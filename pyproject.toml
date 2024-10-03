@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "bertrend"
+version = "0.1.0"
+description = "BERTrend analyses topic evolution over time using state-of-the-art transformer models: topic modelling and LLM"
+authors = ["Jérôme Picault <jerome.picault@rte-france.com>", "Guillaume Grosjean <guillaume.grosjean@rte-france.com>"]
+license = "LICENSE.md"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+bertopic = "^0.16.3"
+pandas = "^2.2.2"
+scipy = "^1.14.1"
+loguru = "^0.7.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
