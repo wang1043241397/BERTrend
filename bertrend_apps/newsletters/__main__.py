@@ -42,7 +42,7 @@ from bertrend_apps.common.crontab_utils import schedule_newsletter
 # Config sections
 BERTOPIC_CONFIG_SECTION = "bertopic_config"
 LEARNING_STRATEGY_SECTION = "learning_strategy"
-NEWSLETTER_SECTION = "newsletters"
+NEWSLETTER_SECTION = "newsletter"
 
 # Learning strategies
 LEARN_FROM_SCRATCH = (
