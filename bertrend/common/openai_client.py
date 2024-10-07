@@ -86,16 +86,16 @@ class OpenAI_Client:
             messages.insert(0, {"role": "system", "content": system_prompt})
 
         # For important parameters, set default value if not given
-        model = kwargs.get("model", self.model_name)
-        temperature = kwargs.get("temperature", self.temperature)
-        max_tokens = kwargs.get("max_tokens", self.max_tokens)
+        if not kwargs.get("model"):
+            kwargs["model"] = self.model_name
+        if not kwargs.get("temperature"):
+            kwargs["temperature"] = self.temperature
+        if not kwargs.get("max_tokens"):
+            kwargs["max_tokens"] = self.max_tokens
 
         try:
             answer = self.llm_client.chat.completions.create(
                 messages=messages,
-                model=model,
-                temperature=temperature,
-                max_tokens=max_tokens,
                 **kwargs,
             )
             logger.debug(f"API returned: {answer}")
