@@ -3,4 +3,4 @@
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
 
-from bertrend.summary.abstractive_summarizer import AbstractiveSummarizer
+from bertrend.summary.chatgpt_summarizer import GPTSummarizer

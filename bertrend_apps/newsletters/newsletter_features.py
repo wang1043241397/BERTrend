@@ -215,7 +215,7 @@ def export_md_string(newsletter_md: str, path: Path, format="md"):
     # elif format == "pdf":
     #    md2pdf(path, md_content=newsletter_md)
     elif format == "html":
-        result = md2html(newsletter_md, Path(__file__).parent / "newsletters.css")
+        result = md2html(newsletter_md, Path(__file__).parent / "newsletter.css")
         with open(path, "w") as f:
             f.write(result)
 

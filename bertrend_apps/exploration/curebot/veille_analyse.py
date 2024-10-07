@@ -29,7 +29,7 @@ EMBEDDING_MODEL_NAME = "dangvantuan/sentence-camembert-large"
 TOP_N_WORDS = 5
 # EMBEDDING_MODEL_NAME = "antoinelouis/biencoder-camembert-base-mmarcoFR"
 
-css_style = Path(inspect.getfile(generate_newsletter)).parent / "newsletters.css"
+css_style = Path(inspect.getfile(generate_newsletter)).parent / "newsletter.css"
 
 if "topic_detection_disabled" not in st.session_state:
     st.session_state.topic_detection_disabled = False
