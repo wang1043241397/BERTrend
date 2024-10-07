@@ -33,6 +33,7 @@ BLACKLISTED_URL = [
     "www.nordlittoral.fr",
     # journaux sur abonnements
     "www.ouest-france.fr",
+    "ouest-france.fr",
     # download impossible
 ]
 

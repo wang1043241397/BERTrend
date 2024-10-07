@@ -150,11 +150,12 @@ def _decode_google_news_url(url: str) -> str:
     return primary_url
 
 
-@wait(0.5)
 def decode_google_news_url(
     url: str,
 ) -> str:  # Not cached because not all Google News URLs are encoded.
     """Return Google News entry URLs after decoding their encoding as applicable."""
+    time.sleep(0.5) # to avoid being banned
+
     decoded_content = new_decoderv1(url) if url.startswith(_ENCODED_URL_PREFIX) else url
     if decoded_content["status"]:
         # decoding was ok
