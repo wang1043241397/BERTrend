@@ -57,12 +57,15 @@ plotly-resampler = "^0.10.0"
 pygooglenews = {git = "https://github.com/picaultj/pygooglenews.git", rev = "master"}
 scipy = "^1.14.1"
 scikit-learn = "^1.5.2"
-sentence-transformers = "^3.1.1"
+sentence-transformers = "3.0.1"
 requests = "^2.32.3"
 seaborn = "^0.13.2"
+sentencepiece = "^0.2.0"
 streamlit = "^1.39.0"
 torch = "^2.4.1"
 tqdm = "^4.66.5"
+tiktoken = "^0.8.0"
+tokenizers = "<0.20.0"
 umap-learn = "^0.5.6"
 
 
