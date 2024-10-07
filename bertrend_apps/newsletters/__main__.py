@@ -23,7 +23,7 @@ from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import CountVectorizer
 from umap import UMAP
 
-from bertrend import FEED_BASE_PATH, BEST_CUDA_DEVICE
+from bertrend import FEED_BASE_PATH, BEST_CUDA_DEVICE, OUTPUT_DIR
 from bertrend_apps.common.config_utils import parse_literal
 from bertrend_apps.newsletters.newsletter_features import (
     generate_newsletter,
@@ -32,7 +32,6 @@ from bertrend_apps.newsletters.newsletter_features import (
 from bertrend.train import EmbeddingModel, train_BERTopic
 from bertrend.utils import (
     load_data,
-    OUTPUT_DIR,
     TEXT_COLUMN,
     TIMESTAMP_COLUMN,
     split_df_by_paragraphs,
