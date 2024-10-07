@@ -15,6 +15,7 @@ exclude = [ "data" ]
 
 [tool.poetry.dependencies]
 python = "^3.11"
+ipython = "^8.28.0"
 
 # A list of all the optional dependencies, some of which are included in the
 # below `extras`. They can be opted into by apps.

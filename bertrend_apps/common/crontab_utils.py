@@ -42,8 +42,8 @@ def schedule_newsletter(
     """Schedule data scrapping on the basis of a feed configuration file"""
     newsletter_cfg = configparser.ConfigParser()
     newsletter_cfg.read(newsletter_cfg_path)
-    schedule = newsletter_cfg.get("newsletters", "update_frequency")
-    id = newsletter_cfg.get("newsletters", "id")
+    schedule = newsletter_cfg.get("newsletter", "update_frequency")
+    id = newsletter_cfg.get("newsletter", "id")
     command = f"{sys.prefix}/bin/python -m bertrend_apps.newsletters newsletters {newsletter_cfg_path.resolve()} {data_feed_cfg_path.resolve()} > {BERTREND_LOG_PATH}/cron_newsletter_{id}.log 2>&1"
     env_vars = f"CUDA_VISIBLE_DEVICES={cuda_devices}"
     add_job_to_crontab(schedule, command, env_vars)
