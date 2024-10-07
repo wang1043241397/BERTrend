@@ -639,7 +639,7 @@ def analyze_signal(
             summary = openai_client.generate(
                 system_prompt=GPT_SYSTEM_MESSAGE,
                 user_prompt=summary_prompt,
-                model_name=GPT_MODEL,
+                model=GPT_MODEL,
                 temperature=GPT_TEMPERATURE,
                 max_tokens=GPT_MAX_TOKENS,
             )
@@ -651,7 +651,7 @@ def analyze_signal(
             weak_signal_analysis = openai_client.generate(
                 system_prompt=GPT_SYSTEM_MESSAGE,
                 user_prompt=weak_signal_prompt,
-                model_name=GPT_MODEL,
+                model=GPT_MODEL,
                 temperature=GPT_TEMPERATURE,
                 max_tokens=GPT_MAX_TOKENS,
             )
@@ -666,7 +666,7 @@ def analyze_signal(
             formatted_html = openai_client.generate(
                 system_prompt=GPT_SYSTEM_MESSAGE,
                 user_prompt=html_format_prompt,
-                model_name=GPT_MODEL,
+                model=GPT_MODEL,
                 temperature=GPT_TEMPERATURE,
                 max_tokens=GPT_MAX_TOKENS,
             )

@@ -133,7 +133,7 @@ def generate_newsletter(
                     article_list=article_list,
                     nb_sentences=nb_sentences,
                 ),
-                model_name=openai_model_name,
+                model=openai_model_name,
             )
         elif summary_mode == "none":
             # No summarization is performed
@@ -160,7 +160,7 @@ def generate_newsletter(
                         else topic_summary
                     ),
                 ),
-                model_name=openai_model_name,
+                model=openai_model_name,
             ).replace('"', "")
 
             if improved_topic_description_v2.endswith("."):

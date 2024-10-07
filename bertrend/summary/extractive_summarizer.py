@@ -363,6 +363,6 @@ class EnhancedExtractiveSummarizer(ExtractiveSummarizer):
                 else EN_SYSTEM_SUMMARY_SENTENCES
             ).format(num_sentences=max_sentences),
             user_prompt=base_summary,
-            model_name=model_name if model_name else self.api.model_name,
+            model=model_name if model_name else self.api.model_name,
         )
         return improved_summary

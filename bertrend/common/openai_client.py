@@ -73,11 +73,7 @@ class OpenAI_Client:
         Args:
                 user_prompt (str): prompt to send to the model with role=user.
                 system_prompt (str): prompt to send to the model with role=system.
-                model_name (str, optional): name of the openai model to use for generation.
-                temperature (float, optional): Temperature for generation.
-                max_tokens (int, optional): Maximum tokens to be generated.
-                seed: seed for generation
-                stream: indicated if the result has to be streamed or not
+                **kwargs : other arguments
 
         Returns:
                 (str or Stream[ChatCompletionChunk]): model answer.
