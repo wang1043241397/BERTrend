@@ -19,7 +19,7 @@ from bertrend.app.state_utils import (
     register_widget,
     save_widget_state,
 )
-from bertrend.metrics import TIME_WEIGHT, TopicMetrics, TEM_x, TEM_y
+from bertrend.metrics.metrics import TIME_WEIGHT, TopicMetrics, TEM_x, TEM_y
 from bertrend.utils import TIMESTAMP_COLUMN
 
 # Restore widget state

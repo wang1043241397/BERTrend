@@ -14,13 +14,13 @@ import pandas as pd
 import tldextract
 from loguru import logger
 
+from bertrend.common.openai_client import OpenAI_Client
 from bertrend.common.prompts import (
     FR_USER_SUMMARY_MULTIPLE_DOCS,
     EN_USER_SUMMARY_MULTIPLE_DOCS,
     FR_USER_GENERATE_TOPIC_LABEL_SUMMARIES,
     EN_USER_GENERATE_TOPIC_LABEL_SUMMARIES,
 )
-from wattelse.api.openai.client_openai_api import OpenAI_Client
 from bertrend.summary.summarizer import Summarizer
 from bertrend.summary.abstractive_summarizer import AbstractiveSummarizer
 from bertopic._bertopic import BERTopic

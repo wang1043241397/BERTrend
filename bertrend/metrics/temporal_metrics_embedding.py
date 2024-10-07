@@ -53,13 +53,9 @@ from nltk.stem import PorterStemmer
 from bertopic import BERTopic
 from tqdm import tqdm
 import itertools
-import umap
 from scipy.sparse import csr_matrix
 from sklearn.preprocessing import normalize
-from thefuzz import fuzz
 from pathlib import Path
-import plotly.express as px
-import plotly.graph_objects as go
 from typing import List, Union, Tuple
 import re
 

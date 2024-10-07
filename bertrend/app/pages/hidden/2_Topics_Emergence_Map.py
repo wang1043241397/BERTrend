@@ -12,7 +12,7 @@ from bertrend.app.state_utils import (
     register_widget,
     save_widget_state,
 )
-from bertrend.metrics import TIME_WEIGHT, TopicMetrics
+from bertrend.metrics.metrics import TIME_WEIGHT, TopicMetrics
 from bertrend.utils import TIMESTAMP_COLUMN, PLOTLY_BUTTON_SAVE_CONFIG
 
 # Restore widget state
