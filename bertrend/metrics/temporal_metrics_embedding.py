@@ -48,6 +48,7 @@ metrics.calculate_topic_embedding_stability()
 import pandas as pd
 from loguru import logger
 import numpy as np
+from thefuzz import fuzz
 from sklearn.metrics.pairwise import cosine_similarity
 from nltk.stem import PorterStemmer
 from bertopic import BERTopic
