@@ -2,7 +2,7 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
-
+import inspect
 from pathlib import Path
 import os
 import locale
@@ -215,7 +215,8 @@ def export_md_string(newsletter_md: str, path: Path, format="md"):
     # elif format == "pdf":
     #    md2pdf(path, md_content=newsletter_md)
     elif format == "html":
-        result = md2html(newsletter_md, Path(__file__).parent / "newsletter.css")
+        css_style = Path(inspect.getfile(generate_newsletter)).parent / "newsletter.css"
+        result = md2html(newsletter_md, css_style)
         with open(path, "w") as f:
             f.write(result)
 

@@ -55,7 +55,7 @@ pandas = "^2.2.2"
 plotly = "^5.24.1"
 plotly-resampler = "^0.10.0"
 pygooglenews = {git = "https://github.com/picaultj/pygooglenews.git", rev = "master"}
-scipy = "^1.14.1"
+scipy = {version = "1.12", python=""}
 scikit-learn = "^1.5.2"
 sentence-transformers = "3.0.1"
 requests = "^2.32.3"

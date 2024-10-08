@@ -2,6 +2,7 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
+import inspect
 
 import streamlit as st
 from pathlib import Path
@@ -11,8 +12,8 @@ from bertrend.app.state_utils import (
     register_widget,
     save_widget_state,
 )
-from bertrend.summary import AbstractiveSummarizer
-from bertrend.summary.chatgpt_summarizer import GPTSummarizer
+from bertrend.summary import GPTSummarizer
+from bertrend.summary.abstractive_summarizer import AbstractiveSummarizer
 from bertrend.summary.extractive_summarizer import (
     ExtractiveSummarizer,
     EnhancedExtractiveSummarizer,
@@ -120,7 +121,7 @@ with st.sidebar:
 
     st.toggle(
         "Improve topic description",
-        value=False,
+        value=True,
         on_change=save_widget_state,
         key="newsletter_improve_description",
     )
@@ -158,7 +159,7 @@ if "newsletters" in st.session_state:
     st.components.v1.html(
         md2html(
             st.session_state["newsletters"][0],
-            Path(__file__).parent.parent.parent / "newsletter.css",
+            Path(inspect.getfile(generate_newsletter)).parent / "newsletter.css"
         ),
         height=800,
         scrolling=True,

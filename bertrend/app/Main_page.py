@@ -14,6 +14,8 @@ from loguru import logger
 from sentence_transformers import SentenceTransformer
 from transformers import AutoTokenizer
 
+from bertrend import DATA_DIR
+
 from bertrend.app.app_utils import (
     embedding_model_options,
     bertopic_options,
@@ -34,12 +36,11 @@ from bertrend.app.state_utils import (
 from bertrend.metrics.topic_metrics import get_coherence_value, get_diversity_value
 from bertrend.train import train_BERTopic
 from bertrend.utils import (
-    TIMESTAMP_COLUMN,
     clean_dataset,
-    split_df_by_paragraphs,
-    DATA_DIR,
-    TEXT_COLUMN,
     preprocess_french_text,
+    split_df_by_paragraphs,
+    TEXT_COLUMN,
+    TIMESTAMP_COLUMN,
 )
 
 
