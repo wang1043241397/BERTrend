@@ -7,7 +7,7 @@ This folder contains the code for the topic modeling part of BERTrend. It mainly
 The [app](app) folder contains a Streamlit app that allows to train a BERTopic model and visualize topics. To run the app, use the following command:
 
 ```bash
-streamlit run app/Main_page.py
+streamlit run topic_analysis/Main_page.py
 ```
 
 The app allows you to train a BERTopic model on a given dataset, visualize the topics, generate a newsletter and show a simple representation of topic evolution over time.
@@ -17,7 +17,7 @@ The app allows you to train a BERTopic model on a given dataset, visualize the t
 The [weak_signals](weak_signals) folder contains tools to further study the temporal evolution of topics and detect weak signals in a large dataset. A Streamlit app allows to try the weak signals detection alogrithm on a given dataset. To run the app, use the following command:
 
 ```bash
-streamlit run weak_signals/app.py
+streamlit run weak_signals/topic_analysis.py
 ```
 
 ## Newsletter generation

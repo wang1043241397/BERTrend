@@ -13,11 +13,11 @@ import plotly.graph_objects as go
 import streamlit as st
 import umap
 
-from bertrend.app.app_utils import (
+from bertrend.topic_analysis.app_utils import (
     plot_topics_over_time,
     compute_topics_over_time,
 )
-from bertrend.app.state_utils import (
+from bertrend.topic_analysis.state_utils import (
     register_widget,
     save_widget_state,
     restore_widget_state,
@@ -743,7 +743,7 @@ def display_topics_popularity():
 
 
 def main():
-    """Main function to run the Streamlit app."""
+    """Main function to run the Streamlit topic_analysis."""
     # Restore widget state
     restore_widget_state()
 

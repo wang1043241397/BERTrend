@@ -18,10 +18,10 @@ from urllib.parse import urlparse
 
 from loguru import logger
 
-from bertrend.app.state_utils import restore_widget_state
+from bertrend.topic_analysis.state_utils import restore_widget_state
 from bertrend.common.openai_client import OpenAI_Client
 from bertrend_apps.newsletters.newsletter_features import get_most_representative_docs
-from bertrend.app.app_utils import (
+from bertrend.topic_analysis.app_utils import (
     compute_topics_over_time,
     plot_topics_over_time,
     print_docs_for_specific_topic,
@@ -339,7 +339,7 @@ def create_topic_documents(
 
 
 def main():
-    """Main function to run the Streamlit app."""
+    """Main function to run the Streamlit topic_analysis."""
     check_model_and_prepare_topics()
     display_sidebar()
 

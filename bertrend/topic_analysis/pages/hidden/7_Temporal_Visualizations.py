@@ -9,14 +9,14 @@ import locale
 # from langchain_openai import ChatOpenAI
 # from langchain_core.messages import HumanMessage, SystemMessage
 
-from bertrend.app.app_utils import (
+from bertrend.topic_analysis.app_utils import (
     plot_topics_over_time,
     compute_topics_over_time,
 )
 
 import pandas as pd
 
-from bertrend.app.state_utils import (
+from bertrend.topic_analysis.state_utils import (
     restore_widget_state,
     register_widget,
     save_widget_state,

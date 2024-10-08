@@ -10,8 +10,8 @@ import pandas as pd
 import streamlit as st
 from pathlib import Path
 
-from bertrend.app.app_utils import plot_docs_reparition_over_time
-from bertrend.app.state_utils import save_widget_state
+from bertrend.topic_analysis.app_utils import plot_docs_reparition_over_time
+from bertrend.topic_analysis.state_utils import save_widget_state
 from bertrend.utils import TEXT_COLUMN, TIMESTAMP_COLUMN
 
 

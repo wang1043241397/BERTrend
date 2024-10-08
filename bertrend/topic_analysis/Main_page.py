@@ -16,7 +16,7 @@ from transformers import AutoTokenizer
 
 from bertrend import DATA_DIR
 
-from bertrend.app.app_utils import (
+from bertrend.topic_analysis.app_utils import (
     embedding_model_options,
     bertopic_options,
     umap_options,
@@ -26,8 +26,8 @@ from bertrend.app.app_utils import (
     representation_model_options,
     load_data_wrapper,
 )
-from bertrend.app.data_utils import data_overview, choose_data
-from bertrend.app.state_utils import (
+from bertrend.topic_analysis.data_utils import data_overview, choose_data
+from bertrend.topic_analysis.state_utils import (
     register_widget,
     save_widget_state,
     restore_widget_state,

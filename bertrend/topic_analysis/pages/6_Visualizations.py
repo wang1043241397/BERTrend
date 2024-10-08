@@ -16,10 +16,10 @@ import streamlit.components.v1 as components
 from loguru import logger
 from umap import UMAP
 
-from bertrend.app.app_utils import (
+from bertrend.topic_analysis.app_utils import (
     plot_2d_topics,
 )
-from bertrend.app.state_utils import restore_widget_state
+from bertrend.topic_analysis.state_utils import restore_widget_state
 from bertrend.utils import TEXT_COLUMN, PLOTLY_BUTTON_SAVE_CONFIG
 
 # Set locale for French date names
