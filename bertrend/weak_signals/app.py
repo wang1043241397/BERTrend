@@ -13,6 +13,7 @@ import plotly.graph_objects as go
 from bertopic import BERTopic
 from loguru import logger
 
+from bertrend import DATA_PATH, MODELS_DIR, ZEROSHOT_TOPICS_DATA_DIR, SIGNAL_EVOLUTION_DATA_DIR, WEAK_SIGNALS_CACHE_PATH
 from data_loading import load_and_preprocess_data, group_by_days, find_compatible_files
 from global_vars import *
 from session_state_manager import SessionStateManager
@@ -40,9 +41,8 @@ from weak_signals import (
 
 
 def save_state():
-    os.makedirs(CACHE_PATH, exist_ok=True)
-    state_file = CACHE_PATH / STATE_FILE
-    embeddings_file = CACHE_PATH / EMBEDDINGS_FILE
+    state_file = WEAK_SIGNALS_CACHE_PATH / STATE_FILE
+    embeddings_file = WEAK_SIGNALS_CACHE_PATH / EMBEDDINGS_FILE
 
     # Save the selected files (list of filenames)
     selected_files = SessionStateManager.get("selected_files", [])
@@ -72,8 +72,8 @@ def save_state():
 
 
 def restore_state():
-    state_file = CACHE_PATH / STATE_FILE
-    embeddings_file = CACHE_PATH / EMBEDDINGS_FILE
+    state_file = WEAK_SIGNALS_CACHE_PATH / STATE_FILE
+    embeddings_file = WEAK_SIGNALS_CACHE_PATH / EMBEDDINGS_FILE
 
     if state_file.exists() and embeddings_file.exists():
         with open(state_file, "rb") as f:
@@ -114,15 +114,15 @@ def save_models():
         topic_model.doc_info_df.to_pickle(model_dir / DOC_INFO_DF_FILE)
         topic_model.topic_info_df.to_pickle(model_dir / TOPIC_INFO_DF_FILE)
 
-    with open(CACHE_PATH / DOC_GROUPS_FILE, "wb") as f:
+    with open(WEAK_SIGNALS_CACHE_PATH / DOC_GROUPS_FILE, "wb") as f:
         pickle.dump(SessionStateManager.get("doc_groups"), f)
-    with open(CACHE_PATH / EMB_GROUPS_FILE, "wb") as f:
+    with open(WEAK_SIGNALS_CACHE_PATH / EMB_GROUPS_FILE, "wb") as f:
         pickle.dump(SessionStateManager.get("emb_groups"), f)
-    with open(CACHE_PATH / GRANULARITY_FILE, "wb") as f:
+    with open(WEAK_SIGNALS_CACHE_PATH / GRANULARITY_FILE, "wb") as f:
         pickle.dump(SessionStateManager.get("granularity_select"), f)
 
     # Save the models_trained flag
-    with open(CACHE_PATH / MODELS_TRAINED_FILE, "wb") as f:
+    with open(WEAK_SIGNALS_CACHE_PATH / MODELS_TRAINED_FILE, "wb") as f:
         pickle.dump(SessionStateManager.get("models_trained"), f)
 
     hyperparams = SessionStateManager.get_multiple(
@@ -135,7 +135,7 @@ def save_models():
         "vectorizer_ngram_range",
         "min_df",
     )
-    with open(CACHE_PATH / HYPERPARAMS_FILE, "wb") as f:
+    with open(WEAK_SIGNALS_CACHE_PATH / HYPERPARAMS_FILE, "wb") as f:
         pickle.dump(hyperparams, f)
 
     st.success("Models saved.")
@@ -167,14 +167,14 @@ def restore_models():
     SessionStateManager.set("topic_models", topic_models)
 
     for file, key in [(DOC_GROUPS_FILE, "doc_groups"), (EMB_GROUPS_FILE, "emb_groups")]:
-        file_path = CACHE_PATH / file
+        file_path = WEAK_SIGNALS_CACHE_PATH / file
         if file_path.exists():
             with open(file_path, "rb") as f:
                 SessionStateManager.set(key, pickle.load(f))
         else:
             logger.warning(f"{file} not found.")
 
-    granularity_file = CACHE_PATH / GRANULARITY_FILE
+    granularity_file = WEAK_SIGNALS_CACHE_PATH / GRANULARITY_FILE
     if granularity_file.exists():
         with open(granularity_file, "rb") as f:
             SessionStateManager.set("granularity_select", pickle.load(f))
@@ -182,14 +182,14 @@ def restore_models():
         logger.warning("Granularity value not found.")
 
     # Restore the models_trained flag
-    models_trained_file = CACHE_PATH / MODELS_TRAINED_FILE
+    models_trained_file = WEAK_SIGNALS_CACHE_PATH / MODELS_TRAINED_FILE
     if models_trained_file.exists():
         with open(models_trained_file, "rb") as f:
             SessionStateManager.set("models_trained", pickle.load(f))
     else:
         logger.warning("Models trained flag not found.")
 
-    hyperparams_file = CACHE_PATH / HYPERPARAMS_FILE
+    hyperparams_file = WEAK_SIGNALS_CACHE_PATH / HYPERPARAMS_FILE
     if hyperparams_file.exists():
         with open(hyperparams_file, "rb") as f:
             SessionStateManager.set_multiple(**pickle.load(f))
@@ -200,9 +200,8 @@ def restore_models():
 
 
 def purge_cache():
-    cache_dir = CACHE_PATH
-    if os.path.exists(cache_dir):
-        shutil.rmtree(cache_dir)
+    if WEAK_SIGNALS_CACHE_PATH.exists():
+        shutil.rmtree(WEAK_SIGNALS_CACHE_PATH)
         st.success(f"Cache purged.")
     else:
         st.warning(f"No cache found.")
@@ -884,7 +883,7 @@ def main():
                                 output_file_path = (
                                     Path(__file__).parent / "signal_llm.html"
                                 )
-                                if os.path.exists(output_file_path):
+                                if output_file_path.exists():
                                     # Read the HTML file
                                     with open(
                                         output_file_path, "r", encoding="utf-8"

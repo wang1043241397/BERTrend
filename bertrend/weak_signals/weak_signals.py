@@ -22,10 +22,10 @@ from global_vars import (
     GPT_TEMPERATURE,
     GPT_SYSTEM_MESSAGE,
     GPT_MAX_TOKENS,
-    SIGNAL_EVOLUTION_DATA_DIR,
     SIGNAL_CLASSIF_LOWER_BOUND,
     SIGNAL_CLASSIF_UPPER_BOUND,
 )
+from bertrend import SIGNAL_EVOLUTION_DATA_DIR
 from prompts import get_prompt, save_html_output
 
 

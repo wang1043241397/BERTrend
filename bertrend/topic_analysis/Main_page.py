@@ -14,7 +14,7 @@ from loguru import logger
 from sentence_transformers import SentenceTransformer
 from transformers import AutoTokenizer
 
-from bertrend import DATA_DIR
+from bertrend import DATA_PATH
 
 from bertrend.topic_analysis.app_utils import (
     embedding_model_options,
@@ -136,7 +136,7 @@ def save_model_interface():
 def select_data():
     st.write("## Data selection")
 
-    choose_data(DATA_DIR, ["*.csv", "*.jsonl*", "*.parquet"])
+    choose_data(DATA_PATH, ["*.csv", "*.jsonl*", "*.parquet"])
 
     # Check if selected files have changed
     if (

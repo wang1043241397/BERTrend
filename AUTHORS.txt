@@ -6,9 +6,10 @@ This file is part of BERTrend.
 Lead Developers:
     - Jérôme Picault
     - Guillaume Grosjean
+    - Allaa Boutaleb
 
 Other Developers:
-    - Allaa Boutaleb
+    -
 
 Further Contributions by:
     - 

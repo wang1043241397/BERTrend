@@ -23,7 +23,7 @@ from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import CountVectorizer
 from umap import UMAP
 
-from bertrend import FEED_BASE_PATH, BEST_CUDA_DEVICE, OUTPUT_DIR
+from bertrend import FEED_BASE_PATH, BEST_CUDA_DEVICE, OUTPUT_PATH
 from bertrend_apps.common.config_utils import parse_literal
 from bertrend_apps.newsletters.newsletter_features import (
     generate_newsletter,
@@ -85,7 +85,7 @@ if __name__ == "__main__":
             "split_data_by_paragraphs", False
         )
         if model_path:
-            model_path = OUTPUT_DIR / model_path
+            model_path = OUTPUT_PATH / model_path
         if learning_type == INFERENCE_ONLY and (
             not model_path or not model_path.exists()
         ):
@@ -168,7 +168,7 @@ if __name__ == "__main__":
             }
             newsletter_md += f"\n\n## Debug: config\n\n{conf_dict} \n\n"
 
-        output_dir = OUTPUT_DIR / newsletter_params.get("output_directory")
+        output_dir = OUTPUT_PATH / newsletter_params.get("output_directory")
         output_format = newsletter_params.get("output_format")
         output_path = (
             output_dir
@@ -261,7 +261,7 @@ if __name__ == "__main__":
     def _save_topic_model(
         topic_model: BERTopic, embedding_model: str, model_path_dir: Path
     ):
-        full_model_path_dir = OUTPUT_DIR / "models" / model_path_dir
+        full_model_path_dir = OUTPUT_PATH / "models" / model_path_dir
         full_model_path_dir.mkdir(parents=True, exist_ok=True)
 
         # Serialization using safetensors

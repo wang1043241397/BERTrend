@@ -18,18 +18,28 @@ BASE_PATH = (
     else Path(__file__).parent.parent.parent
 )
 
+# Base dirs
 BASE_DATA_PATH = BASE_PATH / "data"
 BASE_CACHE_PATH = BASE_PATH / "cache"
 BASE_OUTPUT_PATH = BASE_PATH / "output"
+
 FEED_BASE_PATH = BASE_DATA_PATH / "bertrend" / "feeds"
 BERTREND_LOG_PATH = BASE_PATH / "logs" / "bertrend"
 BERTREND_LOG_PATH.mkdir(parents=True, exist_ok=True)
 
 # Define directories
-DATA_DIR = BASE_DATA_PATH / "bertrend"
-OUTPUT_DIR = BASE_OUTPUT_PATH / "bertrend"
-CACHE_DIR = BASE_CACHE_PATH / "bertrend"
+DATA_PATH = BASE_DATA_PATH / "bertrend"
+OUTPUT_PATH = BASE_OUTPUT_PATH / "bertrend"
+CACHE_PATH = BASE_CACHE_PATH / "bertrend"
+
+# Weak signals
+WEAK_SIGNALS_CACHE_PATH = BASE_CACHE_PATH / "weak_signals"
+MODELS_DIR = WEAK_SIGNALS_CACHE_PATH / "models"
+ZEROSHOT_TOPICS_DATA_DIR = WEAK_SIGNALS_CACHE_PATH / "zeroshot_topics_data"
+SIGNAL_EVOLUTION_DATA_DIR = WEAK_SIGNALS_CACHE_PATH / "signal_evolution_data"
 
 # Create directories if they do not exist
-DATA_DIR.mkdir(parents=True, exist_ok=True)
-CACHE_DIR.mkdir(parents=True, exist_ok=True)
+DATA_PATH.mkdir(parents=True, exist_ok=True)
+CACHE_PATH.mkdir(parents=True, exist_ok=True)
+WEAK_SIGNALS_CACHE_PATH.mkdir(parents=True, exist_ok=True)
+

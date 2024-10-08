@@ -3,13 +3,12 @@
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
 
-import os
 import re
 from typing import Dict, Tuple
 
 import pandas as pd
 
-from global_vars import DATA_PATH
+from bertrend import DATA_PATH
 from bertrend.utils import (
     preprocess_french_text,
     TEXT_COLUMN,
@@ -48,13 +47,13 @@ def load_and_preprocess_data(
     file_name, file_ext = selected_file
 
     if file_ext == "csv":
-        df = pd.read_csv(os.path.join(DATA_PATH, file_name))
+        df = pd.read_csv(DATA_PATH / file_name)
     elif file_ext == "parquet":
-        df = pd.read_parquet(os.path.join(DATA_PATH, file_name))
+        df = pd.read_parquet(DATA_PATH / file_name)
     elif file_ext == "json":
-        df = pd.read_json(os.path.join(DATA_PATH, file_name))
+        df = pd.read_json(DATA_PATH / file_name)
     elif file_ext == "jsonl":
-        df = pd.read_json(os.path.join(DATA_PATH, file_name), lines=True)
+        df = pd.read_json(DATA_PATH / file_name, lines=True)
 
     # Convert timestamp column to datetime
     df[TIMESTAMP_COLUMN] = pd.to_datetime(df[TIMESTAMP_COLUMN], errors="coerce")

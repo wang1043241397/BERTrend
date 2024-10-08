@@ -7,8 +7,6 @@ import json
 import os
 from pathlib import Path
 
-from bertrend import BASE_CACHE_PATH, BASE_DATA_PATH
-
 # Stopwords
 STOP_WORDS_RTE = [
     "w",
@@ -54,13 +52,6 @@ with open(stopwords_fr_file, "r", encoding="utf-8") as file:
     FRENCH_STOPWORDS = json.load(file)
 
 STOPWORDS = STOP_WORDS_RTE + COMMON_NGRAMS + FRENCH_STOPWORDS
-
-# Paths
-CACHE_PATH = BASE_CACHE_PATH / "weak_signals"
-MODELS_DIR = CACHE_PATH / "models"
-DATA_PATH = BASE_DATA_PATH / "bertopic"
-ZEROSHOT_TOPICS_DATA_DIR = CACHE_PATH / "zeroshot_topics_data"
-SIGNAL_EVOLUTION_DATA_DIR = CACHE_PATH / "signal_evolution_data"
 
 # File names
 STATE_FILE = "app_state.pkl"
