@@ -24,6 +24,7 @@ os.umask(0o002)
 
 # List of URLs we do not want to have results from (ex. obsolete or not pertinent)
 BLACKLISTED_URL = [
+    # journaux sur abonnements
     "www.filiere-3e.fr",
     "www.courrier-picard.fr",
     "www.aisnenouvelle.fr",
@@ -31,10 +32,10 @@ BLACKLISTED_URL = [
     "www.lest-eclair.fr",
     "www.lunion.fr",
     "www.nordlittoral.fr",
-    # journaux sur abonnements
-    "www.ouest-france.fr",
-    "ouest-france.fr",
     # download impossible
+    "ouest-france.fr",
+    # outliers
+    "www.luxurylifestylemag.co.uk" #LLM!
 ]
 
 
