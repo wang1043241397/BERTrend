@@ -484,19 +484,23 @@ def train_BERTopic(
     topics, probs = topic_model.fit_transform(filtered_dataset[column], embeddings)
 
     logger.info("Reducing outliers via embeddings strategy...")
-    new_topics = topic_model.reduce_outliers(
-        documents=filtered_dataset[column],
-        topics=topics,
-        embeddings=embeddings,
-        strategy="embeddings",
-    )
+    if not topic_model._outliers:
+        logger.warning("No outliers to reduce.")
+        new_topics = topics
+    else:
+        new_topics = topic_model.reduce_outliers(
+            documents=filtered_dataset[column],
+            topics=topics,
+            embeddings=embeddings,
+            strategy="embeddings",
+        )
 
-    topic_model.update_topics(
-        filtered_dataset[column],
-        topics=new_topics,
-        vectorizer_model=vectorizer_model,
-        representation_model=other_models,
-    )
+        topic_model.update_topics(
+            filtered_dataset[column],
+            topics=new_topics,
+            vectorizer_model=vectorizer_model,
+            representation_model=other_models,
+        )
 
     # If OpenAI model is present, apply it after reducing outliers
     if openai_model:

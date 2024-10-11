@@ -385,7 +385,7 @@ def train_model():
 ################################################
 
 # Wide layout
-st.set_page_config(page_title="Wattelse® topic", layout="wide")
+st.set_page_config(page_title="BERTrend - Topic Analysis", layout="wide")
 
 restore_widget_state()
 
