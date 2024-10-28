@@ -2,6 +2,9 @@
 
 <img width="1619" alt="bertrend pipeline" src="https://github.com/user-attachments/assets/0b38a539-8378-419e-966e-a58c4c8fd079">
 
+## Paper
+
+The code is this directory is partly described in the paper: [BERTrend: Neural Topic Modeling for Emerging Trends Detection](./BERTrend paper.pdf)
 
 
 ## Badges
