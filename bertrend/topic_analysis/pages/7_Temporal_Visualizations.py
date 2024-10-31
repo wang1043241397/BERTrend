@@ -769,7 +769,7 @@ def main():
             st.error("Please select a valid granularity before applying.")
 
     # Display visualizations only if TempTopic has been fitted
-    if "metrics" in st.session_state:
+    if "temptopic" in st.session_state:
         display_topic_evolution_dataframe()
         display_topic_info_dataframe()
         display_documents_per_date_dataframe()
