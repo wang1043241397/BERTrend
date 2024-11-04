@@ -159,7 +159,7 @@ def display_topic_info():
     ]["Representation"]
 
     st.write(
-        f"# Thème {st.session_state['selected_topic_number']} : {topic_docs_number} documents"
+        f"# Topic {st.session_state['selected_topic_number']} : {topic_docs_number} documents"
     )
     st.markdown(f"## #{' #'.join(topic_words)}")
 
@@ -235,7 +235,7 @@ def display_source_distribution(representative_df, selected_sources):
 
     # Determine which slices should be pulled out
     for source in source_counts.index:
-        if source in selected_sources and "Tous" not in selected_sources:
+        if source in selected_sources and "All" not in selected_sources:
             pull.append(0.2)
         else:
             pull.append(0)
@@ -353,7 +353,7 @@ def main():
 
     # Number of articles to display
     top_n_docs = st.number_input(
-        "Nombre d'articles à afficher",
+        "Number of articles to display",
         min_value=1,
         max_value=st.session_state["topics_info"].iloc[
             st.session_state["selected_topic_number"]
@@ -372,13 +372,13 @@ def main():
 
     # Multi-select for sources
     selected_sources = st.multiselect(
-        "Sélectionnez les sources à afficher",
-        options=["Tous"] + list(sources),
-        default=["Tous"],
+        "Select the sources to display",
+        options=["All"] + list(sources),
+        default=["All"],
     )
 
     # Filter the dataframe based on selected sources
-    if "Tous" not in selected_sources:
+    if "All" not in selected_sources:
         filtered_df = representative_df[
             representative_df["url"].apply(get_website_name).isin(selected_sources)
         ]
@@ -394,7 +394,7 @@ def main():
 
     with col2:
         # Filter the dataframe only for document display
-        if "Tous" not in selected_sources:
+        if "All" not in selected_sources:
             filtered_df = representative_df[
                 representative_df["url"].apply(get_website_name).isin(selected_sources)
             ]
@@ -408,7 +408,7 @@ def main():
 
     # GPT description button
     if st.button(
-        "Générer une description courte du thème",
+        "Generate a short description of the topic",
         type="primary",
         use_container_width=True,
     ):

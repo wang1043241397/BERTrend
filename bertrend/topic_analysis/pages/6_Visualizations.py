@@ -27,7 +27,7 @@ locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
 
 # Restore widget state and set up page
 restore_widget_state()
-st.set_page_config(page_title="Wattelse® topic", layout="wide")
+st.set_page_config(page_title="BERTrend topic analysis", layout="wide")
 
 # Check if a model is trained
 if "topic_model" not in st.session_state:

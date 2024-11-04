@@ -29,7 +29,7 @@ from bertrend.utils import TIMESTAMP_COLUMN, TEXT_COLUMN, PLOTLY_BUTTON_SAVE_CON
 locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
 
 # Page configuration
-st.set_page_config(page_title="Wattelse® topic", layout="wide")
+st.set_page_config(page_title="BERTrend topic analysis", layout="wide")
 
 
 # TempTopic output visualization functions

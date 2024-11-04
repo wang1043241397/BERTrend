@@ -48,7 +48,7 @@ def display_documents_on_click(clicked_point):
 locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
 
 # Wide layout
-st.set_page_config(page_title="Wattelse® topic", layout="wide")
+st.set_page_config(page_title="BERTrend topic analysis", layout="wide")
 
 # Stop script if no model is trained
 if "topic_model" not in st.session_state.keys():
