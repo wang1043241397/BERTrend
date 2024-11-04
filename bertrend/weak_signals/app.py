@@ -13,7 +13,13 @@ import plotly.graph_objects as go
 from bertopic import BERTopic
 from loguru import logger
 
-from bertrend import DATA_PATH, MODELS_DIR, ZEROSHOT_TOPICS_DATA_DIR, SIGNAL_EVOLUTION_DATA_DIR, WEAK_SIGNALS_CACHE_PATH
+from bertrend import (
+    DATA_PATH,
+    MODELS_DIR,
+    ZEROSHOT_TOPICS_DATA_DIR,
+    SIGNAL_EVOLUTION_DATA_DIR,
+    WEAK_SIGNALS_CACHE_PATH,
+)
 from data_loading import load_and_preprocess_data, group_by_days, find_compatible_files
 from global_vars import *
 from session_state_manager import SessionStateManager
@@ -212,7 +218,7 @@ def main():
         page_title=PAGE_TITLE, layout=LAYOUT, initial_sidebar_state="expanded"
     )
 
-    st.title("Topic Modeling and Weak Signal Detection")
+    st.title("Trend Analysis and Weak Signal Detection")
 
     # Set the main flags
     SessionStateManager.get_or_set("data_embedded", False)

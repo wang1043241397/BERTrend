@@ -132,6 +132,8 @@ In addition, we provide some tools to collect data and generate a custom dataset
 Please refer to the documentation page about [data providers](./docs/data_provider.md)
 for details.
 
+Datasets have to be stored into `$BERTREND_BASE_DIR/data/bertrend/`
+
 #### Dataset format
 BERTrend requires a text dataset that contains at least the following columns:
 - `text`
@@ -206,6 +208,16 @@ Please refer to the [BERTopic documentation](https://maartengr.github.io/BERTopi
 
 
 ### 2. Weak signal analysis
+**Weak signals** refer to early, small indicators of larger, important trends (like disruptive technologies or public health issues).
+
+Identifying weak signals early is critical for decision-making across domains such as politics, healthcare, and innovation
+
+Key Features of the demonstrator:
+- Dynamic Topic Modeling in an online learning setting
+- Popularity-based Signal Classification
+  * based on their popularity trends: noise, weak signals, and strong signals
+  * **new popularity metric** considers both the number of documents within a topic and the **frequency of updates**
+
 
 #### Launching the Weak signal analysis demonstrator
 
@@ -213,6 +225,39 @@ Please refer to the [BERTopic documentation](https://maartengr.github.io/BERTopi
 cd bertrend/weak_signals
 CUDA_VISIBLE_DEVICES=<gpu_number> streamlit run app.py
 ```
+
+
+#### Data preparation
+- Choose the dataset from available ones
+![bertrend_data](docs/images/bertrend_data.png)
+- Click on `Embed Documents`
+
+#### Train model
+- Click on the tab `Model Training`
+- Select the time granularity (in days); this will split the dataset
+  into document time slices based on the selected value
+- Click on `Train Models`: this will generate one topic model per time slice
+- Once this is done, click on `Merge Models` to produce the aggregated model
+
+#### Results analysis
+This page provides several statistics about the resulting topics:
+
+- number of topics detected
+- topic size evolution over time
+- topic popularity evolution
+- overall popularity evolution over time 
+
+![popularity_evolution](docs/images/popularity_evolution.png)
+
+- list of topics identified as noise, weak and strong signals
+
+In addition, this page allows to use LLMs to analyze more in depth specific signals.
+This analysis is defined with a pre-defined template that allows to gather
+various dimensions about the topic evolution betwen two time slices, such as:
+- what happens since last timestamp (summary of main events)
+- a multi-faceted description for example about key developments, foreseen changes, potential impact, etc.
+
+![llm_interpretation](docs/images/llm_interpretation.png)
 
 
 <!-- **TODO**
