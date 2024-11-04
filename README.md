@@ -81,10 +81,11 @@ More specifically, the code base is divided into two main demonstrators:
 - interpretation of these signals using LLMs
 - inspection of topic merging process using Sankey diagram
 
-
+<!--
 ## Visuals
 **TODO**
 Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+-->
 
 ## Installation
 
@@ -98,14 +99,20 @@ In order to work properly, BERTrend requires the following environment variables
   - `OPENAI_ENDPOINT`: can be empty if you use the openAI services, otherwise shall point to your LLM endpoint (for ex. Azure or local server)
   - `OPENAI_DEFAULT_MODEL_NAME`: name of the model to be used by default
 
+### Hardware and software requirements
+
+- Altough BERTrend can run on CPU-devices only, it works faster on a GPU-enabled device (at least one GPU 16Go RAM is recommended)
+- BERTrend requires Python >= 3.11
+
 ### Package installation
 
 Installation can be done using pip in the home dir of BERTrend:
 
-`pip install .`
+`pip install .` or `poetry install`
 
 (or `pip install -e .` if you want to install the package locally)
 
+This will install BERTrend and its dependencies.
 
 ### Datasets
 #### Dataset sources
@@ -115,11 +122,11 @@ Examples of meaningful datasets for BERTrend include:
 - news articles
 - social media publications
 
-or any combination of those.
+(or any combination of those.)
 
 Typical relevant public datasets:
-- New York Times dataset
-- Arxiv dataset
+- New York Times dataset: https://www.kaggle.com/datasets/tumanovalexander/nyt-articles-data
+- Arxiv dataset: https://www.kaggle.com/datasets/Cornell-University/arxiv
 
 In addition, we provide some tools to collect data and generate a custom dataset.
 Please refer to the documentation page about [data providers](./docs/data_provider.md)
@@ -131,28 +138,89 @@ BERTrend requires a text dataset that contains at least the following columns:
 - `timestamp`
 
 BERTrend supports several dataset formats:
-- d
-- d
+- csv
+- parquet
+- json / jsonl
 
 ## Quick start
 
-### Dynamic topic modelling analysis
+This section indicates how to start our demonstrators about dynamic topic modelling.
+Both demonstrators are available as Streamlit apps.
 
-### Weak signal analysis
-
-
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+### 1. Dynamic topic modelling analysis
 
 
+#### Launching the Dynamic topic modelling analysis demonstrator
+```
+cd bertrend/topic_analysis
+CUDA_VISIBLE_DEVICES=<gpu_number> streamlit run Main_page.py
+```
 
-## Usage
-**TODO**
+#### Description of main pages
+- `Parameters`: include all BERTopic parameters. Depending on your data, especially depending on the language of the data, choose carefully the Embedding model to use.
+
+![parameters](docs/images/parameters.png)
+
+Please refer to the [BERTopic documentation](https://maartengr.github.io/BERTopic/algorithm/algorithm.html) for details about the parameters.
+
+- `Main page`: allows to 
+  - select a dataset
+  - select the range of timestamps
+  - split paragraphs if needed
+  - train a topic model
+
+![data_selection](docs/images/data_selection.png)
+
+- `Explore Topics`
+  - computes topics over time
+  ![exploration_over_time](./docs/images/explore1.png)
+  
+  - allow to select sources and to generate a short description for each theme
+  ![topic_exploration](./docs/images/explore2.png)
+  
+
+- `Generate Newsletters`
+  - This is an exemple of application of topic exploitation: we 
+  illustrate how we can combine topic analysis and LLM possibilities to 
+  easily exploit topic models: this page generates a newsletter based on the
+  most preeminent topics : a LLM is used to generate the topic description
+  and the LLM is also used to summmarize representative docs for each topic.
+   
+- `Visualizations`: Several kings of visualization are provided to 
+  explore the topic that have been created: 
+  - the `Overall Results` slider provides standard information such as inter-topic distance map
+  - the `Topics Treemap` slider provides a bloc view of topics and their relative importance
+  - the `Data Map` slider allows to easily search among topics and data
+
+  ![data_map](./docs/images/data_map.png)  
+
+- `Temporal Visualizations`: this page focuses on dynamic topic modeling.
+  In particular, it provides:
+  - 3D visualization that illustrates the temporal evolution of topics:
+    a misalignment over time indicates that the dynamic topic modelling (DTM)
+    algorithm has assigned documents to incorrect topics
+  - metrics to assess the stability of topics over time: overall topic stability, 
+    temporl topic stability and temporal representation stability
+
+  ![temptopic_metrics](./docs/images/temptopic_metrics.png)  
+
+
+### 2. Weak signal analysis
+
+#### Launching the Weak signal analysis demonstrator
+
+```
+cd bertrend/weak_signals
+CUDA_VISIBLE_DEVICES=<gpu_number> streamlit run app.py
+```
+
+
+<!-- **TODO**
 Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-### Getting started
+-->
 
 ## Support
-
+  
 Please use the 'Issues' to report and discuss any problem you are facing with BERTrend.
 
 
