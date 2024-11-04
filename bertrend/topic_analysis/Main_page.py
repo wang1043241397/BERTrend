@@ -41,6 +41,7 @@ from bertrend.utils import (
     split_df_by_paragraphs,
     TEXT_COLUMN,
     TIMESTAMP_COLUMN,
+    URL_COLUMN,
 )
 
 
@@ -158,6 +159,11 @@ def select_data():
             st.session_state["raw_df"] = (
                 pd.concat(loaded_dfs) if len(loaded_dfs) > 1 else loaded_dfs[0]
             )
+
+            # Add optional columns if not present
+            if URL_COLUMN not in list(st.session_state["raw_df"].columns.values):
+                logger.warning(f"{URL_COLUMN} not found in data")
+                st.session_state["raw_df"][URL_COLUMN] = ""
 
             # Remove duplicates from raw_df
             st.session_state["raw_df"] = st.session_state["raw_df"].drop_duplicates(
