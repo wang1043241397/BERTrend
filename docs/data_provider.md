@@ -11,11 +11,10 @@ Several data providers are supported:
 - NewsCatcher
 
 # Usage
-```                                                                                                                                                 
-(weak_signals) jerome@linux:~/dev/weak-signals$ python -m bertrend_apps.data_provider --help
-                                                                                                                                                      
-                                                                                                                                                       
- Usage: python -m data_provider [OPTIONS] COMMAND [ARGS]...                                                                                           
+```bash
+python -m bertrend_apps.data_provider --help
+
+Usage: python -m data_provider [OPTIONS] COMMAND [ARGS]...                                                                                           
                                                                                                                                                       
 ╭─ Options ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
 │ --install-completion        [bash|zsh|fish|powershell|pwsh]  Install completion for the specified shell. [default: None]                           │
@@ -34,8 +33,8 @@ Several data providers are supported:
 
  ```
 
-```
-(weak_signals) jerome@linux:~/dev/weak-signals$ python -m bertrend_apps.data_provider --help auto-scrape --help
+```bash
+python -m bertrend_apps.data_provider --help auto-scrape --help
                                                                                                                                                       
 Usage: python -m data_provider auto-scrape [OPTIONS] [REQUESTS_FILE]                                                                                 
                                                                                                                                                       
@@ -58,10 +57,10 @@ Usage: python -m data_provider auto-scrape [OPTIONS] [REQUESTS_FILE]
 
 ```
 
-```
-(weak_signals) jerome@linux:~/dev/weak-signals$ python -m bertrend_apps.data_provider generate-query-file --help
-                                                                                                                                                      
- Usage: python -m data_provider generate-query-file [OPTIONS] [KEYWORDS]                                                                              
+```bash
+python -m bertrend_apps.data_provider generate-query-file --help
+
+Usage: python -m data_provider generate-query-file [OPTIONS] [KEYWORDS]                                                                              
                                                                                                                                                       
  Generates a query file to be used with the auto-scrape command. This is useful for queries generating many results. This will split the broad query  
  into many ones, each one covering an 'interval' (range) in days covered by each atomic request. If you want to cover several keywords, run the       
@@ -82,7 +81,7 @@ Usage: python -m data_provider auto-scrape [OPTIONS] [REQUESTS_FILE]
 ╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-# Remarques
+# Comment
 
 You can expect a rate of 10-20% of articles not correctly processed
 - problem of cookies management
