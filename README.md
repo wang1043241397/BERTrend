@@ -47,7 +47,8 @@ The code base is divided into two main demonstrators:
 - [bertrend/weak_signals](bertrend/weak_signals): Identifies and analyzes emerging trends and signals
 
 #### Demonstrator Video
-[![Weak signal analysis](./docs/videos/BERTrend.png)](./docs/videos/BERTrend.mp4)
+https://github.com/user-attachments/assets/d79368d9-d4e0-4324-8a98-a888f0ab3b65
+
 
 #### Demonstrator Features
 - Exploration of signals in real time at any given timestamp
