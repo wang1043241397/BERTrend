@@ -2,7 +2,7 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
-
+import os
 from typing import List, Dict, Optional
 
 import dateparser
@@ -12,7 +12,9 @@ from newscatcherapi import NewsCatcherApiClient
 from bertrend_apps.data_provider.data_provider import DataProvider
 from bertrend_apps.data_provider.utils import wait
 
-API_KEY = "ajY3f53bIUECMKxE-Q5DvH2Etrq8QYYiC5GRWh8AIx4"  # Free API key
+API_KEY = os.getenv("NEWSCATCHER_API_KEY")
+if not API_KEY:
+    raise ValueError("NEWSCATCHER_API_KEY environment variable is not set")
 
 
 class NewsCatcherProvider(DataProvider):

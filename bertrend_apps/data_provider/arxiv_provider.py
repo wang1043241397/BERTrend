@@ -4,6 +4,7 @@
 #  This file is part of BERTrend.
 
 import itertools
+import os
 from datetime import datetime
 from typing import List, Dict, Optional
 from collections import defaultdict
@@ -25,9 +26,11 @@ NUM_RETRIES = 10
 query = "cat:cs.CL"
 max_results = float("inf")
 
-### Parameters Semantic Scholar###
+### Parameters Semantic Scholar ###
+SEMANTIC_SCHOLAR_API_KEY = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
+if not SEMANTIC_SCHOLAR_API_KEY:
+    raise ValueError("SEMANTIC_SCHOLAR_API_KEY environment variable is not set")
 
-SEMANTIC_SCHOLAR_API_KEY = "q252gwgpRVAb49CWJqde3TEr6VjzXyc8P8RcGCo2"
 PAPERS_PER_REQUEST = 500  # should not be more than 500
 SEMANTIC_SCHOLAR_FIELDS = "title,abstract,citationCount,publicationDate,url"
 
