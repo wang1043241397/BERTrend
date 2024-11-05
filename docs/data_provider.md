@@ -1,8 +1,8 @@
-# Installation
-If the installation of the pygooglenews dependency fails, please use the script `install_pygooglenews.sh`
+# Data providers
 
-# Description
-Grabs articles (news or scientific articles) and store them as jsonlines file.
+## Description
+Grabs articles (news or scientific articles) from the web and store them as jsonlines file.
+These collected data can then be used as input of the BERTrend demonstrators.
 
 Several data providers are supported:
 - Arxiv
@@ -10,7 +10,19 @@ Several data providers are supported:
 - Bing News
 - NewsCatcher
 
-# Usage
+## API keys
+Some data providers require the creation of an API key to work properly.
+
+This is the case with Arxiv and NewsCatcher. The API can be created for free on their web site.
+
+You have then to set the following environment variables:
+```bash
+export NEWSCATCHER_API_KEY=<your_api_key>
+export ARXIV_API_KEY=<your_api_key>
+```
+
+
+## Usage
 ```bash
 python -m bertrend_apps.data_provider --help
 
@@ -81,8 +93,8 @@ Usage: python -m data_provider generate-query-file [OPTIONS] [KEYWORDS]
 ╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-# Comment
+## Important note
 
-You can expect a rate of 10-20% of articles not correctly processed
+You may expect a rate of 10-20% of articles not correctly processed because of:
 - problem of cookies management
 - errors 404, 403
