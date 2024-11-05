@@ -5,7 +5,7 @@
 ## Paper
 
 The code in this repository is part of the work described in the paper: 
-[BERTrend: Neural Topic Modeling for Emerging Trends Detection](./BERTrend paper.pdf).
+[BERTrend: Neural Topic Modeling for Emerging Trends Detection](./BERTrend%20paper.pdf).
 
 ## Description
 
@@ -21,7 +21,7 @@ The code base is divided into two main demonstrators:
 
 ### Dynamic Topic Modeling Analysis
 
-- `bertrend/topic_analysis`: Focuses on dynamic topic modeling analysis using:
+- [bertrend/topic_analysis](bertrend/topic_analysis): Focuses on dynamic topic modeling analysis using:
   - Dedicated metrics, called TEMPTopic:
     - Stability Evaluation: Measures the stability of topics over time, evaluating how consistent and coherent topics remain.
     - Volatility Assessment: Analyzes the volatility of topics, identifying how much topics change over different time periods.
@@ -44,7 +44,7 @@ The code base is divided into two main demonstrators:
 
 ### Weak Signal Analysis
 
-- `bertrend/weak_signals`: Identifies and analyzes emerging trends and signals
+- [bertrend/weak_signals](bertrend/weak_signals): Identifies and analyzes emerging trends and signals
 
 #### Demonstrator Video
 [![Weak signal analysis](./docs/videos/BERTrend.png)](./docs/videos/BERTrend.mp4)
