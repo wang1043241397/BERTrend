@@ -13,6 +13,7 @@ BERTrend is a novel framework for detecting and monitoring weak signals in large
 
 BERTrend classifies topics as noise, weak signals, or strong signals based on their popularity trends, using a metric that considers both the number of documents and update frequency. This method allows for real-time monitoring and analysis of emerging trends while filtering out noise.
 
+
 ## Main Features
 
 The BERTrend repository provides a set of metrics, methods, and visualization tools to support the analysis of dynamic topic modeling in large text corpora. The tools are designed to help users detect, analyze, and visualize emerging topics and trends over time.
@@ -30,8 +31,8 @@ The code base is divided into two main demonstrators:
       - Temporal Topic Representation Stability: Assesses the stability of topic representations over time.
   - Visualization tools to easily assess the results.
 
-#### Demonstrator Video
-[![Dynamic topic modelling analysis](./docs/videos/TEMPtopic.png)](./docs/videos/TEMPTopic.mp4)
+####  Topic Modeling Analysis Demonstrator Video
+https://github.com/user-attachments/assets/f600f666-a6da-40be-8b07-5041b3bde1dc
 
 #### Demonstrator Features
 - Data management: selection of single/multiple datasets, filter by time, filter by size, split long documents by paragraphs 
@@ -46,7 +47,7 @@ The code base is divided into two main demonstrators:
 
 - [bertrend/weak_signals](bertrend/weak_signals): Identifies and analyzes emerging trends and signals
 
-#### Demonstrator Video
+#### Weak Signal Analysis Demonstrator Video
 https://github.com/user-attachments/assets/d79368d9-d4e0-4324-8a98-a888f0ab3b65
 
 
