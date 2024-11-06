@@ -76,6 +76,14 @@ FR_USER_GENERATE_TOPIC_LABEL_SUMMARIES = (
     '\n"{title_list}"'
 )
 
+FR_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2 = (
+    'Dans le cadre de la génération d\'une newsletter sur le thème "{newsletter_title}", '
+    "décrit en une courte expression le sous-thème associé au texte suivant. "
+    "L'expression doit être courte en 4 mots maximum. "
+    "Elle doit montrer en quoi le texte est spécifique pour le thème.\n\n"
+    '"{title_list}"'
+)
+
 # title_list: list of documents extracts belonging to the topic
 
 EN_USER_GENERATE_TOPIC_LABEL_SUMMARIES = (

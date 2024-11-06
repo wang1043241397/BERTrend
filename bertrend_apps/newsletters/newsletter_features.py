@@ -18,7 +18,7 @@ from bertrend.common.openai_client import OpenAI_Client
 from bertrend.common.prompts import (
     FR_USER_SUMMARY_MULTIPLE_DOCS,
     EN_USER_SUMMARY_MULTIPLE_DOCS,
-    FR_USER_GENERATE_TOPIC_LABEL_SUMMARIES,
+    FR_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2,
     EN_USER_GENERATE_TOPIC_LABEL_SUMMARIES,
 )
 from bertrend.summary.summarizer import Summarizer
@@ -150,10 +150,11 @@ def generate_newsletter(
 
             improved_topic_description_v2 = openai_api.generate(
                 (
-                    FR_USER_GENERATE_TOPIC_LABEL_SUMMARIES
+                    FR_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2
                     if prompt_language == "fr"
                     else EN_USER_GENERATE_TOPIC_LABEL_SUMMARIES
                 ).format(
+                    newsletter_title=newsletter_title,
                     title_list=(
                         " ; ".join(summaries)
                         if summary_mode == "document"
