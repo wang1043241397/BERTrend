@@ -14,12 +14,12 @@ To generate a newsletter, you should first create the following configuration fi
 Generate just one newsletter based on a specific dataset. You can use the following command to show help:
 
 ```bash
-python -m bertrend_apps.newsletters newsletter --help
+python -m bertrend_apps.newsletters newsletters --help
 ```
 
 Then create a single newsletter based on your configuration files:
 ```bash
-python -m bertrend_apps.newsletters newsletter newsletter.cfg feed.cfg
+python -m bertrend_apps.newsletters newsletters newsletter.cfg feed.cfg
 ```
 
 ## Scheduled creation
@@ -39,5 +39,5 @@ python -m bertrend_apps.data_provider schedule-scrapping feed.cfg
 Follow this example:
 
 ```bash
-python -m bertrend_apps.newsletters schedule-newsletter newsletter.cfg feed.cfg
+python -m bertrend_apps.newsletters schedule-newsletters newsletter.cfg feed.cfg
 ```
