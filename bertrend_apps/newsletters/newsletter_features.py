@@ -19,7 +19,7 @@ from bertrend.common.prompts import (
     FR_USER_SUMMARY_MULTIPLE_DOCS,
     EN_USER_SUMMARY_MULTIPLE_DOCS,
     FR_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2,
-    EN_USER_GENERATE_TOPIC_LABEL_SUMMARIES,
+    EN_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2,
 )
 from bertrend.summary.summarizer import Summarizer
 from bertrend.summary.abstractive_summarizer import AbstractiveSummarizer
@@ -152,7 +152,7 @@ def generate_newsletter(
                 (
                     FR_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2
                     if prompt_language == "fr"
-                    else EN_USER_GENERATE_TOPIC_LABEL_SUMMARIES
+                    else EN_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2
                 ).format(
                     newsletter_title=newsletter_title,
                     title_list=(

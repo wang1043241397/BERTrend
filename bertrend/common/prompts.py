@@ -87,9 +87,18 @@ FR_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2 = (
 
 # title_list: list of documents extracts belonging to the topic
 
-EN_USER_GENERATE_TOPIC_LABEL_SUMMARIES = (
+EN_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2 = (
     "Describe in a short sentence the topic associated with the following extracts. "
     "The topic description should be short and specific, no more than 4 words. "
+    '\n"{title_list}"'
+)
+
+EN_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2 = (
+    'Within the framework of the generation of a newsletter on the topic "{newsletter_title}", '
+    "describe in a short sentence the sub-topic associated with the following text. "
+    "The sentence should be short, no more than 4 words. "
+    "It should show in what way the text is specific to the topic. "
+    "It should not be general nor describe a sub-topic too close to the topic of the newsletter.\n\n"
     '\n"{title_list}"'
 )
 # title_list: list of documents extracts belonging to the topic
