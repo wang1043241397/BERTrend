@@ -142,6 +142,11 @@ if __name__ == "__main__":
 
         summarizer_class = locate(newsletter_params.get("summarizer_class"))
 
+        # If no model_name is given, set default model name to env variable $DEFAULT_MODEL_NAME
+        openai_model_name = newsletter_params.get("openai_model_name", "")
+        if not openai_model_name:
+            openai_model_name = os.getenv("DEFAULT_MODEL_NAME")
+
         # generate newsletters
         logger.info(f"Generating newsletters...")
         title = newsletter_params.get("title")
@@ -159,7 +164,7 @@ if __name__ == "__main__":
             improve_topic_description=newsletter_params.getboolean(
                 "improve_topic_description", False
             ),
-            openai_model_name=newsletter_params.get("openai_model_name"),
+            openai_model_name=openai_model_name,
         )
 
         if newsletter_params.getboolean("debug", True):
