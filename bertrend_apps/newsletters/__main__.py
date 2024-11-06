@@ -24,7 +24,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from umap import UMAP
 
 from bertrend import FEED_BASE_PATH, BEST_CUDA_DEVICE, OUTPUT_PATH
-from bertrend_apps.common.config_utils import parse_literal
+from bertrend_apps.common.config_utils import parse_literal, EnvInterpolation
 from bertrend_apps.newsletters.newsletter_features import (
     generate_newsletter,
     export_md_string,
@@ -70,7 +70,9 @@ if __name__ == "__main__":
         logger.info(f"Reading newsletters configuration file: {newsletter_cfg_path}")
 
         # read newsletters & data feed configuration
-        config = configparser.ConfigParser(converters={"literal": parse_literal})
+        config = configparser.ConfigParser(
+            converters={"literal": parse_literal}, interpolation=EnvInterpolation()
+        )
         config.read(newsletter_cfg_path)
         data_feed_cfg = configparser.ConfigParser()
         data_feed_cfg.read(data_feed_cfg_path)

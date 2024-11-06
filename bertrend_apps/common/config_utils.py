@@ -4,6 +4,7 @@
 #  This file is part of BERTrend.
 
 import ast
+import json
 import os
 from configparser import BasicInterpolation
 from typing import Any
@@ -25,4 +26,10 @@ class EnvInterpolation(BasicInterpolation):
 
     def before_get(self, parser, section, option, value, defaults):
         value = super().before_get(parser, section, option, value, defaults)
-        return os.path.expandvars(value)
+        decoded_value = os.path.expandvars(value)
+        try:
+            # try to decode string as json
+            return json.loads(decoded_value)
+        except json.JSONDecodeError:
+            # assumes string
+            return decoded_value
