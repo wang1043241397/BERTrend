@@ -15,7 +15,7 @@ Some data providers require the creation of an API key to work properly.
 
 This is the case with the Arxiv and NewsCatcher data providers. 
 The Arxiv data provider uses the Semantic Scholar API to enrich data.
-The API can be created for free on their web site.
+The API can be created for free on their web site (https://www.newscatcherapi.com/, https://www.semanticscholar.org/product/api).
 
 You have then to set the following environment variables:
 ```bash
