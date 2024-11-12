@@ -244,10 +244,22 @@ This Source Code is subject to the terms of the Mozilla Public License (MPL) v2 
 If you use BERTrend in your work, please cite:
 
 ```bibtex
-@inproceedings{bertrend,
-    author = { Allaa Boutaleb, Jérôme Picault, Guillaume Grosjean },
-    title = { BERTrend: Neural Topic Modeling for Emerging Trends Detection },
-    year = {2024},
-    booktitle = {FuturED 2024: Workshop on Future of Event Detection, colocated with EMNLP 2024}, 
+@inproceedings{boutaleb-etal-2024-bertrend,
+    title = "{BERT}rend: Neural Topic Modeling for Emerging Trends Detection",
+    author = "Boutaleb, Allaa  and
+      Picault, Jerome  and
+      Grosjean, Guillaume",
+    editor = "Tetreault, Joel  and
+      Nguyen, Thien Huu  and
+      Lamba, Hemank  and
+      Hughes, Amanda",
+    booktitle = "Proceedings of the Workshop on the Future of Event Detection (FuturED)",
+    month = nov,
+    year = "2024",
+    address = "Miami, Florida, USA",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.futured-1.1",
+    pages = "1--17",
 }
+
 ```
