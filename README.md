@@ -99,7 +99,7 @@ BERTrend can work with various text datasets such as:
 - Social media publications
 
 Recommended public datasets:
-- New York Times dataset: https://www.kaggle.com/datasets/tumanovalexander/nyt-articles-data
+- New York Times dataset: https://www.kaggle.com/datasets/aryansingh0909/nyt-articles-21m-2000-present
 - Arxiv dataset: https://www.kaggle.com/datasets/Cornell-University/arxiv
 
 For custom dataset creation, please refer to the documentation page about [data providers](./docs/data_provider.md).
