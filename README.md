@@ -2,6 +2,11 @@
 
 ![BERTrend pipeline](./BERTrend_overview.png)
 
+## Work in progress
+
+- make a independant `BERTrend` Class to simplify usage and integration
+- make BERTrend available as a python package in PyPI
+
 ## Paper
 
 The code in this repository is part of the work described in the paper: 
