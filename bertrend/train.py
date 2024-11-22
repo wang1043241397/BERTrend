@@ -495,7 +495,7 @@ def train_BERTopic(
             strategy="embeddings",
         )
 
-        #BUG: here with bertopic > 0.16.2
+        # BUG: here with bertopic > 0.16.2
         topic_model.update_topics(
             filtered_dataset[column],
             topics=new_topics,

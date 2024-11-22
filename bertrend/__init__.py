@@ -42,4 +42,3 @@ SIGNAL_EVOLUTION_DATA_DIR = WEAK_SIGNALS_CACHE_PATH / "signal_evolution_data"
 DATA_PATH.mkdir(parents=True, exist_ok=True)
 CACHE_PATH.mkdir(parents=True, exist_ok=True)
 WEAK_SIGNALS_CACHE_PATH.mkdir(parents=True, exist_ok=True)
-
