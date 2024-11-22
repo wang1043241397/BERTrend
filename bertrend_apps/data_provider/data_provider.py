@@ -35,7 +35,7 @@ BLACKLISTED_URL = [
     # download impossible
     "ouest-france.fr",
     # outliers
-    "www.luxurylifestylemag.co.uk" #LLM!
+    "www.luxurylifestylemag.co.uk",  # LLM!
 ]
 
 

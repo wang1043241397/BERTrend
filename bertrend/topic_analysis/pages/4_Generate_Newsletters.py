@@ -159,7 +159,7 @@ if "newsletters" in st.session_state:
     st.components.v1.html(
         md2html(
             st.session_state["newsletters"][0],
-            Path(inspect.getfile(generate_newsletter)).parent / "newsletter.css"
+            Path(inspect.getfile(generate_newsletter)).parent / "newsletter.css",
         ),
         height=800,
         scrolling=True,
