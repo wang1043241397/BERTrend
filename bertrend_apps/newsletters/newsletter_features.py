@@ -31,7 +31,10 @@ os.umask(0o002)
 
 
 def generate_newsletter(
-    topic_model: BERTopic,    df: pd.DataFrame,    topics: List[int],    df_split: pd.DataFrame = None,
+    topic_model: BERTopic,
+    df: pd.DataFrame,
+    topics: List[int],
+    df_split: pd.DataFrame = None,
     top_n_topics: int = 5,
     top_n_docs: int = 3,
     top_n_docs_mode: str = "cluster_probability",
