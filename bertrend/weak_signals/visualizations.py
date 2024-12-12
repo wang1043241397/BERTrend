@@ -13,7 +13,7 @@ from bertopic import BERTopic
 from plotly_resampler import FigureWidgetResampler
 
 from bertrend.utils import PLOTLY_BUTTON_SAVE_CONFIG
-from global_vars import SIGNAL_CLASSIF_LOWER_BOUND, SIGNAL_CLASSIF_UPPER_BOUND
+from bertrend.parameters import SIGNAL_CLASSIF_LOWER_BOUND, SIGNAL_CLASSIF_UPPER_BOUND
 from weak_signals import classify_signals
 
 

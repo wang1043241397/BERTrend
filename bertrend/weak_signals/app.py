@@ -20,12 +20,28 @@ from bertrend import (
     SIGNAL_EVOLUTION_DATA_DIR,
     WEAK_SIGNALS_CACHE_PATH,
 )
+from bertrend.bertrend import BERTrend, calculate_signal_popularity
+from bertrend.embedding_service import EmbeddingService
+from bertrend.topic_model import TopicModel
+from bertrend.weak_signals.messages import (
+    MODEL_MERGING_COMPLETE_MESSAGE,
+    NO_CACHE_WARNING,
+    CACHE_PURGED_MESSAGE,
+    MODELS_RESTORED_MESSAGE,
+    EMBEDDINGS_CALCULATED_MESSAGE,
+    NO_DATA_WARNING,
+    MODEL_TRAINING_COMPLETE_MESSAGE,
+    STATE_SAVED_MESSAGE,
+    STATE_RESTORED_MESSAGE,
+    MODELS_SAVED_MESSAGE,
+    NO_MODELS_WARNING,
+    NO_GRANULARITY_WARNING,
+    NO_DATASET_WARNING,
+)
 from data_loading import load_and_preprocess_data, group_by_days, find_compatible_files
-from global_vars import *
+from bertrend.parameters import *
 from session_state_manager import SessionStateManager
 from topic_modeling import (
-    embed_documents,
-    train_topic_models,
     merge_models,
     preprocess_model,
 )
@@ -40,10 +56,13 @@ from visualizations import (
 from bertrend.utils import PLOTLY_BUTTON_SAVE_CONFIG, TEXT_COLUMN
 from weak_signals import (
     detect_weak_signals_zeroshot,
-    calculate_signal_popularity,
     analyze_signal,
     save_signal_evolution_data,
 )
+
+# UI Settings
+PAGE_TITLE = "BERTopic Topic Detection"
+LAYOUT = "wide"
 
 
 def save_state():
@@ -74,7 +93,7 @@ def save_state():
         pickle.dump(state, f)
 
     np.save(embeddings_file, SessionStateManager.get_embeddings())
-    st.success("Application state saved.")
+    st.success(STATE_SAVED_MESSAGE)
 
 
 def restore_state():
@@ -92,7 +111,7 @@ def restore_state():
         # Restore other states
         SessionStateManager.set_multiple(**state)
         SessionStateManager.set("embeddings", np.load(embeddings_file))
-        st.success("Application state restored.")
+        st.success(STATE_RESTORED_MESSAGE)
 
         # Update the multiselect widget with restored selected files
         st.session_state["selected_files"] = selected_files
@@ -144,12 +163,12 @@ def save_models():
     with open(WEAK_SIGNALS_CACHE_PATH / HYPERPARAMS_FILE, "wb") as f:
         pickle.dump(hyperparams, f)
 
-    st.success("Models saved.")
+    st.success(MODELS_SAVED_MESSAGE)
 
 
 def restore_models():
     if not MODELS_DIR.exists():
-        st.warning("No saved models found.")
+        st.warning(NO_MODELS_WARNING)
         return
 
     topic_models = {}
@@ -185,7 +204,7 @@ def restore_models():
         with open(granularity_file, "rb") as f:
             SessionStateManager.set("granularity_select", pickle.load(f))
     else:
-        logger.warning("Granularity value not found.")
+        logger.warning(NO_GRANULARITY_WARNING)
 
     # Restore the models_trained flag
     models_trained_file = WEAK_SIGNALS_CACHE_PATH / MODELS_TRAINED_FILE
@@ -202,15 +221,15 @@ def restore_models():
     else:
         logger.warning("Hyperparameters file not found.")
 
-    st.success("Models restored.")
+    st.success(MODELS_RESTORED_MESSAGE)
 
 
 def purge_cache():
     if WEAK_SIGNALS_CACHE_PATH.exists():
         shutil.rmtree(WEAK_SIGNALS_CACHE_PATH)
-        st.success(f"Cache purged.")
+        st.success(CACHE_PURGED_MESSAGE)
     else:
-        st.warning(f"No cache found.")
+        st.warning(NO_CACHE_WARNING)
 
 
 def main():
@@ -365,7 +384,7 @@ def main():
         )
 
         if not selected_files:
-            st.warning("Please select at least one dataset to proceed.")
+            st.warning(NO_DATASET_WARNING)
             return
 
         # Display number input and checkbox for preprocessing options
@@ -444,6 +463,8 @@ def main():
 
             # Embed documents
             if st.button("Embed Documents"):
+                embedding_service = EmbeddingService()
+
                 with st.spinner("Embedding documents..."):
                     embedding_dtype = SessionStateManager.get("embedding_dtype")
                     embedding_model_name = SessionStateManager.get(
@@ -455,20 +476,17 @@ def main():
                     ].tolist()
 
                     try:
-                        embedding_model, embeddings = embed_documents(
+                        embedding_model, embeddings = embedding_service.embed_documents(
                             texts=texts,
                             embedding_model_name=embedding_model_name,
                             embedding_dtype=embedding_dtype,
-                            embedding_device=EMBEDDING_DEVICE,
-                            batch_size=EMBEDDING_BATCH_SIZE,
-                            max_seq_length=EMBEDDING_MAX_SEQ_LENGTH,
                         )
 
                         SessionStateManager.set("embedding_model", embedding_model)
                         SessionStateManager.set("embeddings", embeddings)
                         SessionStateManager.set("data_embedded", True)
 
-                        st.success("Embeddings calculated successfully!")
+                        st.success(EMBEDDINGS_CALCULATED_MESSAGE)
                         save_state()
                     except Exception as e:
                         st.error(
@@ -513,7 +531,7 @@ def main():
                     use_container_width=True,
                 )
             else:
-                st.warning("No data available for the selected granularity.")
+                st.warning(NO_DATA_WARNING)
 
         if not SessionStateManager.get("data_embedded", False):
             st.warning("Please embed data before proceeding to model training.")
@@ -531,16 +549,15 @@ def main():
 
             if st.button("Train Models"):
                 with st.spinner("Training models..."):
+                    # FIXME: called twice (see above)
                     grouped_data = group_by_days(
                         SessionStateManager.get_dataframe("timefiltered_df"),
                         day_granularity=granularity,
                     )
 
                     logger.debug(SessionStateManager.get("language"))
-                    topic_models, doc_groups, emb_groups = train_topic_models(
-                        grouped_data,
-                        SessionStateManager.get("embedding_model"),
-                        SessionStateManager.get_embeddings(),
+
+                    topic_model = TopicModel(
                         umap_n_components=SessionStateManager.get("umap_n_components"),
                         umap_n_neighbors=SessionStateManager.get("umap_n_neighbors"),
                         hdbscan_min_cluster_size=SessionStateManager.get(
@@ -557,106 +574,45 @@ def main():
                         ),
                         min_df=SessionStateManager.get("min_df"),
                         top_n_words=SessionStateManager.get("top_n_words"),
+                        language=SessionStateManager.get("language"),
+                    )
+
+                    bertrend = BERTrend(
+                        topic_model=topic_model,
                         zeroshot_topic_list=zeroshot_topic_list,
                         zeroshot_min_similarity=SessionStateManager.get(
                             "zeroshot_min_similarity"
                         ),
-                        language=SessionStateManager.get("language"),
                     )
+                    topic_models, doc_groups, emb_groups = bertrend.train_topic_models(
+                        grouped_data=grouped_data,
+                        embedding_model=SessionStateManager.get("embedding_model"),
+                        embeddings=SessionStateManager.get_embeddings(),
+                    )
+
                     SessionStateManager.set_multiple(
                         topic_models=topic_models,
                         doc_groups=doc_groups,
                         emb_groups=emb_groups,
                     )
                     SessionStateManager.set("models_trained", True)
-                    st.success("Model training complete!")
-                    save_models()
+                    st.success(MODEL_TRAINING_COMPLETE_MESSAGE)
+                    save_models()  # FIXME: to be moved to bertrend
 
             if not SessionStateManager.get("models_trained", False):
                 st.stop()
             else:
                 if st.button("Merge Models"):
                     with st.spinner("Merging models..."):
-                        topic_dfs = {
-                            period: preprocess_model(
-                                model,
-                                SessionStateManager.get("doc_groups")[period],
-                                SessionStateManager.get("emb_groups")[period],
-                            )
-                            for period, model in SessionStateManager.get(
-                                "topic_models"
-                            ).items()
-                        }
-
-                        timestamps = sorted(topic_dfs.keys())
-                        merged_df_without_outliers = None
-                        all_merge_histories = []
-                        all_new_topics = []
-
-                        progress_bar = st.progress(0)
-                        SessionStateManager.set("merge_df_size_over_time", [])
-
-                        for i, (current_timestamp, next_timestamp) in enumerate(
-                            zip(timestamps[:-1], timestamps[1:])
-                        ):
-                            df1 = topic_dfs[current_timestamp][
-                                topic_dfs[current_timestamp]["Topic"] != -1
-                            ]
-                            df2 = topic_dfs[next_timestamp][
-                                topic_dfs[next_timestamp]["Topic"] != -1
-                            ]
-
-                            if merged_df_without_outliers is None:
-                                if not (df1.empty or df2.empty):
-                                    (
-                                        merged_df_without_outliers,
-                                        merge_history,
-                                        new_topics,
-                                    ) = merge_models(
-                                        df1,
-                                        df2,
-                                        min_similarity=SessionStateManager.get(
-                                            "min_similarity"
-                                        ),
-                                        timestamp=current_timestamp,
-                                    )
-                            elif not df2.empty:
-                                (
-                                    merged_df_without_outliers,
-                                    merge_history,
-                                    new_topics,
-                                ) = merge_models(
-                                    merged_df_without_outliers,
-                                    df2,
-                                    min_similarity=SessionStateManager.get(
-                                        "min_similarity"
-                                    ),
-                                    timestamp=current_timestamp,
-                                )
-                            else:
-                                continue
-
-                            all_merge_histories.append(merge_history)
-                            all_new_topics.append(new_topics)
-                            merge_df_size_over_time = SessionStateManager.get(
-                                "merge_df_size_over_time"
-                            )
-                            merge_df_size_over_time.append(
-                                (
-                                    current_timestamp,
-                                    merged_df_without_outliers["Topic"].max() + 1,
-                                )
-                            )
-                            SessionStateManager.update(
-                                "merge_df_size_over_time", merge_df_size_over_time
-                            )
-
-                            progress_bar.progress((i + 1) / len(timestamps))
-
-                        all_merge_histories_df = pd.concat(
-                            all_merge_histories, ignore_index=True
+                        # TODO: encapsulate into a merging function
+                        (
+                            merged_df_without_outliers,
+                            all_merge_histories_df,
+                            all_new_topics_df,
+                        ) = bertrend.merge_models(
+                            min_similarity=SessionStateManager.get("min_similarity"),
+                            granularity=granularity,
                         )
-                        all_new_topics_df = pd.concat(all_new_topics, ignore_index=True)
 
                         SessionStateManager.set_multiple(
                             merged_df=merged_df_without_outliers,
@@ -668,7 +624,7 @@ def main():
                             topic_sizes,
                             topic_last_popularity,
                             topic_last_update,
-                        ) = calculate_signal_popularity(
+                        ) = bertrend.calculate_signal_popularity(
                             all_merge_histories_df, granularity
                         )
                         SessionStateManager.set_multiple(
@@ -679,7 +635,7 @@ def main():
 
                         SessionStateManager.set("models_merged", True)
 
-                    st.success("Model merging complete!")
+                    st.success(MODEL_MERGING_COMPLETE_MESSAGE)
 
     with tab3:
         st.header("Results Analysis")

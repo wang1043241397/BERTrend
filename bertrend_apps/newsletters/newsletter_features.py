@@ -15,7 +15,7 @@ import tldextract
 from loguru import logger
 
 from bertrend.common.openai_client import OpenAI_Client
-from bertrend.common.prompts import (
+from bertrend_apps.newsletters.prompts import (
     FR_USER_SUMMARY_MULTIPLE_DOCS,
     EN_USER_SUMMARY_MULTIPLE_DOCS,
     FR_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2,

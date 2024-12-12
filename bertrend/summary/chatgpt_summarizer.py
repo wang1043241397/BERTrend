@@ -6,7 +6,7 @@
 from loguru import logger
 
 from bertrend.common.openai_client import OpenAI_Client
-from bertrend.common.prompts import (
+from bertrend.summary.prompts import (
     FR_SYSTEM_SUMMARY_SENTENCES,
     EN_SYSTEM_SUMMARY_SENTENCES,
 )

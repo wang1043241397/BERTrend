@@ -5,6 +5,15 @@
 import os
 from pathlib import Path
 
+from bertrend.utils.config_utils import load_toml_config
+
+BERTREND_CONFIG_PATH = Path(__file__).parent / "bertrend.toml"
+
+# Read config
+BERTREND_CONFIG = load_toml_config(BERTREND_CONFIG_PATH)
+EMBEDDING_CONFIG = BERTREND_CONFIG["embedding_service"]
+LLM_CONFIG = BERTREND_CONFIG["llm_service"]
+
 # Linux command to find the index of the GPU device currently less used than the others
 BEST_CUDA_DEVICE = (
     "\`nvidia-smi --query-gpu=index,memory.used --format=csv,nounits | tail -n +2 | sort -t',' -k2 -n  "

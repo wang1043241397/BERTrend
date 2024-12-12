@@ -1,0 +1,17 @@
+#  Copyright (c) 2024, RTE (https://www.rte-france.com)
+#  See AUTHORS.txt
+#  SPDX-License-Identifier: MPL-2.0
+#  This file is part of BERTrend.
+
+# Configuration for BERTrend
+
+[embedding_service]
+# Indicates if BERTrend shall use local embedding service (run by BERTrend) or if the embedding service
+# is delegated to an external service. If set to false, the other properties shall be set properly.
+# It is generally more efficient to use a dedicated service for embeddings.
+use_local = false
+local_embedding_name = "OrdalieTech/Solon-embeddings-large-0.1"
+host = "localhost"
+port = 6464
+
+[llm_service]

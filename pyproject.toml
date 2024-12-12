@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "bertrend"
-version = "0.1.0"
+version = "0.1.1"
 description = "BERTrend analyses topic evolution over time using state-of-the-art transformer models: topic modelling and LLM"
-authors = ["Jérôme Picault <jerome.picault@rte-france.com>", "Guillaume Grosjean <guillaume.grosjean@rte-france.com>"]
+authors = ["Jérôme Picault <jerome.picault@rte-france.com>", "Guillaume Grosjean <guillaume.grosjean@rte-france.com>", "Allaa Boutaleb <allaa.boutaleb@lip6.fr>"]
 license = "LICENSE.md"
 readme = "README.md"
 repository = "https://github.com/rte-france/BERTrend"
@@ -20,6 +20,7 @@ ipython = "^8.28.0"
 # A list of all the optional dependencies, some of which are included in the
 # below `extras`. They can be opted into by apps.
 pytest = { version = "^8.3.3", optional = true}
+coverage = { version = "^7.6.9", optional = true}
 
 # These packages are mandatory and form the core of this package’s distribution.
 accelerate = "^0.34.2"
@@ -35,15 +36,15 @@ google-api-python-client = "^2.148.0"
 google-auth-httplib2 = "^0.2.0"
 google-auth-oauthlib = "^1.2.1"
 goose3 = "^3.1.19"
-hdbscan = "^0.8.38.post2"
+hdbscan = "^0.8.40"
 langchain-community = "^0.3.1"
 langchain-chroma = "^0.1.4"
-langchain-openai = "^0.2.2"
+langchain-openai = "^0.2.12"
 langdetect = "^1.0.9"
-llama-index = "^0.11.17"
-llama-index-core = "^0.11.17"
+llama-index = "^0.12.5"
+llama-index-core = "^0.12.5"
 llvmlite = "^0.43.0"
-loguru = "^0.7.2"
+loguru = "^0.7.3"
 lxml-html-clean = "^0.2.2"
 jsonlines = "^4.0.0"
 markdown = "^3.7"
@@ -51,7 +52,7 @@ newscatcherapi = "^0.7.3"
 newspaper4k = "^0.9.3.1"
 nltk = "^3.9.1"
 numpy = "<2"
-openai = "^1.51.1"
+openai = "^1.57.2"
 pandas = "^2.2.2"
 plotly = "^5.24.1"
 plotly-resampler = "^0.10.0"
@@ -62,17 +63,17 @@ sentence-transformers = "3.0.1"
 requests = "^2.32.3"
 seaborn = "^0.13.2"
 sentencepiece = "^0.2.0"
-streamlit = "^1.39.0"
+streamlit = "^1.41.0"
 thefuzz = "^0.22.1"
-torch = "^2.4.1"
+torch = "^2.5.1"
 tqdm = "^4.66.5"
 tiktoken = "^0.8.0"
 tokenizers = "<0.20.0"
-umap-learn = "^0.5.6"
+umap-learn = "^0.5.7"
 
 
 [tool.poetry.extras]
-tests = ["pytest"]
+tests = ["pytest", "coverage"]
 
 
 [build-system]

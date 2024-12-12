@@ -7,6 +7,8 @@ import json
 import os
 from pathlib import Path
 
+import torch
+
 # Stopwords
 STOP_WORDS_RTE = [
     "w",
@@ -47,7 +49,7 @@ COMMON_NGRAMS = [
     "système électrique",
 ]
 
-stopwords_fr_file = Path(__file__).parent / "stopwords-fr.json"
+stopwords_fr_file = Path(__file__).parent / "resources" / "stopwords-fr.json"
 with open(stopwords_fr_file, "r", encoding="utf-8") as file:
     FRENCH_STOPWORDS = json.load(file)
 
@@ -101,7 +103,7 @@ OUTLIER_REDUCTION_STRATEGY = "c-tf-idf"  # or "embeddings"
 EMBEDDING_DTYPES = ["float32", "float16", "bfloat16"]
 EMBEDDING_BATCH_SIZE = 5000
 EMBEDDING_MAX_SEQ_LENGTH = 512
-EMBEDDING_DEVICE = "cuda"
+EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Other constants
 LANGUAGES = ["French", "English"]
@@ -122,10 +124,6 @@ SAMPLE_SIZE_DEFAULT = None  # Or whatever default you want, None means all docum
 DEFAULT_WINDOW_SIZE = 7  # days
 MAX_WINDOW_SIZE = 365  # days
 
-# UI Settings
-PAGE_TITLE = "BERTopic Topic Detection"
-LAYOUT = "wide"
-
 # Visualization Settings
 SANKEY_NODE_PAD = 15
 SANKEY_NODE_THICKNESS = 20
@@ -139,25 +137,5 @@ POPULARITY_THRESHOLD = 0.1  # for weak signal detection, if applicable
 SIGNAL_CLASSIF_LOWER_BOUND = 10
 SIGNAL_CLASSIF_UPPER_BOUND = 75
 
-# Error Messages
-NO_DATA_WARNING = "No data available for the selected granularity."
-NO_MODELS_WARNING = "No saved models found."
-NO_CACHE_WARNING = "No cache found."
-TOPIC_NOT_FOUND_WARNING = (
-    "Topic {topic_number} not found in the merge histories within the specified window."
-)
-
-# Success Messages
-STATE_SAVED_MESSAGE = "Application state saved."
-STATE_RESTORED_MESSAGE = "Application state restored."
-MODELS_SAVED_MESSAGE = "Models saved."
-MODELS_RESTORED_MESSAGE = "Models restored."
-EMBEDDINGS_CALCULATED_MESSAGE = "Embeddings calculated successfully!"
-MODEL_TRAINING_COMPLETE_MESSAGE = "Model training complete!"
-MODEL_MERGING_COMPLETE_MESSAGE = "Model merging complete!"
-TOPIC_COUNTS_SAVED_MESSAGE = "Topic and signal counts saved to {file_path}"
-CACHE_PURGED_MESSAGE = "Cache purged."
-
 # Other Constants
 DEFAULT_ZEROSHOT_TOPICS = ""  # Empty string or a default list of topics
-PROGRESS_BAR_DESCRIPTION = "Batches processed"

@@ -24,7 +24,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from umap import UMAP
 
 from bertrend import FEED_BASE_PATH, BEST_CUDA_DEVICE, OUTPUT_PATH
-from bertrend_apps.common.config_utils import parse_literal, EnvInterpolation
+from bertrend.utils.config_utils import parse_literal, EnvInterpolation
 from bertrend_apps.newsletters.newsletter_features import (
     generate_newsletter,
     export_md_string,

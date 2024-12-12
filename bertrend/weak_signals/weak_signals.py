@@ -5,7 +5,6 @@
 
 import os
 import pickle
-from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Tuple, Any
 
@@ -17,7 +16,7 @@ from loguru import logger
 from tqdm import tqdm
 
 from bertrend.common.openai_client import OpenAI_Client
-from global_vars import (
+from bertrend.parameters import (
     GPT_MODEL,
     GPT_TEMPERATURE,
     GPT_SYSTEM_MESSAGE,
@@ -26,7 +25,7 @@ from global_vars import (
     SIGNAL_CLASSIF_UPPER_BOUND,
 )
 from bertrend import SIGNAL_EVOLUTION_DATA_DIR
-from prompts import get_prompt, save_html_output
+from bertrend.weak_signals.prompts import get_prompt, save_html_output
 
 
 def detect_weak_signals_zeroshot(
@@ -98,7 +97,7 @@ def detect_weak_signals_zeroshot(
                     }
                 else:
                     # Topic not found in the current timestamp, apply decay to previously seen topics
-                    weak_signal_trends[topic][timestamp] = apply_decay(
+                    weak_signal_trends[topic][timestamp] = _apply_decay(
                         topic,
                         timestamp,
                         topic_last_popularity,
@@ -109,7 +108,7 @@ def detect_weak_signals_zeroshot(
                     )
             else:
                 # Timestamp not in topic_models, apply decay to previously seen topics
-                weak_signal_trends[topic][timestamp] = apply_decay(
+                weak_signal_trends[topic][timestamp] = _apply_decay(
                     topic,
                     timestamp,
                     topic_last_popularity,
@@ -122,7 +121,7 @@ def detect_weak_signals_zeroshot(
     return weak_signal_trends
 
 
-def apply_decay(
+def _apply_decay(
     topic,
     timestamp,
     topic_last_popularity,
@@ -152,7 +151,7 @@ def apply_decay(
     }
 
 
-def filter_data(data, window_end, keep_documents):
+def _filter_data(data, window_end, keep_documents):
     """Helper function to filter data based on window_end."""
     return {
         "Timestamps": [ts for ts in data["Timestamps"] if ts <= window_end],
@@ -190,7 +189,7 @@ def filter_data(data, window_end, keep_documents):
     }
 
 
-def is_rising_popularity(filtered_data, latest_timestamp):
+def _is_rising_popularity(filtered_data, latest_timestamp):
     """Helper function to check if popularity is rising."""
     retrospective_start = latest_timestamp - pd.Timedelta(days=14)
     retrospective_data = [
@@ -209,136 +208,43 @@ def is_rising_popularity(filtered_data, latest_timestamp):
     return True
 
 
-def create_dataframes(
+def _create_df(topics, keep_documents):
+    df = pd.DataFrame(
+        [
+            {
+                "Topic": topic,
+                "Representation": filtered_data["Representation"][-1],
+                "Latest_Popularity": latest_popularity,
+                "Docs_Count": docs_count,
+                "Paragraphs_Count": paragraphs_count,
+                "Latest_Timestamp": latest_timestamp,
+                "Documents": filtered_data["Documents"] if keep_documents else [],
+                "Sources": {
+                    source for sources in filtered_data["Sources"] for source in sources
+                },
+                "Source_Diversity": source_diversity,
+            }
+            for topic, latest_popularity, latest_timestamp, docs_count, paragraphs_count, source_diversity, filtered_data in topics
+        ]
+    )
+
+    # if not df.empty: df = df[df['Latest_Popularity'] >= 0.01] # Remove signals that faded away by filtering on latest popularity
+    return df
+
+
+def _create_dataframes(
     noise_topics, weak_signal_topics, strong_signal_topics, keep_documents
 ):
     """Helper function to create DataFrames for each category."""
 
-    def create_df(topics):
-        df = pd.DataFrame(
-            [
-                {
-                    "Topic": topic,
-                    "Representation": filtered_data["Representation"][-1],
-                    "Latest_Popularity": latest_popularity,
-                    "Docs_Count": docs_count,
-                    "Paragraphs_Count": paragraphs_count,
-                    "Latest_Timestamp": latest_timestamp,
-                    "Documents": filtered_data["Documents"] if keep_documents else [],
-                    "Sources": {
-                        source
-                        for sources in filtered_data["Sources"]
-                        for source in sources
-                    },
-                    "Source_Diversity": source_diversity,
-                }
-                for topic, latest_popularity, latest_timestamp, docs_count, paragraphs_count, source_diversity, filtered_data in topics
-            ]
-        )
-
-        # if not df.empty: df = df[df['Latest_Popularity'] >= 0.01] # Remove signals that faded away by filtering on latest popularity
-        return df
-
     return (
-        create_df(noise_topics),
-        create_df(weak_signal_topics),
-        create_df(strong_signal_topics),
+        _create_df(noise_topics, keep_documents),
+        _create_df(weak_signal_topics, keep_documents),
+        _create_df(strong_signal_topics, keep_documents),
     )
 
 
-def calculate_signal_popularity(
-    all_merge_histories_df: pd.DataFrame,
-    granularity: int,
-    decay_factor: float = 0.01,
-    decay_power: float = 2,
-) -> Tuple[Dict[int, Dict[str, Any]], Dict[int, float], Dict[int, pd.Timestamp]]:
-    """
-    Calculate the popularity of signals (topics) over time, accounting for merges and applying decay.
-
-    Args:
-        all_merge_histories_df (pd.DataFrame): DataFrame containing all merge histories.
-        granularity (int): Granularity of the timestamps in days.
-        decay_factor (float): Factor for exponential decay calculation.
-        decay_power (float): Power for exponential decay calculation.
-
-    Returns:
-        Tuple[Dict[int, Dict[str, Any]], Dict[int, float], Dict[int, pd.Timestamp]]:
-            - topic_sizes: Dictionary storing topic sizes and related information over time.
-            - topic_last_popularity: Dictionary storing the last known popularity of each topic.
-            - topic_last_update: Dictionary storing the last update timestamp of each topic.
-    """
-    topic_sizes = defaultdict(lambda: defaultdict(list))
-    topic_last_popularity = {}
-    topic_last_update = {}
-
-    min_timestamp = all_merge_histories_df["Timestamp"].min()
-    max_timestamp = all_merge_histories_df["Timestamp"].max()
-    granularity_timedelta = pd.Timedelta(days=granularity)
-    time_range = pd.date_range(
-        start=min_timestamp.to_pydatetime(),
-        end=(max_timestamp + granularity_timedelta).to_pydatetime(),
-        freq=granularity_timedelta,
-    )
-
-    for current_timestamp in time_range:
-        current_df = all_merge_histories_df[
-            all_merge_histories_df["Timestamp"] == current_timestamp
-        ]
-        updated_topics = set()
-
-        # Process active topics (those appearing in the current timestamp)
-        for _, row in current_df.iterrows():
-            current_topic = row["Topic1"]
-            updated_topics.add(current_topic)
-
-            if current_topic not in topic_sizes:
-                # Initialize new topic
-                initialize_new_topic(
-                    topic_sizes,
-                    topic_last_popularity,
-                    topic_last_update,
-                    current_topic,
-                    current_timestamp,
-                    row,
-                )
-
-            # Update existing topic
-            update_existing_topic(
-                topic_sizes,
-                topic_last_popularity,
-                topic_last_update,
-                current_topic,
-                current_timestamp,
-                granularity_timedelta,
-                row,
-            )
-
-            # Mark the topic as updated for the next timestamp
-            updated_topics.add(current_topic)
-
-        # Apply decay to topics that weren't updated in this timestamp or the next
-        next_timestamp = current_timestamp + granularity_timedelta
-        next_df = all_merge_histories_df[
-            all_merge_histories_df["Timestamp"] == next_timestamp
-        ]
-        topics_updated_next = set(next_df["Topic1"])
-
-        apply_decay_to_inactive_topics(
-            topic_sizes,
-            topic_last_popularity,
-            topic_last_update,
-            updated_topics,
-            topics_updated_next,
-            current_timestamp,
-            granularity_timedelta,
-            decay_factor,
-            decay_power,
-        )
-
-    return topic_sizes, topic_last_popularity, topic_last_update
-
-
-def initialize_new_topic(
+def _initialize_new_topic(
     topic_sizes, topic_last_popularity, topic_last_update, topic, timestamp, row
 ):
     """Initialize a new topic with its first data point."""
@@ -393,7 +299,7 @@ def update_existing_topic(
     topic_last_update[topic] = next_timestamp  # Update to next_timestamp
 
 
-def apply_decay_to_inactive_topics(
+def _apply_decay_to_inactive_topics(
     topic_sizes,
     topic_last_popularity,
     topic_last_update,
@@ -471,7 +377,7 @@ def classify_signals(
     sorted_topics = sorted(topic_sizes.items(), key=lambda x: x[0])
 
     for topic, data in sorted_topics:
-        filtered_data = filter_data(data, window_end, keep_documents)
+        filtered_data = _filter_data(data, window_end, keep_documents)
         if not filtered_data["Timestamps"]:
             continue
 
@@ -513,7 +419,7 @@ def classify_signals(
                 noise_topics.append(topic_data)
             elif q1 <= latest_popularity <= q3:
                 if rising_popularity_only:
-                    if is_rising_popularity(filtered_data, latest_timestamp):
+                    if _is_rising_popularity(filtered_data, latest_timestamp):
                         weak_signal_topics.append(topic_data)
                     else:
                         noise_topics.append(topic_data)
@@ -522,7 +428,7 @@ def classify_signals(
             else:
                 strong_signal_topics.append(topic_data)
 
-    return create_dataframes(
+    return _create_dataframes(
         noise_topics, weak_signal_topics, strong_signal_topics, keep_documents
     )
 

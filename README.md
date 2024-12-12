@@ -1,5 +1,12 @@
 # BERTrend
 
+[![rte-france - BERTrend](https://img.shields.io/static/v1?label=rte-france&message=BERTrend&color=blue&logo=github)](https://github.com/rte-france/BERTrend "Go to GitHub repo")
+![GitHub License](https://img.shields.io/github/license/rte-france/BERTrend)
+[![stars - BERTrend](https://img.shields.io/github/stars/rte-france/BERTrend?style=social)](https://github.com/rte-france/BERTrend)
+[![forks - BERTrend](https://img.shields.io/github/forks/rte-france/BERTrend?style=social)](https://github.com/rte-france/BERTrend)
+[![issues - BERTrend](https://img.shields.io/github/issues/rte-france/BERTrend)](https://github.com/rte-france/BERTrend/issues)
+![Static Badge](https://img.shields.io/badge/python-%3E%3D3.11-blue)
+
 ![BERTrend pipeline](./BERTrend_overview.png)
 
 ## Work in progress
