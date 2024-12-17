@@ -12,8 +12,8 @@ from bertrend.demos.topic_analysis.state_utils import (
     register_widget,
     save_widget_state,
 )
-from bertrend.services.summary import GPTSummarizer
 from bertrend.services.summary.abstractive_summarizer import AbstractiveSummarizer
+from bertrend.services.summary.chatgpt_summarizer import GPTSummarizer
 from bertrend.services.summary.extractive_summarizer import (
     ExtractiveSummarizer,
     EnhancedExtractiveSummarizer,

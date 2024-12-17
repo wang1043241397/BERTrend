@@ -18,7 +18,7 @@ from bertrend import (
     MODELS_DIR,
     ZEROSHOT_TOPICS_DATA_DIR,
     SIGNAL_EVOLUTION_DATA_DIR,
-    WEAK_SIGNALS_CACHE_PATH,
+    CACHE_PATH,
 )
 from bertrend.bertrend import BERTrend
 from bertrend.services.embedding_service import EmbeddingService
@@ -68,8 +68,8 @@ LAYOUT = "wide"
 
 
 def save_state():
-    state_file = WEAK_SIGNALS_CACHE_PATH / STATE_FILE
-    embeddings_file = WEAK_SIGNALS_CACHE_PATH / EMBEDDINGS_FILE
+    state_file = CACHE_PATH / STATE_FILE
+    embeddings_file = CACHE_PATH / EMBEDDINGS_FILE
 
     # Save the selected files (list of filenames)
     selected_files = SessionStateManager.get("selected_files", [])
@@ -99,8 +99,8 @@ def save_state():
 
 
 def restore_state():
-    state_file = WEAK_SIGNALS_CACHE_PATH / STATE_FILE
-    embeddings_file = WEAK_SIGNALS_CACHE_PATH / EMBEDDINGS_FILE
+    state_file = CACHE_PATH / STATE_FILE
+    embeddings_file = CACHE_PATH / EMBEDDINGS_FILE
 
     if state_file.exists() and embeddings_file.exists():
         with open(state_file, "rb") as f:
@@ -141,15 +141,15 @@ def save_models():
         topic_model.doc_info_df.to_pickle(model_dir / DOC_INFO_DF_FILE)
         topic_model.topic_info_df.to_pickle(model_dir / TOPIC_INFO_DF_FILE)
 
-    with open(WEAK_SIGNALS_CACHE_PATH / DOC_GROUPS_FILE, "wb") as f:
+    with open(CACHE_PATH / DOC_GROUPS_FILE, "wb") as f:
         pickle.dump(SessionStateManager.get("doc_groups"), f)
-    with open(WEAK_SIGNALS_CACHE_PATH / EMB_GROUPS_FILE, "wb") as f:
+    with open(CACHE_PATH / EMB_GROUPS_FILE, "wb") as f:
         pickle.dump(SessionStateManager.get("emb_groups"), f)
-    with open(WEAK_SIGNALS_CACHE_PATH / GRANULARITY_FILE, "wb") as f:
+    with open(CACHE_PATH / GRANULARITY_FILE, "wb") as f:
         pickle.dump(SessionStateManager.get("granularity_select"), f)
 
     # Save the models_trained flag
-    with open(WEAK_SIGNALS_CACHE_PATH / MODELS_TRAINED_FILE, "wb") as f:
+    with open(CACHE_PATH / MODELS_TRAINED_FILE, "wb") as f:
         pickle.dump(SessionStateManager.get("models_trained"), f)
 
     hyperparams = SessionStateManager.get_multiple(
@@ -162,7 +162,7 @@ def save_models():
         "vectorizer_ngram_range",
         "min_df",
     )
-    with open(WEAK_SIGNALS_CACHE_PATH / HYPERPARAMS_FILE, "wb") as f:
+    with open(CACHE_PATH / HYPERPARAMS_FILE, "wb") as f:
         pickle.dump(hyperparams, f)
 
     st.success(MODELS_SAVED_MESSAGE)
@@ -194,14 +194,14 @@ def restore_models():
     SessionStateManager.set("topic_models", topic_models)
 
     for file, key in [(DOC_GROUPS_FILE, "doc_groups"), (EMB_GROUPS_FILE, "emb_groups")]:
-        file_path = WEAK_SIGNALS_CACHE_PATH / file
+        file_path = CACHE_PATH / file
         if file_path.exists():
             with open(file_path, "rb") as f:
                 SessionStateManager.set(key, pickle.load(f))
         else:
             logger.warning(f"{file} not found.")
 
-    granularity_file = WEAK_SIGNALS_CACHE_PATH / GRANULARITY_FILE
+    granularity_file = CACHE_PATH / GRANULARITY_FILE
     if granularity_file.exists():
         with open(granularity_file, "rb") as f:
             SessionStateManager.set("granularity_select", pickle.load(f))
@@ -209,14 +209,14 @@ def restore_models():
         logger.warning(NO_GRANULARITY_WARNING)
 
     # Restore the models_trained flag
-    models_trained_file = WEAK_SIGNALS_CACHE_PATH / MODELS_TRAINED_FILE
+    models_trained_file = CACHE_PATH / MODELS_TRAINED_FILE
     if models_trained_file.exists():
         with open(models_trained_file, "rb") as f:
             SessionStateManager.set("models_trained", pickle.load(f))
     else:
         logger.warning("Models trained flag not found.")
 
-    hyperparams_file = WEAK_SIGNALS_CACHE_PATH / HYPERPARAMS_FILE
+    hyperparams_file = CACHE_PATH / HYPERPARAMS_FILE
     if hyperparams_file.exists():
         with open(hyperparams_file, "rb") as f:
             SessionStateManager.set_multiple(**pickle.load(f))
@@ -227,8 +227,8 @@ def restore_models():
 
 
 def purge_cache():
-    if WEAK_SIGNALS_CACHE_PATH.exists():
-        shutil.rmtree(WEAK_SIGNALS_CACHE_PATH)
+    if CACHE_PATH.exists():
+        shutil.rmtree(CACHE_PATH)
         st.success(CACHE_PURGED_MESSAGE)
     else:
         st.warning(NO_CACHE_WARNING)
@@ -598,6 +598,9 @@ def main():
                         emb_groups=emb_groups,
                     )
                     SessionStateManager.set("models_trained", True)
+
+                    SessionStateManager.set("bertrend", bertrend)
+
                     st.success(MODEL_TRAINING_COMPLETE_MESSAGE)
                     save_models()  # FIXME: to be moved to bertrend
 
@@ -611,7 +614,7 @@ def main():
                             merged_df_without_outliers,
                             all_merge_histories_df,
                             all_new_topics_df,
-                        ) = bertrend.merge_models(
+                        ) = SessionStateManager.get("bertrend").merge_models(
                             min_similarity=SessionStateManager.get("min_similarity"),
                             granularity=granularity,
                         )

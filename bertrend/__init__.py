@@ -42,12 +42,10 @@ OUTPUT_PATH = BASE_OUTPUT_PATH / "bertrend"
 CACHE_PATH = BASE_CACHE_PATH / "bertrend"
 
 # Weak signals
-WEAK_SIGNALS_CACHE_PATH = BASE_CACHE_PATH / "weak_signals"
-MODELS_DIR = WEAK_SIGNALS_CACHE_PATH / "models"
-ZEROSHOT_TOPICS_DATA_DIR = WEAK_SIGNALS_CACHE_PATH / "zeroshot_topics_data"
-SIGNAL_EVOLUTION_DATA_DIR = WEAK_SIGNALS_CACHE_PATH / "signal_evolution_data"
+MODELS_DIR = CACHE_PATH / "models"
+ZEROSHOT_TOPICS_DATA_DIR = CACHE_PATH / "zeroshot_topics_data"
+SIGNAL_EVOLUTION_DATA_DIR = CACHE_PATH / "signal_evolution_data"
 
 # Create directories if they do not exist
 DATA_PATH.mkdir(parents=True, exist_ok=True)
 CACHE_PATH.mkdir(parents=True, exist_ok=True)
-WEAK_SIGNALS_CACHE_PATH.mkdir(parents=True, exist_ok=True)
