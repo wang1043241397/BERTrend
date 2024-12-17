@@ -25,7 +25,7 @@ from bertrend.parameters import (
     SIGNAL_CLASSIF_UPPER_BOUND,
 )
 from bertrend import SIGNAL_EVOLUTION_DATA_DIR
-from bertrend.signal_analysis.prompts import get_prompt, save_html_output
+from bertrend.trend_analysis.prompts import get_prompt, save_html_output
 
 
 def detect_weak_signals_zeroshot(

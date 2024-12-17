@@ -21,8 +21,8 @@ from bertrend_apps.newsletters.prompts import (
     FR_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2,
     EN_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2,
 )
-from bertrend.summary.summarizer import Summarizer
-from bertrend.summary.abstractive_summarizer import AbstractiveSummarizer
+from bertrend.services.summarizer import Summarizer
+from bertrend.services.summary.abstractive_summarizer import AbstractiveSummarizer
 from bertopic._bertopic import BERTopic
 from tqdm import tqdm
 

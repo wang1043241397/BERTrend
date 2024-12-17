@@ -12,9 +12,9 @@ from bertrend.demos.topic_analysis.state_utils import (
     register_widget,
     save_widget_state,
 )
-from bertrend.summary import GPTSummarizer
-from bertrend.summary.abstractive_summarizer import AbstractiveSummarizer
-from bertrend.summary.extractive_summarizer import (
+from bertrend.services.summary import GPTSummarizer
+from bertrend.services.summary.abstractive_summarizer import AbstractiveSummarizer
+from bertrend.services.summary.extractive_summarizer import (
     ExtractiveSummarizer,
     EnhancedExtractiveSummarizer,
 )

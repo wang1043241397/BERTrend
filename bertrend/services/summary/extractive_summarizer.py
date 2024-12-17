@@ -14,12 +14,12 @@ from sentence_transformers.models import Transformer, Pooling
 from torch import Tensor
 
 from bertrend.llm_utils.openai_client import OpenAI_Client
-from bertrend.summary.lexrank import degree_centrality_scores
-from bertrend.summary.prompts import (
+from bertrend.services.summary.lexrank import degree_centrality_scores
+from bertrend.services.summary.prompts import (
     FR_SYSTEM_SUMMARY_SENTENCES,
     EN_SYSTEM_SUMMARY_SENTENCES,
 )
-from bertrend.summary.summarizer import (
+from bertrend.services.summarizer import (
     Summarizer,
     DEFAULT_MAX_SENTENCES,
     DEFAULT_SUMMARIZATION_RATIO,

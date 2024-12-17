@@ -9,7 +9,7 @@ from typing import List
 import torch
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
-from bertrend.summary.summarizer import Summarizer
+from bertrend.services.summarizer import Summarizer
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 

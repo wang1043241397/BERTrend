@@ -6,13 +6,13 @@
 from loguru import logger
 
 from bertrend.llm_utils.openai_client import OpenAI_Client
-from bertrend.summary.prompts import (
+from bertrend.services.summary.prompts import (
     FR_SYSTEM_SUMMARY_SENTENCES,
     EN_SYSTEM_SUMMARY_SENTENCES,
 )
-from bertrend.summary.summarizer import DEFAULT_MAX_SENTENCES
+from bertrend.services.summarizer import DEFAULT_MAX_SENTENCES
 
-from bertrend.summary.summarizer import Summarizer
+from bertrend.services.summarizer import Summarizer
 
 
 class GPTSummarizer(Summarizer):
