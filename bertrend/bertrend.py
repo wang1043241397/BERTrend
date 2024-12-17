@@ -12,17 +12,17 @@ from loguru import logger
 from sentence_transformers import SentenceTransformer
 
 from bertrend.topic_model import TopicModel
-from bertrend.utils import TEXT_COLUMN
 from bertrend.parameters import (
     DEFAULT_MIN_SIMILARITY,
     DEFAULT_GRANULARITY,
 )
-from bertrend.weak_signals.topic_modeling import preprocess_model, merge_models
-from bertrend.weak_signals.weak_signals import (
+from bertrend.trend_analysis.topic_modeling import preprocess_model, merge_models
+from bertrend.trend_analysis.weak_signals import (
     _initialize_new_topic,
     update_existing_topic,
     _apply_decay_to_inactive_topics,
 )
+from bertrend.utils.data_loading import TEXT_COLUMN
 
 
 class BERTrend:

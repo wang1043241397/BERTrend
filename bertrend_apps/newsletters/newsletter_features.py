@@ -14,7 +14,7 @@ import pandas as pd
 import tldextract
 from loguru import logger
 
-from bertrend.common.openai_client import OpenAI_Client
+from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend_apps.newsletters.prompts import (
     FR_USER_SUMMARY_MULTIPLE_DOCS,
     EN_USER_SUMMARY_MULTIPLE_DOCS,

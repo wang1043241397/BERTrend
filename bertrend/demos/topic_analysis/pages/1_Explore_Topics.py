@@ -18,18 +18,15 @@ from urllib.parse import urlparse
 
 from loguru import logger
 
-from bertrend.topic_analysis.state_utils import restore_widget_state
-from bertrend.common.openai_client import OpenAI_Client
+from bertrend.demos.topic_analysis.state_utils import restore_widget_state
+from bertrend.llm_utils.openai_client import OpenAI_Client
+from bertrend.trend_analysis.visualizations import PLOTLY_BUTTON_SAVE_CONFIG
+from bertrend.utils.data_loading import TIMESTAMP_COLUMN, TEXT_COLUMN
 from bertrend_apps.newsletters.newsletter_features import get_most_representative_docs
-from bertrend.topic_analysis.app_utils import (
+from bertrend.demos.topic_analysis.app_utils import (
     compute_topics_over_time,
     plot_topics_over_time,
     print_docs_for_specific_topic,
-)
-from bertrend.utils import (
-    PLOTLY_BUTTON_SAVE_CONFIG,
-    TEXT_COLUMN,
-    TIMESTAMP_COLUMN,
 )
 
 

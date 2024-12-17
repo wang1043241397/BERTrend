@@ -149,7 +149,7 @@ Topic Evolution Summary:
 {topic_summary}
 
 Weak Signal Analysis:
-{weak_signal_analysis}
+{trend_analysis}
 
 Instructions:
 1. Carefully read the provided topic evolution summary, weak signal analysis, and HTML template.
@@ -170,7 +170,7 @@ Résumé de l'Évolution du Sujet :
 {topic_summary}
 
 Analyse du Signal Faible :
-{weak_signal_analysis}
+{trend_analysis}
 
 Instructions :
 1. Lisez attentivement le résumé de l'évolution du sujet, l'analyse du signal faible et le modèle HTML fournis.

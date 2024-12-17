@@ -14,16 +14,17 @@ import streamlit as st
 import umap
 
 from bertrend.metrics.temporal_metrics_embedding import TempTopic
-from bertrend.topic_analysis.app_utils import (
+from bertrend.demos.topic_analysis.app_utils import (
     plot_topics_over_time,
     compute_topics_over_time,
 )
-from bertrend.topic_analysis.state_utils import (
+from bertrend.demos.topic_analysis.state_utils import (
     register_widget,
     save_widget_state,
     restore_widget_state,
 )
-from bertrend.utils import TIMESTAMP_COLUMN, TEXT_COLUMN, PLOTLY_BUTTON_SAVE_CONFIG
+from bertrend.trend_analysis.visualizations import PLOTLY_BUTTON_SAVE_CONFIG
+from bertrend.utils.data_loading import TIMESTAMP_COLUMN, TEXT_COLUMN
 
 # Set locale for French date names
 locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")

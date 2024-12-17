@@ -10,16 +10,16 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from bertrend.topic_analysis.state_utils import register_widget
-from bertrend.utils import (
-    PLOTLY_BUTTON_SAVE_CONFIG,
-    TEXT_COLUMN,
+from bertrend.demos.topic_analysis.state_utils import register_widget
+from bertrend.trend_analysis.visualizations import PLOTLY_BUTTON_SAVE_CONFIG
+from bertrend.utils.data_loading import (
+    load_data,
     TIMESTAMP_COLUMN,
     GROUPED_TIMESTAMP_COLUMN,
-    URL_COLUMN,
+    TEXT_COLUMN,
     TITLE_COLUMN,
+    URL_COLUMN,
     CITATION_COUNT_COL,
-    load_data,
 )
 
 # Default configuration parameters for the application
@@ -304,7 +304,7 @@ def plot_topics_hierarchy(form_parameters, _topic_model, width=700):
 
 def make_dynamic_topics_split(df, nr_bins):
     """
-    Split docs into nr_bins and generate a common timestamp label into a new column
+    Split docs into nr_bins and generate a llm_utils timestamp label into a new column
     """
     df = df.sort_values(TIMESTAMP_COLUMN, ascending=False)
     split_df = np.array_split(df, nr_bins)

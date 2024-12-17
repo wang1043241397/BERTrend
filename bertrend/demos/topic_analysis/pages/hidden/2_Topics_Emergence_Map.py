@@ -6,14 +6,15 @@
 import streamlit as st
 from statistics import StatisticsError
 
-from bertrend.topic_analysis.app_utils import compute_topics_over_time
-from bertrend.topic_analysis.state_utils import (
+from bertrend.demos.topic_analysis.app_utils import compute_topics_over_time
+from bertrend.demos.topic_analysis.state_utils import (
     restore_widget_state,
     register_widget,
     save_widget_state,
 )
 from bertrend.metrics.metrics import TIME_WEIGHT, TopicMetrics
-from bertrend.utils import TIMESTAMP_COLUMN, PLOTLY_BUTTON_SAVE_CONFIG
+from bertrend.trend_analysis.visualizations import PLOTLY_BUTTON_SAVE_CONFIG
+from bertrend.utils.data_loading import TIMESTAMP_COLUMN
 
 # Restore widget state
 restore_widget_state()

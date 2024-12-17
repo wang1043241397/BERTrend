@@ -16,7 +16,7 @@ from transformers import AutoTokenizer
 
 from bertrend import DATA_PATH
 
-from bertrend.topic_analysis.app_utils import (
+from bertrend.demos.topic_analysis.app_utils import (
     embedding_model_options,
     bertopic_options,
     umap_options,
@@ -26,8 +26,8 @@ from bertrend.topic_analysis.app_utils import (
     representation_model_options,
     load_data_wrapper,
 )
-from bertrend.topic_analysis.data_utils import data_overview, choose_data
-from bertrend.topic_analysis.state_utils import (
+from bertrend.demos.topic_analysis.data_utils import data_overview, choose_data
+from bertrend.demos.topic_analysis.state_utils import (
     register_widget,
     save_widget_state,
     restore_widget_state,
@@ -35,13 +35,13 @@ from bertrend.topic_analysis.state_utils import (
 
 from bertrend.metrics.topic_metrics import get_coherence_value, get_diversity_value
 from bertrend.train import train_BERTopic
-from bertrend.utils import (
-    clean_dataset,
-    preprocess_french_text,
+from bertrend.utils.data_loading import (
     split_df_by_paragraphs,
-    TEXT_COLUMN,
     TIMESTAMP_COLUMN,
     URL_COLUMN,
+    TEXT_COLUMN,
+    preprocess_french_text,
+    clean_dataset,
 )
 
 

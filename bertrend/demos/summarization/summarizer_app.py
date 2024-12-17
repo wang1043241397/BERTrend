@@ -7,7 +7,7 @@ import os
 import streamlit as st
 from loguru import logger
 
-from bertrend.summary import AbstractiveSummarizer
+from bertrend.summary.abstractive_summarizer import AbstractiveSummarizer
 from bertrend.summary.chatgpt_summarizer import GPTSummarizer
 from bertrend.summary.extractive_summarizer import (
     EnhancedExtractiveSummarizer,

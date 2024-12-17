@@ -2,30 +2,16 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
-
 import gzip
-import os
-import ssl
 import re
 from pathlib import Path
+from typing import Dict, Tuple
 
-import nltk
 import pandas as pd
-from transformers import AutoTokenizer
 from loguru import logger
+from transformers import AutoTokenizer
 
-
-# Ensures files are written with +rw permissions for both user and groups
-os.umask(0o002)
-
-# Workaround for downloading nltk data in some environments
-try:
-    _create_unverified_https_context = ssl._create_unverified_context
-except AttributeError:
-    pass
-else:
-    ssl._create_default_https_context = _create_unverified_https_context
-nltk.download("stopwords")
+from bertrend import DATA_PATH
 
 # Define column names
 TEXT_COLUMN = "text"
@@ -36,14 +22,103 @@ TITLE_COLUMN = "title"
 CITATION_COUNT_COL = "citation_count"
 
 
-PLOTLY_BUTTON_SAVE_CONFIG = {
-    "toImageButtonOptions": {
-        "format": "svg",
-        # 'height': 500,
-        # 'width': 1500,
-        "scale": 1,
-    }
-}
+def find_compatible_files(path, extensions):
+    return [
+        (str(f.relative_to(path)), f.suffix[1:])
+        for f in path.rglob("*")
+        if f.suffix[1:] in extensions
+    ]
+
+
+# @st.cache_data
+def load_and_preprocess_data(
+    selected_file: Tuple[str, str],
+    language: str,
+    min_chars: int,
+    split_by_paragraph: bool,
+) -> pd.DataFrame:
+    """
+    Load and preprocess data from a selected file.
+
+    Args:
+        selected_file (tuple): A tuple containing the selected file name and extension.
+        language (str): The language of the text data ('French' or 'English').
+        min_chars (int): The minimum number of characters required for a text to be included.
+        split_by_paragraph (bool): Whether to split the text data by paragraphs.
+
+    Returns:
+        pd.DataFrame: The loaded and preprocessed DataFrame.
+    """
+    file_name, file_ext = selected_file
+
+    if file_ext == "csv":
+        df = pd.read_csv(DATA_PATH / file_name)
+    elif file_ext == "parquet":
+        df = pd.read_parquet(DATA_PATH / file_name)
+    elif file_ext == "json":
+        df = pd.read_json(DATA_PATH / file_name)
+    elif file_ext == "jsonl":
+        df = pd.read_json(DATA_PATH / file_name, lines=True)
+
+    # Convert timestamp column to datetime
+    df[TIMESTAMP_COLUMN] = pd.to_datetime(df[TIMESTAMP_COLUMN], errors="coerce")
+
+    # Drop rows with invalid timestamps
+    df = df.dropna(subset=[TIMESTAMP_COLUMN])
+
+    df = df.sort_values(by=TIMESTAMP_COLUMN, ascending=True).reset_index(drop=True)
+    df["document_id"] = df.index
+
+    if URL_COLUMN in df.columns:
+        df["source"] = df[URL_COLUMN].apply(
+            lambda x: x.split("/")[2] if pd.notna(x) else None
+        )
+    else:
+        df["source"] = None
+        df[URL_COLUMN] = None
+
+    if language == "French":
+        df[TEXT_COLUMN] = df[TEXT_COLUMN].apply(preprocess_french_text)
+
+    if split_by_paragraph:
+        new_rows = []
+        for _, row in df.iterrows():
+            # Attempt splitting by \n\n first
+            paragraphs = re.split(r"\n\n", row[TEXT_COLUMN])
+            if len(paragraphs) == 1:  # If no split occurred, attempt splitting by \n
+                paragraphs = re.split(r"\n", row[TEXT_COLUMN])
+            for paragraph in paragraphs:
+                new_row = row.copy()
+                new_row[TEXT_COLUMN] = paragraph
+                new_row["source"] = row["source"]
+                new_rows.append(new_row)
+        df = pd.DataFrame(new_rows)
+
+    if min_chars > 0:
+        df = df[df[TEXT_COLUMN].str.len() >= min_chars]
+
+    df = df[df[TEXT_COLUMN].str.strip() != ""].reset_index(drop=True)
+
+    return df
+
+
+def group_by_days(
+    df: pd.DataFrame, day_granularity: int = 1
+) -> Dict[pd.Timestamp, pd.DataFrame]:
+    """
+    Group a DataFrame by a specified number of days.
+
+    Args:
+        df (pd.DataFrame): The input DataFrame containing a TIMESTAMP_COLUMN column.
+        day_granularity (int): The number of days to group by (default is 1).
+
+    Returns:
+        Dict[pd.Timestamp, pd.DataFrame]: A dictionary where each key is the timestamp group and the value is the corresponding DataFrame.
+    """
+    df[TIMESTAMP_COLUMN] = pd.to_datetime(df[TIMESTAMP_COLUMN])
+    grouped = df.groupby(pd.Grouper(key=TIMESTAMP_COLUMN, freq=f"{day_granularity}D"))
+    dict_of_dfs = {name: group for name, group in grouped}
+    return dict_of_dfs
 
 
 def load_data(full_data_name: Path) -> pd.DataFrame:
@@ -217,7 +292,7 @@ def preprocess_french_text(text: str) -> str:
     """
     Preprocess French text by normalizing apostrophes, replacing hyphens and similar characters with spaces,
     removing specific prefixes, removing unwanted punctuations (excluding apostrophes, periods, commas, and specific other punctuation),
-    replacing special characters with a space (preserving accented characters, common Latin extensions, and newlines),
+    replacing special characters with a space (preserving accented characters, llm_utils Latin extensions, and newlines),
     normalizing superscripts and subscripts,
     splitting words containing capitals in the middle (while avoiding splitting fully capitalized words),
     and replacing multiple spaces with a single space.
@@ -234,7 +309,7 @@ def preprocess_french_text(text: str) -> str:
     # Replace hyphens and similar characters with spaces
     text = re.sub(r"\b(-|/|;|:)", " ", text)
 
-    # Replace special characters with a space (preserving specified punctuation, accented characters, common Latin extensions, and newlines)
+    # Replace special characters with a space (preserving specified punctuation, accented characters, llm_utils Latin extensions, and newlines)
     text = re.sub(r"[^\w\s\nàâçéèêëîïôûùüÿñæœ.,\'\"\(\)\[\]]", " ", text)
 
     # Normalize superscripts and subscripts for both numbers and letters

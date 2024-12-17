@@ -20,10 +20,10 @@ from bertrend import (
     SIGNAL_EVOLUTION_DATA_DIR,
     WEAK_SIGNALS_CACHE_PATH,
 )
-from bertrend.bertrend import BERTrend, calculate_signal_popularity
-from bertrend.embedding_service import EmbeddingService
+from bertrend.bertrend import BERTrend
+from bertrend.services.embedding_service import EmbeddingService
 from bertrend.topic_model import TopicModel
-from bertrend.weak_signals.messages import (
+from bertrend.demos.weak_signals.messages import (
     MODEL_MERGING_COMPLETE_MESSAGE,
     NO_CACHE_WARNING,
     CACHE_PURGED_MESSAGE,
@@ -38,27 +38,29 @@ from bertrend.weak_signals.messages import (
     NO_GRANULARITY_WARNING,
     NO_DATASET_WARNING,
 )
-from data_loading import load_and_preprocess_data, group_by_days, find_compatible_files
+from bertrend.trend_analysis.weak_signals import (
+    detect_weak_signals_zeroshot,
+    save_signal_evolution_data,
+    analyze_signal,
+)
+from bertrend.utils.data_loading import (
+    load_and_preprocess_data,
+    group_by_days,
+    find_compatible_files,
+    TEXT_COLUMN,
+)
 from bertrend.parameters import *
 from session_state_manager import SessionStateManager
-from topic_modeling import (
-    merge_models,
-    preprocess_model,
-)
-from visualizations import (
+from bertrend.trend_analysis.visualizations import (
     plot_num_topics_and_outliers,
     plot_topics_per_timestamp,
     plot_topic_size_evolution,
     create_topic_size_evolution_figure,
     plot_newly_emerged_topics,
     create_sankey_diagram,
+    PLOTLY_BUTTON_SAVE_CONFIG,
 )
-from bertrend.utils import PLOTLY_BUTTON_SAVE_CONFIG, TEXT_COLUMN
-from weak_signals import (
-    detect_weak_signals_zeroshot,
-    analyze_signal,
-    save_signal_evolution_data,
-)
+
 
 # UI Settings
 PAGE_TITLE = "BERTopic Topic Detection"

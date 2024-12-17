@@ -15,7 +15,7 @@ from bertopic import BERTopic
 from loguru import logger
 from tqdm import tqdm
 
-from bertrend.common.openai_client import OpenAI_Client
+from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend.parameters import (
     GPT_MODEL,
     GPT_TEMPERATURE,
@@ -25,7 +25,7 @@ from bertrend.parameters import (
     SIGNAL_CLASSIF_UPPER_BOUND,
 )
 from bertrend import SIGNAL_EVOLUTION_DATA_DIR
-from bertrend.weak_signals.prompts import get_prompt, save_html_output
+from bertrend.signal_analysis.prompts import get_prompt, save_html_output
 
 
 def detect_weak_signals_zeroshot(

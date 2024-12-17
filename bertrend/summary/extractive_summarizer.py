@@ -13,7 +13,7 @@ from sentence_transformers import SentenceTransformer, util
 from sentence_transformers.models import Transformer, Pooling
 from torch import Tensor
 
-from bertrend.common.openai_client import OpenAI_Client
+from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend.summary.lexrank import degree_centrality_scores
 from bertrend.summary.prompts import (
     FR_SYSTEM_SUMMARY_SENTENCES,

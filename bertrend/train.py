@@ -24,12 +24,11 @@ from umap import UMAP
 
 from bertrend import BASE_CACHE_PATH
 from bertrend.parameters import STOPWORDS
-from bertrend.common.openai_client import OpenAI_Client
+from bertrend.llm_utils.openai_client import OpenAI_Client
+from bertrend.utils.data_loading import TEXT_COLUMN
 from bertrend_apps.newsletters.prompts import FRENCH_TOPIC_REPRESENTATION_PROMPT
-from bertrend.utils import (
-    TEXT_COLUMN,
-)
-from bertrend.common.cache_utils import load_embeddings, save_embeddings, get_hash
+
+from bertrend.utils.cache_utils import load_embeddings, save_embeddings, get_hash
 
 # Parameters:
 DEFAULT_EMBEDDING_MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"

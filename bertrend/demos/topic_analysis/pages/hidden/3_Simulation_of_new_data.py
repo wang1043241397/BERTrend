@@ -8,19 +8,19 @@ from statistics import StatisticsError
 import pandas as pd
 import streamlit as st
 
-from bertrend.topic_analysis.app_utils import (
+from bertrend.demos.topic_analysis.app_utils import (
     plot_remaining_docs_repartition_over_time,
     transform_new_data,
     compute_topics_over_time,
     plot_topics_over_time,
 )
-from bertrend.topic_analysis.state_utils import (
+from bertrend.demos.topic_analysis.state_utils import (
     restore_widget_state,
     register_widget,
     save_widget_state,
 )
 from bertrend.metrics.metrics import TIME_WEIGHT, TopicMetrics, TEM_x, TEM_y
-from bertrend.utils import TIMESTAMP_COLUMN
+from bertrend.utils.data_loading import TIMESTAMP_COLUMN
 
 # Restore widget state
 restore_widget_state()

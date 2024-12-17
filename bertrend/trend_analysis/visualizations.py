@@ -12,9 +12,17 @@ import streamlit as st
 from bertopic import BERTopic
 from plotly_resampler import FigureWidgetResampler
 
-from bertrend.utils import PLOTLY_BUTTON_SAVE_CONFIG
 from bertrend.parameters import SIGNAL_CLASSIF_LOWER_BOUND, SIGNAL_CLASSIF_UPPER_BOUND
-from weak_signals import classify_signals
+from bertrend.trend_analysis.weak_signals import classify_signals
+
+PLOTLY_BUTTON_SAVE_CONFIG = {
+    "toImageButtonOptions": {
+        "format": "svg",
+        # 'height': 500,
+        # 'width': 1500,
+        "scale": 1,
+    }
+}
 
 
 def plot_num_topics_and_outliers(topic_models: Dict[pd.Timestamp, BERTopic]) -> None:

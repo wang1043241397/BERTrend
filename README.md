@@ -34,7 +34,7 @@ The code base is divided into two main demonstrators:
 
 ### Dynamic Topic Modeling Analysis
 
-- [bertrend/topic_analysis](bertrend/topic_analysis): Focuses on dynamic topic modeling analysis using:
+- [bertrend/topic_analysis](bertrend/demos/topic_analysis): Focuses on dynamic topic modeling analysis using:
   - Dedicated metrics, called TEMPTopic:
     - Stability Evaluation: Measures the stability of topics over time, evaluating how consistent and coherent topics remain.
     - Volatility Assessment: Analyzes the volatility of topics, identifying how much topics change over different time periods.
@@ -57,7 +57,7 @@ https://github.com/user-attachments/assets/f600f666-a6da-40be-8b07-5041b3bde1dc
 
 ### Weak Signal Analysis
 
-- [bertrend/weak_signals](bertrend/weak_signals): Identifies and analyzes emerging trends and signals
+- [bertrend/weak_signals](bertrend/demos/weak_signals): Identifies and analyzes emerging trends and signals
 
 #### Weak Signal Analysis Demonstrator Video
 https://github.com/user-attachments/assets/d79368d9-d4e0-4324-8a98-a888f0ab3b65
@@ -189,7 +189,7 @@ Key Features of the demonstrator:
 #### Launch the Weak Signal Analysis Demonstrator
 ```bash
 cd bertrend/weak_signals
-CUDA_VISIBLE_DEVICES=<gpu_number> streamlit run app.py
+CUDA_VISIBLE_DEVICES=<gpu_number> streamlit run summarizer_app.py
 ```
 
 #### Data Preparation
