@@ -18,23 +18,24 @@ python = "^3.11"
 ipython = "^8.28.0"
 
 # These packages are mandatory and form the core of this package’s distribution.
-accelerate = "^0.34.2"
+#accelerate = "^0.34.2" # required?
 bertopic = "0.16.2" #problem with versions above in .update_topics
 black = "^24.10.0"
-dateparser = "^1.2.0"
 datamapplot = "0.3.0"
+dateparser = "^1.2.0"
 gensim = "4.3.2"
 hdbscan = "^0.8.40"
+joblib = "^1.4.2"
+jsonlines = "^4.0.0"
+langdetect = "^1.0.9"
 langchain-community = "^0.3.1"
 langchain-chroma = "^0.1.4"
 langchain-openai = "^0.2.12"
-langdetect = "^1.0.9"
-llama-index = "^0.12.5"
-llama-index-core = "^0.12.5"
-llvmlite = "^0.43.0"
+#llama-index = "^0.12.5"        not used
+#llama-index-core = "^0.12.5"   not used
+#llvmlite = "^0.43.0" #required?
 loguru = "^0.7.3"
 lxml-html-clean = "^0.2.2"
-jsonlines = "^4.0.0"
 markdown = "^3.7"
 nltk = "^3.9.1"
 numpy = "<2"
@@ -49,9 +50,10 @@ requests = "^2.32.3"
 seaborn = "^0.13.2"
 sentencepiece = "^0.2.0"
 streamlit = "^1.41.0"
+tldextract = ">=2.0.1"
 thefuzz = "^0.22.1"
 torch = "^2.5.1"
-tqdm = "^4.66.5"
+tqdm = "^4.67.1"
 tiktoken = "^0.8.0"
 tokenizers = "<0.20.0"
 umap-learn = "^0.5.7"
@@ -66,7 +68,7 @@ arxiv = { version = "^2.1.3", optional = true }
 feedparser = { version = "^6.0.11", optional = true }
 googlenewsdecoder = { version = "^0.1.6", optional = true }
 google-api-python-client = { version = "^2.148.0", optional = true }
-google-auth-httplib2 = { version = "^0.2.0", optional = true }
+#google-auth-httplib2 = { version = "^0.2.0", optional = true } #required?
 google-auth-oauthlib = { version = "^1.2.1", optional = true }
 goose3 = { version = "^3.1.19", optional = true }
 newscatcherapi = { version = "^0.7.3", optional = true }

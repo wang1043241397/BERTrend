@@ -629,7 +629,9 @@ def main():
                             topic_sizes,
                             topic_last_popularity,
                             topic_last_update,
-                        ) = bertrend.calculate_signal_popularity(
+                        ) = SessionStateManager.get(
+                            "bertrend"
+                        ).calculate_signal_popularity(
                             all_merge_histories_df, granularity
                         )
                         SessionStateManager.set_multiple(
