@@ -4,8 +4,6 @@
 #  This file is part of BERTrend.
 
 import os
-from configparser import ConfigParser
-
 import pytest
 from pathlib import Path
 from unittest.mock import patch
@@ -13,8 +11,6 @@ from unittest.mock import patch
 from bertrend.utils.config_utils import (
     _resolve_env_variables,
     load_toml_config,
-    parse_literal,
-    EnvInterpolation,
 )
 
 
@@ -56,46 +52,3 @@ def test_load_toml_config(mock_env):
         assert config["section"]["key2"] == "42"
     finally:
         toml_file.unlink()  # Clean up the test file
-
-
-def test_parse_literal():
-    test_cases = [
-        (
-            {"a": "2", "b": "3", 3: "xyz", "c": "0.5", "z": "(1,1)"},
-            {"a": 2, "b": 3, 3: "xyz", "c": 0.5, "z": (1, 1)},
-        ),
-        ('"hello"', "hello"),
-        ("42", 42),
-        ("(1, 2)", (1, 2)),
-        ("True", True),
-        ("False", False),
-        ("None", None),
-    ]
-
-    for input_expr, expected_output in test_cases:
-        assert parse_literal(input_expr) == expected_output
-
-
-def test_env_interpolation(mock_env):
-    interpolation = EnvInterpolation()
-
-    # Mock the 'before_get' method in the EnvInterpolation class
-    value = "Hello $VAR_NAME"
-    result = interpolation.before_get(ConfigParser(), None, None, value, None)
-
-    assert result == "Hello test_value"
-
-
-@pytest.mark.parametrize(
-    "expr, expected",
-    [
-        ("3.14", 3.14),
-        ("True", True),
-        ("False", False),
-        ("(1,2)", (1, 2)),
-        ("None", None),
-        ("42", 42),
-    ],
-)
-def test_parse_literal_with_parametrize(expr, expected):
-    assert parse_literal(expr) == expected

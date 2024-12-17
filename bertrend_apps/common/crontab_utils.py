@@ -2,7 +2,6 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
-import configparser
 import os
 import subprocess
 import sys
@@ -10,7 +9,7 @@ from pathlib import Path
 
 from loguru import logger
 
-from bertrend import BEST_CUDA_DEVICE, BERTREND_LOG_PATH
+from bertrend import BEST_CUDA_DEVICE, BERTREND_LOG_PATH, load_toml_config
 
 
 def add_job_to_crontab(schedule, command, env_vars=""):
@@ -26,8 +25,7 @@ def schedule_scrapping(
     feed_cfg: Path,
 ):
     """Schedule data scrapping on the basis of a feed configuration file"""
-    data_feed_cfg = configparser.ConfigParser()
-    data_feed_cfg.read(feed_cfg)
+    data_feed_cfg = load_toml_config(feed_cfg)
     schedule = data_feed_cfg.get("data-feed", "update_frequency")
     id = data_feed_cfg.get("data-feed", "id")
     command = f"{sys.prefix}/bin/python -m bertrend_apps.data_provider scrape-feed {feed_cfg.resolve()} > {BERTREND_LOG_PATH}/cron_feed_{id}.log 2>&1"
@@ -40,8 +38,7 @@ def schedule_newsletter(
     cuda_devices: str = BEST_CUDA_DEVICE,
 ):
     """Schedule data scrapping on the basis of a feed configuration file"""
-    newsletter_cfg = configparser.ConfigParser()
-    newsletter_cfg.read(newsletter_cfg_path)
+    newsletter_cfg = load_toml_config(newsletter_cfg_path)
     schedule = newsletter_cfg.get("newsletter", "update_frequency")
     id = newsletter_cfg.get("newsletter", "id")
     command = f"{sys.prefix}/bin/python -m bertrend_apps.newsletters newsletters {newsletter_cfg_path.resolve()} {data_feed_cfg_path.resolve()} > {BERTREND_LOG_PATH}/cron_newsletter_{id}.log 2>&1"
