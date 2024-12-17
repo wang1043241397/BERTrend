@@ -20,7 +20,7 @@ from bertrend import (
     SIGNAL_EVOLUTION_DATA_DIR,
     CACHE_PATH,
 )
-from bertrend.bertrend import BERTrend
+from bertrend import BERTrend
 from bertrend.services.embedding_service import EmbeddingService
 from bertrend.topic_model import TopicModel
 from bertrend.demos.weak_signals.messages import (
@@ -63,7 +63,7 @@ from bertrend.trend_analysis.visualizations import (
 
 
 # UI Settings
-PAGE_TITLE = "BERTopic Topic Detection"
+PAGE_TITLE = "BERTrend - Trend Analysis"
 LAYOUT = "wide"
 
 
@@ -239,7 +239,7 @@ def main():
         page_title=PAGE_TITLE, layout=LAYOUT, initial_sidebar_state="expanded"
     )
 
-    st.title("Trend Analysis and Weak Signal Detection")
+    st.title(":part_alternation_mark: " + PAGE_TITLE)
 
     # Set the main flags
     SessionStateManager.get_or_set("data_embedded", False)

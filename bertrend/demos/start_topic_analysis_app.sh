@@ -5,4 +5,4 @@
 # This file is part of BERTrend.
 #
 
-CUDA_VISIBLE_DEVICES=0 OPENAI_API_KEY=$AZURE_WATTELSE_OPENAI_API_KEY OPENAI_ENDPOINT=$AZURE_WATTELSE_OPENAI_ENDPOINT OPENAI_DEFAULT_MODEL_NAME=$AZURE_WATTELSE_OPENAI_DEFAULT_MODEL_NAME streamlit run --theme.primaryColor royalblue topic_analysis/Main_page.py
+CUDA_VISIBLE_DEVICES=0 streamlit run --theme.primaryColor royalblue topic_analysis/Main_page.py

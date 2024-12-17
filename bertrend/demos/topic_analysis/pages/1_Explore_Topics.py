@@ -18,6 +18,7 @@ from urllib.parse import urlparse
 
 from loguru import logger
 
+from bertrend import LLM_CONFIG
 from bertrend.demos.topic_analysis.state_utils import restore_widget_state
 from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend.trend_analysis.visualizations import PLOTLY_BUTTON_SAVE_CONFIG
@@ -72,7 +73,11 @@ def generate_topic_description(topic_model, topic_number, filtered_docs):
     # logger.debug(f"Prompt for GPT:\n{prompt}")
 
     try:
-        client = OpenAI_Client()
+        client = OpenAI_Client(
+            api_key=LLM_CONFIG["api_key"],
+            endpoint=LLM_CONFIG["endpoint"],
+            model=LLM_CONFIG["model"],
+        )
         return client.generate(user_prompt=prompt)
     except Exception as e:
         logger.error(f"Error calling OpenAI API: {e}")

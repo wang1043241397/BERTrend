@@ -22,7 +22,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from tqdm import tqdm
 from umap import UMAP
 
-from bertrend import BASE_CACHE_PATH
+from bertrend import BASE_CACHE_PATH, LLM_CONFIG
 from bertrend.parameters import STOPWORDS
 from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend.utils.data_loading import TEXT_COLUMN
@@ -335,7 +335,11 @@ def train_BERTopic(
             elif model == "OpenAI":
                 representation_model.append(
                     OpenAI(
-                        client=OpenAI_Client().llm_client,
+                        client=OpenAI_Client(
+                            api_key=LLM_CONFIG["api_key"],
+                            endpoint=LLM_CONFIG["endpoint"],
+                            model=LLM_CONFIG["model"],
+                        ).llm_client,
                         model=os.environ["OPENAI_DEFAULT_MODEL_NAME"],
                         nr_docs=form_parameters["OpenAI_nr_docs"],
                         prompt=(

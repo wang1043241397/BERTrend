@@ -24,7 +24,7 @@ from bertrend.parameters import (
     SIGNAL_CLASSIF_LOWER_BOUND,
     SIGNAL_CLASSIF_UPPER_BOUND,
 )
-from bertrend import SIGNAL_EVOLUTION_DATA_DIR
+from bertrend import SIGNAL_EVOLUTION_DATA_DIR, LLM_CONFIG
 from bertrend.trend_analysis.prompts import get_prompt, save_html_output
 
 
@@ -533,7 +533,11 @@ def analyze_signal(
         )
 
         try:
-            openai_client = OpenAI_Client()
+            openai_client = OpenAI_Client(
+                api_key=LLM_CONFIG["api_key"],
+                endpoint=LLM_CONFIG["endpoint"],
+                model=LLM_CONFIG["model"],
+            )
 
             # First prompt: Generate summary
             summary_prompt = get_prompt(

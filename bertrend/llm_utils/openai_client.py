@@ -4,6 +4,7 @@
 #  This file is part of BERTrend.
 
 import os
+from typing import List, Dict
 
 from openai import OpenAI, AzureOpenAI, Timeout, Stream
 from loguru import logger
@@ -23,7 +24,14 @@ class OpenAI_Client:
     OPENAI_ENDPOINT respectively. (The endpoint shall only be set for Azure or local deployment)
     """
 
-    def __init__(self, api_key: str = None, endpoint: str = None):
+    def __init__(
+        self,
+        api_key: str = None,
+        endpoint: str = None,
+        model: str = None,
+        temperature: float = DEFAULT_TEMPERATURE,
+        api_version: str = AZURE_API_VERSION,
+    ):
         if not api_key:
             api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
@@ -46,7 +54,10 @@ class OpenAI_Client:
         openai_params = {
             "base_url": endpoint,
         }
-        azure_params = {"azure_endpoint": endpoint, "api_version": AZURE_API_VERSION}
+        azure_params = {
+            "azure_endpoint": endpoint,
+            "api_version": api_version if api_version else AZURE_API_VERSION,
+        }
 
         if not run_on_azure:
             self.llm_client = OpenAI(
@@ -58,8 +69,8 @@ class OpenAI_Client:
                 **common_params,
                 **azure_params,
             )
-        self.model_name = os.getenv("OPENAI_DEFAULT_MODEL_NAME")
-        self.temperature = DEFAULT_TEMPERATURE
+        self.model_name = model if model else os.getenv("OPENAI_DEFAULT_MODEL_NAME")
+        self.temperature = temperature
         self.max_tokens = DEFAULT_MAX_TOKENS
 
     def generate(
@@ -85,6 +96,23 @@ class OpenAI_Client:
         if system_prompt:
             messages.insert(0, {"role": "system", "content": system_prompt})
 
+        return self.generate_from_history(messages, **kwargs)
+
+    def generate_from_history(
+        self,
+        messages: List[Dict],
+        **kwargs,
+    ) -> ChatCompletion | Stream[ChatCompletionChunk] | str:
+        """Call openai model for generation.
+
+        Args:
+                messages (List): list of messages to pass to the API (in the openAI format)
+                **kwargs : other arguments
+
+        Returns:
+                (str or Stream[ChatCompletionChunk]): model answer.
+
+        """
         # For important parameters, set default value if not given
         if not kwargs.get("model"):
             kwargs["model"] = self.model_name
@@ -103,7 +131,7 @@ class OpenAI_Client:
                 return answer
             else:
                 return answer.choices[0].message.content
-        # Details of errors available here: https://platform.openai.com/docs/guides/error-codes/api-errors
+            # Details of errors available here: https://platform.openai.com/docs/guides/error-codes/api-errors
         except Exception as e:
             msg = f"OpenAI API fatal error: {e}"
             logger.error(msg)

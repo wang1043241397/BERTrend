@@ -14,6 +14,7 @@ import pandas as pd
 import tldextract
 from loguru import logger
 
+from bertrend import LLM_CONFIG
 from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend_apps.newsletters.prompts import (
     FR_USER_SUMMARY_MULTIPLE_DOCS,
@@ -71,7 +72,12 @@ def generate_newsletter(
         str: Newsletter in Markdown format
     """
     logger.debug("Generating newsletters...")
-    openai_api = OpenAI_Client()
+    openai_api = OpenAI_Client(
+        api_key=LLM_CONFIG["api_key"],
+        endpoint=LLM_CONFIG["endpoint"],
+        model=LLM_CONFIG["model"],
+    )
+
     # Adapt language for date
     current_local = locale.getlocale()
     if prompt_language == "en":
