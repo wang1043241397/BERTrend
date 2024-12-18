@@ -20,7 +20,7 @@ from bertrend import (
     SIGNAL_EVOLUTION_DATA_DIR,
     CACHE_PATH,
 )
-from bertrend import BERTrend
+from bertrend.BERTrend import BERTrend
 from bertrend.services.embedding_service import EmbeddingService
 from bertrend.topic_model import TopicModel
 from bertrend.demos.weak_signals.messages import (
