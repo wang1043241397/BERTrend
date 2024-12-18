@@ -150,7 +150,7 @@ def save_models():
 
     # Save the models_trained flag
     with open(CACHE_PATH / MODELS_TRAINED_FILE, "wb") as f:
-        pickle.dump(SessionStateManager.get("models_trained"), f)
+        pickle.dump(SessionStateManager.get("bertrend")._is_fitted, f)
 
     hyperparams = SessionStateManager.get_multiple(
         "umap_n_components",
@@ -212,6 +212,7 @@ def restore_models():
     models_trained_file = CACHE_PATH / MODELS_TRAINED_FILE
     if models_trained_file.exists():
         with open(models_trained_file, "rb") as f:
+            # FIXME! set bertrend first!
             SessionStateManager.set("models_trained", pickle.load(f))
     else:
         logger.warning("Models trained flag not found.")
@@ -243,8 +244,7 @@ def main():
 
     # Set the main flags
     SessionStateManager.get_or_set("data_embedded", False)
-    SessionStateManager.get_or_set("models_merged", False)
-    SessionStateManager.get_or_set("models_trained", False)
+    SessionStateManager.get_or_set("popularity_computed", False)
 
     # Sidebar
     with st.sidebar:
@@ -586,61 +586,38 @@ def main():
                             "zeroshot_min_similarity"
                         ),
                     )
-                    topic_models, doc_groups, emb_groups = bertrend.train_topic_models(
+                    bertrend.train_topic_models(
                         grouped_data=grouped_data,
                         embedding_model=SessionStateManager.get("embedding_model"),
                         embeddings=SessionStateManager.get_embeddings(),
                     )
 
+                    # TODO: A supprimer / adapter - cf save/restore
                     SessionStateManager.set_multiple(
-                        topic_models=topic_models,
-                        doc_groups=doc_groups,
-                        emb_groups=emb_groups,
+                        doc_groups=bertrend.doc_groups,
+                        emb_groups=bertrend.emb_groups,
                     )
-                    SessionStateManager.set("models_trained", True)
 
                     SessionStateManager.set("bertrend", bertrend)
 
                     st.success(MODEL_TRAINING_COMPLETE_MESSAGE)
-                    save_models()  # FIXME: to be moved to bertrend
+                    save_models()  # FIXME: to be moved to bertrend?
 
-            if not SessionStateManager.get("models_trained", False):
+            if not SessionStateManager.get("bertrend")._is_fitted:
                 st.stop()
             else:
                 if st.button("Merge Models"):
                     with st.spinner("Merging models..."):
                         # TODO: encapsulate into a merging function
-                        (
-                            merged_df_without_outliers,
-                            all_merge_histories_df,
-                            all_new_topics_df,
-                        ) = SessionStateManager.get("bertrend").merge_models(
+                        SessionStateManager.get("bertrend").merge_models(
                             min_similarity=SessionStateManager.get("min_similarity"),
+                        )
+
+                        SessionStateManager.get("bertrend").calculate_signal_popularity(
                             granularity=granularity,
                         )
 
-                        SessionStateManager.set_multiple(
-                            merged_df=merged_df_without_outliers,
-                            all_merge_histories_df=all_merge_histories_df,
-                            all_new_topics_df=all_new_topics_df,
-                        )
-
-                        (
-                            topic_sizes,
-                            topic_last_popularity,
-                            topic_last_update,
-                        ) = SessionStateManager.get(
-                            "bertrend"
-                        ).calculate_signal_popularity(
-                            all_merge_histories_df, granularity
-                        )
-                        SessionStateManager.set_multiple(
-                            topic_sizes=topic_sizes,
-                            topic_last_popularity=topic_last_popularity,
-                            topic_last_update=topic_last_update,
-                        )
-
-                        SessionStateManager.set("models_merged", True)
+                        SessionStateManager.set("popularity_computed", True)
 
                     st.success(MODEL_MERGING_COMPLETE_MESSAGE)
 
@@ -653,12 +630,12 @@ def main():
             )
             st.stop()
 
-        elif not SessionStateManager.get("models_trained", False):
+        elif not SessionStateManager.get("bertopic")._is_fitted:
             st.warning("Please train models before proceeding to analysis.")
             st.stop()
 
         else:
-            topic_models = SessionStateManager.get("topic_models")
+            topic_models = SessionStateManager.get("bertrend").topic_models
             st.subheader("Topic Overview")
             plot_num_topics_and_outliers(topic_models)
             plot_topics_per_timestamp(topic_models)
@@ -730,7 +707,7 @@ def main():
                     )
                     st.success(f"Zeroshot topics data saved to {json_file_path}")
 
-            if not SessionStateManager.get("models_merged", False):
+            if not SessionStateManager.get("popularity_computed", False):
                 st.warning("Please merge models to view additional analyses.")
                 st.stop()
 
@@ -738,7 +715,7 @@ def main():
                 # Display merged signal trend
                 st.subheader("Topic Size Evolution")
                 st.dataframe(
-                    SessionStateManager.get("all_merge_histories_df")[
+                    SessionStateManager.get("bertrend").all_merge_histories_df[
                         [
                             "Timestamp",
                             "Topic1",
@@ -761,8 +738,8 @@ def main():
                     )
 
                     all_merge_histories_df = SessionStateManager.get(
-                        "all_merge_histories_df"
-                    )
+                        "bertrend"
+                    ).all_merge_histories_df
                     min_datetime = (
                         all_merge_histories_df["Timestamp"].min().to_pydatetime()
                     )
@@ -808,14 +785,14 @@ def main():
                             save_path = save_signal_evolution_data(
                                 all_merge_histories_df=all_merge_histories_df,
                                 topic_sizes=dict(
-                                    SessionStateManager.get("topic_sizes")
+                                    SessionStateManager.get("bertrend").topic_sizes
                                 ),
                                 topic_last_popularity=SessionStateManager.get(
-                                    "topic_last_popularity"
-                                ),
+                                    "bertrend"
+                                ).topic_last_popularity,
                                 topic_last_update=SessionStateManager.get(
-                                    "topic_last_update"
-                                ),
+                                    "bertrend"
+                                ).topic_last_update,
                                 window_size=SessionStateManager.get("window_size"),
                                 granularity=granularity,
                                 start_timestamp=pd.Timestamp(start_date),
@@ -878,12 +855,14 @@ def main():
 
                 # Create the Sankey Diagram
                 st.subheader("Topic Evolution")
-                create_sankey_diagram(SessionStateManager.get("all_merge_histories_df"))
+                create_sankey_diagram(
+                    SessionStateManager.get("bertrend").all_merge_histories_df
+                )
 
-                if SessionStateManager.get("all_new_topics_df") is not None:
+                if SessionStateManager.get("bertrend").all_new_topics_df is not None:
                     st.subheader("Newly Emerged Topics")
                     plot_newly_emerged_topics(
-                        SessionStateManager.get("all_new_topics_df")
+                        SessionStateManager.get("bertrend").all_new_topics_df
                     )
 
                 if st.button("Retrieve Topic Counts"):
@@ -891,9 +870,7 @@ def main():
                         # Number of topics per individual topic model
                         individual_model_topic_counts = [
                             (timestamp, model.topic_info_df["Topic"].max() + 1)
-                            for timestamp, model in SessionStateManager.get(
-                                "topic_models"
-                            ).items()
+                            for timestamp, model in topic_models.items()
                         ]
                         df_individual_models = pd.DataFrame(
                             individual_model_topic_counts,

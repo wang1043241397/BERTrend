@@ -57,10 +57,12 @@ DEFAULT_REPRESENTATION_MODEL: List[RepresentationModelType] = [
     MaximalMarginalRelevance(diversity=0.3)
 ]
 
+# TODO - a lot of duplicate code with weak_signals - to be unified
+
 
 class EmbeddingModel(BaseEmbedder):
     """
-    Custom class for the embedding model. Currently supports SentenceBert models (model_name should refer to a SentenceBert model).
+    Custom class for the embedding model. Currently, supports SentenceBert models (model_name should refer to a SentenceBert model).
     Implements batch processing for efficient memory usage and handles different input types.
     """
 

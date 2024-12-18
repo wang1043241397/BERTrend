@@ -75,6 +75,8 @@ class TopicModel:
         # Initialize models based on those parameters
         self._initialize_models()
 
+        # TODO : set self.topic_model?
+
     def _initialize_models(self):
         self.umap_model = UMAP(
             n_components=self.umap_n_components,
@@ -156,14 +158,17 @@ class TopicModel:
             logger.debug("\tFitting BERTopic model")
             topics, probs = topic_model.fit_transform(docs, embeddings)
 
-            logger.debug("\tReducing outliers")
-            new_topics = topic_model.reduce_outliers(
-                documents=docs,
-                topics=topics,
-                embeddings=embeddings,
-                strategy=OUTLIER_REDUCTION_STRATEGY,
-            )
-
+            if not topic_model._outliers:
+                logger.warning("\tNo outliers to reduce.")
+                new_topics = topics
+            else:
+                logger.debug("\tReducing outliers")
+                new_topics = topic_model.reduce_outliers(
+                    documents=docs,
+                    topics=topics,
+                    embeddings=embeddings,
+                    strategy=OUTLIER_REDUCTION_STRATEGY,
+                )
             topic_model.update_topics(
                 docs=docs,
                 topics=new_topics,
