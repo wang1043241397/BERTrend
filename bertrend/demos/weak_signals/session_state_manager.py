@@ -52,6 +52,7 @@ class SessionStateManager:
         df = st.session_state.get(key)
         return df if isinstance(df, pd.DataFrame) else None
 
+    # FIXME: no usage?
     @staticmethod
     def get_model(key: str) -> Optional[Any]:
         return st.session_state.get(key)

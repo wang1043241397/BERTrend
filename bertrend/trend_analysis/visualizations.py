@@ -143,10 +143,10 @@ def plot_topics_per_timestamp(topic_models: Dict[pd.Timestamp, BERTopic]) -> Non
         st.dataframe(selected_model.topic_info_df, use_container_width=True)
 
 
-def create_topic_size_evolution_figure(topic_ids=None):
+def create_topic_size_evolution_figure(topic_ids=None) -> go.Figure:
     fig = go.Figure()
 
-    topic_sizes = st.session_state.topic_sizes
+    topic_sizes = st.session_state["bertrend"].topic_sizes
 
     if topic_ids is None:
         # If topic_ids is not provided, include all topics
@@ -201,9 +201,9 @@ def plot_topic_size_evolution(
         Tuple[float, float]: The q1 and q3 values representing the 10th and 90th percentiles of popularity values.
     """
 
-    topic_sizes = st.session_state.topic_sizes
-    topic_last_popularity = st.session_state.topic_last_popularity
-    topic_last_update = st.session_state.topic_last_update
+    topic_sizes = st.session_state["bertrend"].topic_sizes
+    topic_last_popularity = st.session_state["bertrend"].topic_last_popularity
+    topic_last_update = st.session_state["bertrend"].topic_last_update
 
     window_size_timedelta = pd.Timedelta(days=window_size)
     granularity_timedelta = pd.Timedelta(days=granularity)

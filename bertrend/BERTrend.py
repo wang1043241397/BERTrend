@@ -194,6 +194,7 @@ class BERTrend:
             grouped_data (Dict[pd.Timestamp, pd.DataFrame]): Dictionary of grouped data by timestamp.
             embedding_model (SentenceTransformer): Sentence transformer model for embeddings.
             embeddings (np.ndarray): Precomputed document embeddings.
+            granularity (int):
         """
         # TODO from topic_modelling = train_topic_models (modulo data transformation)
         # TODO rename to fit?
@@ -456,12 +457,14 @@ class BERTrend:
             pickle.dump(self.doc_groups, f)
         with open(CACHE_PATH / EMB_GROUPS_FILE, "wb") as f:
             pickle.dump(self.emb_groups, f)
-        with open(CACHE_PATH / GRANULARITY_FILE, "wb") as f:
-            pickle.dump(self.granularity)
+
+        # FIXME: granularity currently not set at this stage
+        # with open(CACHE_PATH / GRANULARITY_FILE, "wb") as f:
+        #     pickle.dump(self.granularity)
 
         # Save the models_trained flag
         with open(CACHE_PATH / MODELS_TRAINED_FILE, "wb") as f:
-            pickle.dump(self.bertrend._is_fitted, f)
+            pickle.dump(self._is_fitted, f)
 
         # TODO!
         """

@@ -558,7 +558,10 @@ def main():
                     # Store bertrend object
                     SessionStateManager.set("bertrend", bertrend)
 
-            if not SessionStateManager.get("bertrend")._is_fitted:
+            if (
+                "bertrend" not in st.session_state
+                or not SessionStateManager.get("bertrend")._is_fitted
+            ):
                 st.stop()
             else:
                 if st.button("Merge Models"):
@@ -585,7 +588,7 @@ def main():
             )
             st.stop()
 
-        elif not SessionStateManager.get("bertopic")._is_fitted:
+        elif not SessionStateManager.get("bertrend")._is_fitted:
             st.warning("Please train models before proceeding to analysis.")
             st.stop()
 
