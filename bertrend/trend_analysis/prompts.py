@@ -149,7 +149,7 @@ Topic Evolution Summary:
 {topic_summary}
 
 Weak Signal Analysis:
-{trend_analysis}
+{weak_signal_analysis}
 
 Instructions:
 1. Carefully read the provided topic evolution summary, weak signal analysis, and HTML template.
@@ -170,7 +170,7 @@ Résumé de l'Évolution du Sujet :
 {topic_summary}
 
 Analyse du Signal Faible :
-{trend_analysis}
+{weak_signal_analysis}
 
 Instructions :
 1. Lisez attentivement le résumé de l'évolution du sujet, l'analyse du signal faible et le modèle HTML fournis.
@@ -235,6 +235,7 @@ def get_prompt(
 
 
 # Function to parse the model's output and save as HTML
+# FIXME: default path of file!
 def save_html_output(model_output, output_file="signal_llm.html"):
     # Clean the HTML content
     cleaned_html = model_output.strip()  # Remove leading/trailing whitespace
