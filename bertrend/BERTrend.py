@@ -2,6 +2,8 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
+import pickle
+import shutil
 from collections import defaultdict
 from typing import Dict, Tuple, List, Any
 
@@ -11,10 +13,18 @@ from bertopic import BERTopic
 from loguru import logger
 from sentence_transformers import SentenceTransformer
 
+from bertrend import MODELS_DIR, CACHE_PATH
 from bertrend.topic_model import TopicModel
 from bertrend.parameters import (
     DEFAULT_MIN_SIMILARITY,
     DEFAULT_GRANULARITY,
+    DOC_INFO_DF_FILE,
+    TOPIC_INFO_DF_FILE,
+    DOC_GROUPS_FILE,
+    MODELS_TRAINED_FILE,
+    EMB_GROUPS_FILE,
+    GRANULARITY_FILE,
+    HYPERPARAMS_FILE,
 )
 from bertrend.trend_analysis.topic_modeling import preprocess_model, merge_models
 from bertrend.trend_analysis.weak_signals import (
@@ -340,6 +350,8 @@ class BERTrend:
         Returns:
 
         """
+        self.granularity = granularity
+
         if not self._are_models_merged:
             # FIXME: RuntimeError
             raise RuntimeError(
@@ -417,6 +429,55 @@ class BERTrend:
         self.topic_sizes = topic_sizes
         self.topic_last_popularity = topic_last_popularity
         self.topic_last_update = topic_last_update
+
+    def save_models(self):
+        if MODELS_DIR.exists():
+            shutil.rmtree(MODELS_DIR)
+        MODELS_DIR.mkdir(parents=True, exist_ok=True)
+
+        # TODO
+        """
+        for period, topic_model in self.topic_models.items():
+            model_dir = MODELS_DIR / period.strftime("%Y-%m-%d")
+            model_dir.mkdir(exist_ok=True)
+            embedding_model = SessionStateManager.get("embedding_model")
+            topic_model.save(
+                model_dir,
+                serialization="safetensors",
+                save_ctfidf=False,
+                save_embedding_model=embedding_model,
+            )
+
+            topic_model.doc_info_df.to_pickle(model_dir / DOC_INFO_DF_FILE)
+            topic_model.topic_info_df.to_pickle(model_dir / TOPIC_INFO_DF_FILE)
+        """
+
+        with open(CACHE_PATH / DOC_GROUPS_FILE, "wb") as f:
+            pickle.dump(self.doc_groups, f)
+        with open(CACHE_PATH / EMB_GROUPS_FILE, "wb") as f:
+            pickle.dump(self.emb_groups, f)
+        with open(CACHE_PATH / GRANULARITY_FILE, "wb") as f:
+            pickle.dump(self.granularity)
+
+        # Save the models_trained flag
+        with open(CACHE_PATH / MODELS_TRAINED_FILE, "wb") as f:
+            pickle.dump(self.bertrend._is_fitted, f)
+
+        # TODO!
+        """
+        hyperparams = SessionStateManager.get_multiple(
+            "umap_n_components",
+            "umap_n_neighbors",
+            "hdbscan_min_cluster_size",
+            "hdbscan_min_samples",
+            "hdbscan_cluster_selection_method",
+            "top_n_words",
+            "vectorizer_ngram_range",
+            "min_df",
+        )
+        with open(CACHE_PATH / HYPERPARAMS_FILE, "wb") as f:
+            pickle.dump(hyperparams, f)
+        """
 
     #####################################################################################################
     # FIXME: WIP

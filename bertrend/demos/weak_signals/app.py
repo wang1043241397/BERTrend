@@ -121,53 +121,6 @@ def restore_state():
         st.warning("No saved state found.")
 
 
-def save_models():
-    if MODELS_DIR.exists():
-        shutil.rmtree(MODELS_DIR)
-    MODELS_DIR.mkdir(parents=True, exist_ok=True)
-
-    topic_models = SessionStateManager.get("topic_models", {})
-    for period, topic_model in topic_models.items():
-        model_dir = MODELS_DIR / period.strftime("%Y-%m-%d")
-        model_dir.mkdir(exist_ok=True)
-        embedding_model = SessionStateManager.get("embedding_model")
-        topic_model.save(
-            model_dir,
-            serialization="safetensors",
-            save_ctfidf=False,
-            save_embedding_model=embedding_model,
-        )
-
-        topic_model.doc_info_df.to_pickle(model_dir / DOC_INFO_DF_FILE)
-        topic_model.topic_info_df.to_pickle(model_dir / TOPIC_INFO_DF_FILE)
-
-    with open(CACHE_PATH / DOC_GROUPS_FILE, "wb") as f:
-        pickle.dump(SessionStateManager.get("doc_groups"), f)
-    with open(CACHE_PATH / EMB_GROUPS_FILE, "wb") as f:
-        pickle.dump(SessionStateManager.get("emb_groups"), f)
-    with open(CACHE_PATH / GRANULARITY_FILE, "wb") as f:
-        pickle.dump(SessionStateManager.get("granularity_select"), f)
-
-    # Save the models_trained flag
-    with open(CACHE_PATH / MODELS_TRAINED_FILE, "wb") as f:
-        pickle.dump(SessionStateManager.get("bertrend")._is_fitted, f)
-
-    hyperparams = SessionStateManager.get_multiple(
-        "umap_n_components",
-        "umap_n_neighbors",
-        "hdbscan_min_cluster_size",
-        "hdbscan_min_samples",
-        "hdbscan_cluster_selection_method",
-        "top_n_words",
-        "vectorizer_ngram_range",
-        "min_df",
-    )
-    with open(CACHE_PATH / HYPERPARAMS_FILE, "wb") as f:
-        pickle.dump(hyperparams, f)
-
-    st.success(MODELS_SAVED_MESSAGE)
-
-
 def restore_models():
     if not MODELS_DIR.exists():
         st.warning(NO_MODELS_WARNING)
@@ -224,8 +177,6 @@ def restore_models():
     else:
         logger.warning("Hyperparameters file not found.")
 
-    st.success(MODELS_RESTORED_MESSAGE)
-
 
 def purge_cache():
     if CACHE_PATH.exists():
@@ -256,6 +207,7 @@ def main():
         if st.button("Restore Previous Run", use_container_width=True):
             restore_state()
             restore_models()
+            st.success(MODELS_RESTORED_MESSAGE)
 
         if st.button("Purge Cache", use_container_width=True):
             purge_cache()
@@ -499,7 +451,7 @@ def main():
         st.header("Model Training")
 
         # Select granularity
-        granularity = st.number_input(
+        st.number_input(
             "Select Granularity",
             value=DEFAULT_GRANULARITY,
             min_value=1,
@@ -512,7 +464,7 @@ def main():
         with st.expander("Documents per Timestamp", expanded=True):
             grouped_data = group_by_days(
                 SessionStateManager.get_dataframe("timefiltered_df"),
-                day_granularity=granularity,
+                day_granularity=SessionStateManager.get("granularity_select"),
             )
             non_empty_timestamps = [
                 timestamp
@@ -554,7 +506,7 @@ def main():
                     # FIXME: called twice (see above)
                     grouped_data = group_by_days(
                         SessionStateManager.get_dataframe("timefiltered_df"),
-                        day_granularity=granularity,
+                        day_granularity=SessionStateManager.get("granularity_select"),
                     )
 
                     logger.debug(SessionStateManager.get("language"))
@@ -598,10 +550,13 @@ def main():
                         emb_groups=bertrend.emb_groups,
                     )
 
-                    SessionStateManager.set("bertrend", bertrend)
-
                     st.success(MODEL_TRAINING_COMPLETE_MESSAGE)
-                    save_models()  # FIXME: to be moved to bertrend?
+
+                    bertrend.save_models()
+                    st.success(MODELS_SAVED_MESSAGE)
+
+                    # Store bertrend object
+                    SessionStateManager.set("bertrend", bertrend)
 
             if not SessionStateManager.get("bertrend")._is_fitted:
                 st.stop()
@@ -614,7 +569,7 @@ def main():
                         )
 
                         SessionStateManager.get("bertrend").calculate_signal_popularity(
-                            granularity=granularity,
+                            granularity=SessionStateManager.get("granularity_select"),
                         )
 
                         SessionStateManager.set("popularity_computed", True)
@@ -644,7 +599,9 @@ def main():
             if zeroshot_topic_list:
                 st.subheader("Zero-shot Weak Signal Trends")
                 weak_signal_trends = detect_weak_signals_zeroshot(
-                    topic_models, zeroshot_topic_list, granularity
+                    topic_models,
+                    zeroshot_topic_list,
+                    SessionStateManager.get("granularity_select"),
                 )
                 with st.expander("Zero-shot Weak Signal Trends", expanded=False):
                     fig_trend = go.Figure()
@@ -751,7 +708,9 @@ def main():
                         "Current date",
                         min_value=min_datetime,
                         max_value=max_datetime,
-                        step=pd.Timedelta(days=granularity),
+                        step=pd.Timedelta(
+                            days=SessionStateManager.get("granularity_select")
+                        ),
                         format="YYYY-MM-DD",
                         help="""The earliest selectable date corresponds to the earliest timestamp when topics were merged 
                         (with the smallest possible value being the earliest timestamp in the provided data). 
@@ -762,7 +721,7 @@ def main():
                     plot_topic_size_evolution(
                         create_topic_size_evolution_figure(),
                         window_size,
-                        granularity,
+                        SessionStateManager.get("granularity_select"),
                         current_date,
                         min_datetime,
                         max_datetime,
@@ -774,7 +733,9 @@ def main():
                         options=pd.date_range(
                             start=min_datetime,
                             end=max_datetime,
-                            freq=pd.Timedelta(days=granularity),
+                            freq=pd.Timedelta(
+                                days=SessionStateManager.get("granularity_select")
+                            ),
                         ),
                         value=(min_datetime, max_datetime),
                         format_func=lambda x: x.strftime("%Y-%m-%d"),
@@ -794,7 +755,9 @@ def main():
                                     "bertrend"
                                 ).topic_last_update,
                                 window_size=SessionStateManager.get("window_size"),
-                                granularity=granularity,
+                                granularity=SessionStateManager.get(
+                                    "granularity_select"
+                                ),
                                 start_timestamp=pd.Timestamp(start_date),
                                 end_timestamp=pd.Timestamp(end_date),
                             )
@@ -821,7 +784,7 @@ def main():
                                     topic_number,
                                     current_date,
                                     all_merge_histories_df,
-                                    granularity,
+                                    SessionStateManager.get("granularity_select"),
                                     language,
                                 )
 
