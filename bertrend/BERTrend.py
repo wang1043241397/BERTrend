@@ -14,6 +14,10 @@ from loguru import logger
 from sentence_transformers import SentenceTransformer
 
 from bertrend import MODELS_DIR, CACHE_PATH
+from bertrend.demos.weak_signals.messages import (
+    NO_GRANULARITY_WARNING,
+)
+from bertrend.demos.weak_signals.session_state_manager import SessionStateManager
 from bertrend.topic_model import TopicModel
 from bertrend.parameters import (
     DEFAULT_MIN_SIMILARITY,
@@ -194,7 +198,6 @@ class BERTrend:
             grouped_data (Dict[pd.Timestamp, pd.DataFrame]): Dictionary of grouped data by timestamp.
             embedding_model (SentenceTransformer): Sentence transformer model for embeddings.
             embeddings (np.ndarray): Precomputed document embeddings.
-            granularity (int):
         """
         # TODO from topic_modelling = train_topic_models (modulo data transformation)
         # TODO rename to fit?
@@ -267,7 +270,6 @@ class BERTrend:
 
         # progress_bar = st.progress(0)
         merge_df_size_over_time = []
-        # SessionStateManager.set("merge_df_size_over_time", [])
 
         for i, (current_timestamp, next_timestamp) in enumerate(
             zip(timestamps[:-1], timestamps[1:])
@@ -312,11 +314,7 @@ class BERTrend:
                     merged_df_without_outliers["Topic"].max() + 1,
                 )
             )
-            #
-            # SessionStateManager.update(
-            #     "merge_df_size_over_time", merge_df_size_over_time
-            # )
-            #
+
             # progress_bar.progress((i + 1) / len(timestamps))
 
         all_merge_histories_df = pd.concat(all_merge_histories, ignore_index=True)
@@ -340,7 +338,7 @@ class BERTrend:
         Updates:
            - topic_sizes (Dict[int, Dict[str, Any]]): Dictionary storing topic sizes and related information over time.
            - topic_last_popularity (Dict[int, float]): Dictionary storing the last known popularity of each topic.
-           - topic_last_update (Dict[int, pd.Timestamp]]): Dictionary storing the last update timestamp of each topic.
+           - topic_last_update (Dict[int, pd.Timestamp]): Dictionary storing the last update timestamp of each topic.
 
         Args:
             all_merge_histories_df (pd.DataFrame): DataFrame containing all merge histories.
@@ -444,7 +442,7 @@ class BERTrend:
             embedding_model = SessionStateManager.get("embedding_model")
             topic_model.save(
                 model_dir,
-                serialization="safetensors",
+                serialization=BERTOPIC_SERIALIZATION,
                 save_ctfidf=False,
                 save_embedding_model=embedding_model,
             )
@@ -481,6 +479,65 @@ class BERTrend:
         with open(CACHE_PATH / HYPERPARAMS_FILE, "wb") as f:
             pickle.dump(hyperparams, f)
         """
+
+    @classmethod
+    def restore_models(cls):
+        if not MODELS_DIR.exists():
+            raise FileNotFoundError(f"MODELS_DIR={MODELS_DIR} does not exist")
+
+        topic_models = {}
+        for period_dir in MODELS_DIR.iterdir():
+            if period_dir.is_dir():
+                topic_model = BERTopic.load(period_dir)
+
+                doc_info_df_file = period_dir / DOC_INFO_DF_FILE
+                topic_info_df_file = period_dir / TOPIC_INFO_DF_FILE
+                if doc_info_df_file.exists() and topic_info_df_file.exists():
+                    topic_model.doc_info_df = pd.read_pickle(doc_info_df_file)
+                    topic_model.topic_info_df = pd.read_pickle(topic_info_df_file)
+                else:
+                    logger.warning(
+                        f"doc_info_df or topic_info_df not found for period {period_dir.name}"
+                    )
+
+                period = pd.Timestamp(period_dir.name.replace("_", ":"))
+                topic_models[period] = topic_model
+
+        SessionStateManager.set("topic_models", topic_models)
+
+        for file, key in [
+            (DOC_GROUPS_FILE, "doc_groups"),
+            (EMB_GROUPS_FILE, "emb_groups"),
+        ]:
+            file_path = CACHE_PATH / file
+            if file_path.exists():
+                with open(file_path, "rb") as f:
+                    SessionStateManager.set(key, pickle.load(f))
+            else:
+                logger.warning(f"{file} not found.")
+
+        granularity_file = CACHE_PATH / GRANULARITY_FILE
+        if granularity_file.exists():
+            with open(granularity_file, "rb") as f:
+                SessionStateManager.set("granularity_select", pickle.load(f))
+        else:
+            logger.warning(NO_GRANULARITY_WARNING)
+
+        # Restore the models_trained flag
+        models_trained_file = CACHE_PATH / MODELS_TRAINED_FILE
+        if models_trained_file.exists():
+            with open(models_trained_file, "rb") as f:
+                # FIXME! set bertrend first!
+                SessionStateManager.set("models_trained", pickle.load(f))
+        else:
+            logger.warning("Models trained flag not found.")
+
+        hyperparams_file = CACHE_PATH / HYPERPARAMS_FILE
+        if hyperparams_file.exists():
+            with open(hyperparams_file, "rb") as f:
+                SessionStateManager.set_multiple(**pickle.load(f))
+        else:
+            logger.warning("Hyperparameters file not found.")
 
     #####################################################################################################
     # FIXME: WIP

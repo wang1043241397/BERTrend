@@ -25,3 +25,4 @@ TOPIC_NOT_FOUND_WARNING = (
 )
 NO_GRANULARITY_WARNING = "Granularity value not found."
 NO_DATASET_WARNING = "Please select at least one dataset to proceed."
+HTML_GENERATION_FAILED_WARNING = "HTML generation failed. Displaying markdown instead."

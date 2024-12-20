@@ -11,6 +11,8 @@ from bertopic import BERTopic
 from pandas import Timestamp
 from plotly import graph_objects as go
 
+from bertrend import OUTPUT_PATH
+from bertrend.demos.weak_signals.messages import HTML_GENERATION_FAILED_WARNING
 from bertrend.demos.weak_signals.session_state_manager import SessionStateManager
 from bertrend.parameters import MAX_WINDOW_SIZE, DEFAULT_WINDOW_SIZE
 from bertrend.trend_analysis.visualizations import (
@@ -144,6 +146,7 @@ def display_popularity_evolution():
         (with the smallest possible value being the earliest timestamp in the provided data). 
         The latest selectable date corresponds to the most recent topic merges, which is at most equal 
         to the latest timestamp in the data minus the provided granularity.""",
+        key="current_date",
     )
 
     granularity = SessionStateManager.get("granularity_select")
@@ -272,7 +275,7 @@ def display_topics_per_timestamp(topic_models: Dict[pd.Timestamp, BERTopic]) -> 
         st.dataframe(selected_model.topic_info_df, use_container_width=True)
 
 
-def display_signal_analysis(topic_number):
+def display_signal_analysis(topic_number, output_file="signal_llm.html"):
     language = SessionStateManager.get("language")
     bertrend = SessionStateManager.get("bertrend")
     all_merge_histories_df = bertrend.all_merge_histories_df
@@ -288,8 +291,7 @@ def display_signal_analysis(topic_number):
             )
 
             # Check if the HTML file was created successfully
-            # FIXME: output path
-            output_file_path = Path(__file__).parent / "signal_llm.html"
+            output_file_path = OUTPUT_PATH / output_file
             if output_file_path.exists():
                 # Read the HTML file
                 with open(output_file_path, "r", encoding="utf-8") as file:
@@ -297,7 +299,7 @@ def display_signal_analysis(topic_number):
                 # Display the HTML content
                 st.html(html_content)
             else:
-                st.warning("HTML generation failed. Displaying markdown instead.")
+                st.warning(HTML_GENERATION_FAILED_WARNING)
                 # Fallback to displaying markdown if HTML generation fails
                 col1, col2 = st.columns(spec=[0.5, 0.5], gap="medium")
                 with col1:

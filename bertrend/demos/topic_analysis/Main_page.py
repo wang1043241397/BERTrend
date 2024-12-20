@@ -34,6 +34,7 @@ from bertrend.demos.topic_analysis.state_utils import (
 )
 
 from bertrend.metrics.topic_metrics import get_coherence_value, get_diversity_value
+from bertrend.parameters import BERTOPIC_SERIALIZATION
 from bertrend.train import train_BERTopic
 from bertrend.utils.data_loading import (
     split_df_by_paragraphs,
@@ -120,7 +121,7 @@ def save_model_interface():
             try:
                 st.session_state["topic_model"].save(
                     model_save_path,
-                    serialization="safetensors",
+                    serialization=BERTOPIC_SERIALIZATION,
                     save_ctfidf=True,
                     save_embedding_model=True,
                 )

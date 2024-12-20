@@ -17,9 +17,6 @@ from tqdm import tqdm
 
 from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend.parameters import (
-    GPT_TEMPERATURE,
-    GPT_SYSTEM_MESSAGE,
-    GPT_MAX_TOKENS,
     SIGNAL_CLASSIF_LOWER_BOUND,
     SIGNAL_CLASSIF_UPPER_BOUND,
 )
@@ -547,10 +544,10 @@ def analyze_signal(
                 content_summary=content_summary,
             )
             summary = openai_client.generate(
-                system_prompt=GPT_SYSTEM_MESSAGE,
+                system_prompt=LLM_CONFIG["system_prompt"],
                 user_prompt=summary_prompt,
-                temperature=GPT_TEMPERATURE,
-                max_tokens=GPT_MAX_TOKENS,
+                temperature=LLM_CONFIG["temperature"],
+                max_tokens=LLM_CONFIG["max_tokens"],
             )
 
             # Second prompt: Analyze weak signal
@@ -559,10 +556,10 @@ def analyze_signal(
                 language, "weak_signal", summary_from_first_prompt=summary
             )
             weak_signal_analysis = openai_client.generate(
-                system_prompt=GPT_SYSTEM_MESSAGE,
+                system_prompt=LLM_CONFIG["system_prompt"],
                 user_prompt=weak_signal_prompt,
-                temperature=GPT_TEMPERATURE,
-                max_tokens=GPT_MAX_TOKENS,
+                temperature=LLM_CONFIG["temperature"],
+                max_tokens=LLM_CONFIG["max_tokens"],
             )
 
             # Third prompt: Generate HTML format
@@ -574,10 +571,10 @@ def analyze_signal(
                 weak_signal_analysis=weak_signal_analysis,
             )
             formatted_html = openai_client.generate(
-                system_prompt=GPT_SYSTEM_MESSAGE,
+                system_prompt=LLM_CONFIG["system_prompt"],
                 user_prompt=html_format_prompt,
-                temperature=GPT_TEMPERATURE,
-                max_tokens=GPT_MAX_TOKENS,
+                temperature=LLM_CONFIG["temperature"],
+                max_tokens=LLM_CONFIG["max_tokens"],
             )
 
             # Save the formatted HTML

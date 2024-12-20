@@ -10,12 +10,10 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from bertopic import BERTopic
 from loguru import logger
 
 from bertrend import (
     DATA_PATH,
-    MODELS_DIR,
     ZEROSHOT_TOPICS_DATA_DIR,
     SIGNAL_EVOLUTION_DATA_DIR,
     CACHE_PATH,
@@ -34,9 +32,8 @@ from bertrend.demos.weak_signals.messages import (
     STATE_SAVED_MESSAGE,
     STATE_RESTORED_MESSAGE,
     MODELS_SAVED_MESSAGE,
-    NO_MODELS_WARNING,
-    NO_GRANULARITY_WARNING,
     NO_DATASET_WARNING,
+    NO_MODELS_WARNING,
 )
 from bertrend.trend_analysis.weak_signals import detect_weak_signals_zeroshot
 
@@ -121,63 +118,6 @@ def restore_state():
         st.warning("No saved state found.")
 
 
-def restore_models():
-    if not MODELS_DIR.exists():
-        st.warning(NO_MODELS_WARNING)
-        return
-
-    topic_models = {}
-    for period_dir in MODELS_DIR.iterdir():
-        if period_dir.is_dir():
-            topic_model = BERTopic.load(period_dir)
-
-            doc_info_df_file = period_dir / DOC_INFO_DF_FILE
-            topic_info_df_file = period_dir / TOPIC_INFO_DF_FILE
-            if doc_info_df_file.exists() and topic_info_df_file.exists():
-                topic_model.doc_info_df = pd.read_pickle(doc_info_df_file)
-                topic_model.topic_info_df = pd.read_pickle(topic_info_df_file)
-            else:
-                logger.warning(
-                    f"doc_info_df or topic_info_df not found for period {period_dir.name}"
-                )
-
-            period = pd.Timestamp(period_dir.name.replace("_", ":"))
-            topic_models[period] = topic_model
-
-    SessionStateManager.set("topic_models", topic_models)
-
-    for file, key in [(DOC_GROUPS_FILE, "doc_groups"), (EMB_GROUPS_FILE, "emb_groups")]:
-        file_path = CACHE_PATH / file
-        if file_path.exists():
-            with open(file_path, "rb") as f:
-                SessionStateManager.set(key, pickle.load(f))
-        else:
-            logger.warning(f"{file} not found.")
-
-    granularity_file = CACHE_PATH / GRANULARITY_FILE
-    if granularity_file.exists():
-        with open(granularity_file, "rb") as f:
-            SessionStateManager.set("granularity_select", pickle.load(f))
-    else:
-        logger.warning(NO_GRANULARITY_WARNING)
-
-    # Restore the models_trained flag
-    models_trained_file = CACHE_PATH / MODELS_TRAINED_FILE
-    if models_trained_file.exists():
-        with open(models_trained_file, "rb") as f:
-            # FIXME! set bertrend first!
-            SessionStateManager.set("models_trained", pickle.load(f))
-    else:
-        logger.warning("Models trained flag not found.")
-
-    hyperparams_file = CACHE_PATH / HYPERPARAMS_FILE
-    if hyperparams_file.exists():
-        with open(hyperparams_file, "rb") as f:
-            SessionStateManager.set_multiple(**pickle.load(f))
-    else:
-        logger.warning("Hyperparameters file not found.")
-
-
 def purge_cache():
     if CACHE_PATH.exists():
         shutil.rmtree(CACHE_PATH)
@@ -206,8 +146,11 @@ def main():
 
         if st.button("Restore Previous Run", use_container_width=True):
             restore_state()
-            restore_models()
-            st.success(MODELS_RESTORED_MESSAGE)
+            try:
+                BERTrend.restore_models()
+                st.success(MODELS_RESTORED_MESSAGE)
+            except Exception as e:
+                st.warning(NO_MODELS_WARNING)
 
         if st.button("Purge Cache", use_container_width=True):
             purge_cache()

@@ -11,6 +11,7 @@ BERTREND_CONFIG_PATH = Path(__file__).parent / "bertrend.toml"
 
 # Read config
 BERTREND_CONFIG = load_toml_config(BERTREND_CONFIG_PATH)
+PARAMETERS_CONFIG = BERTREND_CONFIG["parameters"]
 EMBEDDING_CONFIG = BERTREND_CONFIG["embedding_service"]
 LLM_CONFIG = BERTREND_CONFIG["llm_service"]
 
@@ -48,4 +49,5 @@ SIGNAL_EVOLUTION_DATA_DIR = CACHE_PATH / "signal_evolution_data"
 
 # Create directories if they do not exist
 DATA_PATH.mkdir(parents=True, exist_ok=True)
+OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
 CACHE_PATH.mkdir(parents=True, exist_ok=True)

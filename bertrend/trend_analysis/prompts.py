@@ -5,6 +5,8 @@
 
 from pathlib import Path
 
+from bertrend import OUTPUT_PATH
+
 # Global variables for prompts
 SIGNAL_INTRO = {
     "en": """As an elite strategic foresight analyst with extensive expertise across multiple domains and industries, your task is to conduct a comprehensive evaluation of a potential signal derived from the following topic summary:
@@ -234,9 +236,8 @@ def get_prompt(
     return prompt
 
 
-# Function to parse the model's output and save as HTML
-# FIXME: default path of file!
 def save_html_output(model_output, output_file="signal_llm.html"):
+    """Function to parse the model's output and save as HTML"""
     # Clean the HTML content
     cleaned_html = model_output.strip()  # Remove leading/trailing whitespace
 
@@ -252,7 +253,7 @@ def save_html_output(model_output, output_file="signal_llm.html"):
 
     # Final strip to remove any remaining whitespace
     cleaned_html = cleaned_html.strip()
-    output_path = Path(__file__).parent / output_file
+    output_path = OUTPUT_PATH / output_file
 
     # Save the cleaned HTML
     with open(output_path, "w", encoding="utf-8") as file:

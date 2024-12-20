@@ -13,6 +13,11 @@ from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
 from bertrend import EMBEDDING_CONFIG
+from bertrend.parameters import (
+    EMBEDDING_DEVICE,
+    EMBEDDING_BATCH_SIZE,
+    EMBEDDING_MAX_SEQ_LENGTH,
+)
 
 
 class EmbeddingService:
@@ -74,9 +79,9 @@ class EmbeddingService:
         texts: List[str],
         embedding_model_name: str,
         embedding_dtype: str,
-        embedding_device: str = "cuda" if torch.cuda.is_available() else "cpu",
-        batch_size: int = 5000,
-        max_seq_length: int = 512,
+        embedding_device: str = EMBEDDING_DEVICE,
+        batch_size: int = EMBEDDING_BATCH_SIZE,
+        max_seq_length: int = EMBEDDING_MAX_SEQ_LENGTH,
     ) -> Tuple[SentenceTransformer, np.ndarray]:
         """
         Embed a list of documents using a Sentence Transformer model.

@@ -23,6 +23,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from umap import UMAP
 
 from bertrend import FEED_BASE_PATH, BEST_CUDA_DEVICE, OUTPUT_PATH
+from bertrend.parameters import BERTOPIC_SERIALIZATION
 from bertrend.utils.config_utils import load_toml_config
 from bertrend.utils.data_loading import (
     split_df_by_paragraphs,
@@ -266,7 +267,7 @@ if __name__ == "__main__":
         # Serialization using safetensors
         topic_model.save(
             full_model_path_dir,
-            serialization="safetensors",
+            serialization=BERTOPIC_SERIALIZATION,
             save_ctfidf=True,
             save_embedding_model=embedding_model,
         )
