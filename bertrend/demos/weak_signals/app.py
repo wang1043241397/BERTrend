@@ -38,11 +38,8 @@ from bertrend.demos.weak_signals.messages import (
     NO_GRANULARITY_WARNING,
     NO_DATASET_WARNING,
 )
-from bertrend.trend_analysis.weak_signals import (
-    detect_weak_signals_zeroshot,
-    save_signal_evolution_data,
-    analyze_signal,
-)
+from bertrend.trend_analysis.weak_signals import detect_weak_signals_zeroshot
+
 from bertrend.utils.data_loading import (
     load_and_preprocess_data,
     group_by_days,
@@ -52,16 +49,17 @@ from bertrend.utils.data_loading import (
 from bertrend.parameters import *
 from session_state_manager import SessionStateManager
 from bertrend.trend_analysis.visualizations import (
-    plot_topics_per_timestamp,
-    plot_topic_size_evolution,
-    create_topic_size_evolution_figure,
-    plot_newly_emerged_topics,
     plot_size_outliers,
     plot_num_topics,
 )
 from bertrend.demos.weak_signals.visualizations_utils import (
     PLOTLY_BUTTON_SAVE_CONFIG,
     display_sankey_diagram,
+    display_topics_per_timestamp,
+    display_newly_emerged_topics,
+    display_popularity_evolution,
+    save_signal_evolution,
+    display_signal_analysis,
 )
 
 # UI Settings
@@ -610,7 +608,7 @@ def main():
                 use_container_width=True,
             )
 
-            plot_topics_per_timestamp(topic_models)
+            display_topics_per_timestamp(topic_models)
 
             # Display zeroshot signal trend
             if zeroshot_topic_list:
@@ -702,136 +700,20 @@ def main():
                     ]
                 )
 
+                # Display topic popularity evolution
                 with st.expander("Topic Popularity Evolution", expanded=True):
-                    window_size = st.number_input(
-                        "Retrospective Period (days)",
-                        min_value=1,
-                        max_value=MAX_WINDOW_SIZE,
-                        value=DEFAULT_WINDOW_SIZE,
-                        key="window_size",
-                    )
-
-                    all_merge_histories_df = SessionStateManager.get(
-                        "bertrend"
-                    ).all_merge_histories_df
-                    min_datetime = (
-                        all_merge_histories_df["Timestamp"].min().to_pydatetime()
-                    )
-                    max_datetime = (
-                        all_merge_histories_df["Timestamp"].max().to_pydatetime()
-                    )
-
-                    current_date = st.slider(
-                        "Current date",
-                        min_value=min_datetime,
-                        max_value=max_datetime,
-                        step=pd.Timedelta(
-                            days=SessionStateManager.get("granularity_select")
-                        ),
-                        format="YYYY-MM-DD",
-                        help="""The earliest selectable date corresponds to the earliest timestamp when topics were merged 
-                        (with the smallest possible value being the earliest timestamp in the provided data). 
-                        The latest selectable date corresponds to the most recent topic merges, which is at most equal 
-                        to the latest timestamp in the data minus the provided granularity.""",
-                    )
-
-                    plot_topic_size_evolution(
-                        create_topic_size_evolution_figure(
-                            st.session_state["bertrend"].topic_sizes
-                        ),
-                        window_size,
-                        SessionStateManager.get("granularity_select"),
-                        current_date,
-                        min_datetime,
-                        max_datetime,
-                    )
-
+                    display_popularity_evolution()
                     # Save Signal Evolution Data to investigate later on in a separate notebook
-                    start_date, end_date = st.select_slider(
-                        "Select date range for saving signal evolution data:",
-                        options=pd.date_range(
-                            start=min_datetime,
-                            end=max_datetime,
-                            freq=pd.Timedelta(
-                                days=SessionStateManager.get("granularity_select")
-                            ),
-                        ),
-                        value=(min_datetime, max_datetime),
-                        format_func=lambda x: x.strftime("%Y-%m-%d"),
-                    )
-
-                    if st.button("Save Signal Evolution Data"):
-                        try:
-                            save_path = save_signal_evolution_data(
-                                all_merge_histories_df=all_merge_histories_df,
-                                topic_sizes=dict(
-                                    SessionStateManager.get("bertrend").topic_sizes
-                                ),
-                                topic_last_popularity=SessionStateManager.get(
-                                    "bertrend"
-                                ).topic_last_popularity,
-                                topic_last_update=SessionStateManager.get(
-                                    "bertrend"
-                                ).topic_last_update,
-                                window_size=SessionStateManager.get("window_size"),
-                                granularity=SessionStateManager.get(
-                                    "granularity_select"
-                                ),
-                                start_timestamp=pd.Timestamp(start_date),
-                                end_timestamp=pd.Timestamp(end_date),
-                            )
-                            st.success(
-                                f"Signal evolution data saved successfully at {save_path}"
-                            )
-                        except Exception as e:
-                            st.error(
-                                f"Error encountered while saving signal evolution data: {e}"
-                            )
+                    save_signal_evolution()
 
                 # Analyze signal
                 st.subheader("Signal Analysis")
                 topic_number = st.number_input(
                     "Enter a topic number to take a closer look:", min_value=0, step=1
                 )
-
                 if st.button("Analyze signal"):
                     try:
-                        language = SessionStateManager.get("language")
-                        with st.expander("Signal Interpretation", expanded=True):
-                            with st.spinner("Analyzing signal..."):
-                                summary, analysis, formatted_html = analyze_signal(
-                                    topic_number,
-                                    current_date,
-                                    all_merge_histories_df,
-                                    SessionStateManager.get("granularity_select"),
-                                    language,
-                                )
-
-                                # Check if the HTML file was created successfully
-                                output_file_path = (
-                                    Path(__file__).parent / "signal_llm.html"
-                                )
-                                if output_file_path.exists():
-                                    # Read the HTML file
-                                    with open(
-                                        output_file_path, "r", encoding="utf-8"
-                                    ) as file:
-                                        html_content = file.read()
-                                    # Display the HTML content
-                                    st.html(html_content)
-                                else:
-                                    st.warning(
-                                        "HTML generation failed. Displaying markdown instead."
-                                    )
-                                    # Fallback to displaying markdown if HTML generation fails
-                                    col1, col2 = st.columns(
-                                        spec=[0.5, 0.5], gap="medium"
-                                    )
-                                    with col1:
-                                        st.markdown(summary)
-                                    with col2:
-                                        st.markdown(analysis)
-
+                        display_signal_analysis(topic_number)
                     except Exception as e:
                         st.error(f"Error while trying to generate signal summary: {e}")
 
@@ -841,9 +723,10 @@ def main():
                     SessionStateManager.get("bertrend").all_merge_histories_df
                 )
 
+                # Newly emerged topics
                 if SessionStateManager.get("bertrend").all_new_topics_df is not None:
                     st.subheader("Newly Emerged Topics")
-                    plot_newly_emerged_topics(
+                    display_newly_emerged_topics(
                         SessionStateManager.get("bertrend").all_new_topics_df
                     )
 
@@ -879,7 +762,7 @@ def main():
                         # Save individual model topic counts
                         json_file_path = (
                             SIGNAL_EVOLUTION_DATA_DIR
-                            / f"retrospective_{window_size}_days"
+                            / f"retrospective_{SessionStateManager.get('window_size')}_days"
                         )
                         json_file_path.mkdir(parents=True, exist_ok=True)
 

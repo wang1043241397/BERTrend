@@ -8,22 +8,17 @@ from typing import Dict, Tuple
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-import streamlit as st
 from bertopic import BERTopic
+from pandas import Timestamp
 from plotly_resampler import FigureWidgetResampler
 
 from bertrend.parameters import SIGNAL_CLASSIF_LOWER_BOUND, SIGNAL_CLASSIF_UPPER_BOUND
-from bertrend.trend_analysis.weak_signals import classify_signals
 
-# FIXME: à supprimer
-PLOTLY_BUTTON_SAVE_CONFIG = {
-    "toImageButtonOptions": {
-        "format": "svg",
-        # 'height': 500,
-        # 'width': 1500,
-        "scale": 1,
-    }
-}
+# Visualization Settings
+SANKEY_NODE_PAD = 15
+SANKEY_NODE_THICKNESS = 20
+SANKEY_LINE_COLOR = "black"
+SANKEY_LINE_WIDTH = 0.5
 
 
 def plot_num_topics(topic_models: Dict[pd.Timestamp, BERTopic]) -> go.Figure:
@@ -98,54 +93,39 @@ def _prepare_source_topic_data(doc_info_df: pd.DataFrame) -> pd.DataFrame:
     return source_topic_counts
 
 
-def plot_topics_per_timestamp(topic_models: Dict[pd.Timestamp, BERTopic]) -> None:
+def plot_topics_for_model(selected_model: BERTopic) -> go.Figure:
     """
-    Plot the topics discussed per source for each timestamp.
+    Plot the topics discussed per source for the selected model.
 
     Args:
-        topic_models (Dict[pd.Timestamp, BERTopic]): A dictionary of BERTopic models, where the key is the timestamp and the value is the corresponding model.
+        selected_model (BERTopic): A BERTopic model (selected at a specific timestamp)
     """
-    with st.expander("Explore topic models"):
-        model_periods = sorted(topic_models.keys())
-        selected_model_period = st.select_slider(
-            "Select Model", options=model_periods, key="model_slider"
-        )
-        selected_model = topic_models[selected_model_period]
+    source_topic_counts = _prepare_source_topic_data(selected_model.doc_info_df)
 
-        source_topic_counts = _prepare_source_topic_data(selected_model.doc_info_df)
+    fig = go.Figure()
 
-        fig = go.Figure()
-
-        for topic, topic_data in source_topic_counts.groupby("Topic"):
-            fig.add_trace(
-                go.Bar(
-                    x=topic_data["source"],
-                    y=topic_data["Count"],
-                    name=str(topic)
-                    + "_"
-                    + "_".join(topic_data["Representation"].iloc[0][:5]),
-                    hovertemplate="Source: %{x}<br>Topic: %{customdata}<br>Number of documents: %{y}<extra></extra>",
-                    customdata=topic_data["Representation"],
-                )
+    for topic, topic_data in source_topic_counts.groupby("Topic"):
+        fig.add_trace(
+            go.Bar(
+                x=topic_data["source"],
+                y=topic_data["Count"],
+                name=str(topic)
+                + "_"
+                + "_".join(topic_data["Representation"].iloc[0][:5]),
+                hovertemplate="Source: %{x}<br>Topic: %{customdata}<br>Number of documents: %{y}<extra></extra>",
+                customdata=topic_data["Representation"],
             )
-
-        fig.update_layout(
-            title="Talked About Topics per Source",
-            xaxis_title="Source",
-            yaxis_title="Number of Paragraphs",
-            barmode="stack",
-            legend_title="Topics",
         )
 
-        st.plotly_chart(fig, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True)
+    fig.update_layout(
+        title="Talked About Topics per Source",
+        xaxis_title="Source",
+        yaxis_title="Number of Paragraphs",
+        barmode="stack",
+        legend_title="Topics",
+    )
 
-        st.dataframe(
-            selected_model.doc_info_df[
-                ["Paragraph", "document_id", "Topic", "Representation", "source"]
-            ],
-            use_container_width=True,
-        )
-        st.dataframe(selected_model.topic_info_df, use_container_width=True)
+    return fig
 
 
 def create_topic_size_evolution_figure(topic_sizes, topic_ids=None) -> go.Figure:
@@ -186,34 +166,31 @@ def create_topic_size_evolution_figure(topic_sizes, topic_ids=None) -> go.Figure
     return fig
 
 
-def plot_topic_size_evolution(
-    fig, window_size: int, granularity: int, current_date, min_datetime, max_datetime
-) -> Tuple[float, float]:
+def compute_popularity_values_and_thresholds(
+    topic_sizes, window_size: int, granularity: int, current_date
+) -> Tuple[Timestamp, Timestamp, list, float, float]:
     """
     Plot the evolution of topic sizes over time with colored overlays for signal regions.
 
     Args:
-        fig (FigureWidgetResampler): The cached figure to plot.
+        topic_sizes
         window_size (int): The retrospective window size in days.
         granularity (int): The granularity of the timestamps in days.
         current_date (datetime): The current date selected by the user.
-        min_datetime (datetime): The minimum datetime value.
-        max_datetime (datetime): The maximum datetime value.
 
     Returns:
-        Tuple[float, float]: The q1 and q3 values representing the 10th and 90th percentiles of popularity values.
+        Tuple[Timestamp,Timestamp, list, float, float,]:
+            window_start, window_end indicates the start / end periods.
+            all_popularities_values
+            The q1 and q3 values representing the 10th and 90th percentiles of popularity values,
     """
-
-    topic_sizes = st.session_state["bertrend"].topic_sizes
-    topic_last_popularity = st.session_state["bertrend"].topic_last_popularity
-    topic_last_update = st.session_state["bertrend"].topic_last_update
 
     window_size_timedelta = pd.Timedelta(days=window_size)
     granularity_timedelta = pd.Timedelta(days=granularity)
 
     current_date = pd.to_datetime(current_date).floor("D")  # Floor to start of day
-    window_end = current_date + granularity_timedelta
     window_start = current_date - window_size_timedelta
+    window_end = current_date + granularity_timedelta
 
     # Calculate q1 and q3 values (we remove very low values of disappearing signals to not skew the thresholds)
     all_popularity_values = [
@@ -231,8 +208,28 @@ def plot_topic_size_evolution(
     else:
         q1, q3 = 0, 0
 
-    st.write(f"### Noise Threshold : {'{:.3f}'.format(q1)}")
-    st.write(f"### Strong Signal Threshold : {'{:.3f}'.format(q3)}")
+    return window_start, window_end, all_popularity_values, q1, q3
+
+
+# FIXME update description
+def plot_topic_size_evolution(
+    fig,
+    current_date,
+    window_start: Timestamp,
+    window_end: Timestamp,
+    all_popularity_values: list[float],
+    q1: float,
+    q3: float,
+):
+    """
+    Plot the evolution of topic sizes over time with colored overlays for signal regions.
+
+    Args:
+        fig (FigureWidgetResampler): The cached figure to plot.
+        window_size (int): The retrospective window size in days.
+        granularity (int): The granularity of the timestamps in days.
+        current_date (datetime): The current date selected by the user.
+    """
 
     # Add colored overlays for signal regions
     y_max = max(all_popularity_values) if all_popularity_values else 1
@@ -284,56 +281,7 @@ def plot_topic_size_evolution(
     # Strong signal region (green)
     fig.add_hrect(y0=q3, y1=y_max * 100, fillcolor="rgba(0, 255, 0, 0.2)", line_width=0)
 
-    st.plotly_chart(fig, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True)
-
-    # Display DataFrames for each category
-    columns = [
-        "Topic",
-        "Sources",
-        "Source_Diversity",
-        "Representation",
-        "Latest_Popularity",
-        "Docs_Count",
-        "Paragraphs_Count",
-        "Latest_Timestamp",
-        "Documents",
-    ]
-
-    noise_topics_df, weak_signal_topics_df, strong_signal_topics_df = classify_signals(
-        topic_sizes, window_start, window_end, q1, q3
-    )
-
-    st.subheader(":grey[Noise]")
-    if not noise_topics_df.empty:
-        st.dataframe(
-            noise_topics_df.astype(str)[columns].sort_values(
-                by=["Topic", "Latest_Popularity"], ascending=[False, False]
-            )
-        )
-    else:
-        st.info(f"No noisy signals were detected at timestamp {window_end}.")
-
-    st.subheader(":orange[Weak Signals]")
-    if not weak_signal_topics_df.empty:
-        st.dataframe(
-            weak_signal_topics_df.astype(str)[columns].sort_values(
-                by=["Latest_Popularity"], ascending=True
-            )
-        )
-    else:
-        st.info(f"No weak signals were detected at timestamp {window_end}.")
-
-    st.subheader(":green[Strong Signals]")
-    if not strong_signal_topics_df.empty:
-        st.dataframe(
-            strong_signal_topics_df.astype(str)[columns].sort_values(
-                by=["Topic", "Latest_Popularity"], ascending=[False, False]
-            )
-        )
-    else:
-        st.info(f"No strong signals were detected at timestamp {window_end}.")
-
-    return window_start, window_end
+    return fig
 
 
 def plot_newly_emerged_topics(all_new_topics_df: pd.DataFrame) -> go.Figure:
@@ -643,9 +591,9 @@ def create_sankey_diagram_plotly(
         data=[
             go.Sankey(
                 node=dict(
-                    pad=15,
-                    thickness=20,
-                    line=dict(color="black", width=0.5),
+                    pad=SANKEY_NODE_PAD,
+                    thickness=SANKEY_NODE_THICKNESS,
+                    line=dict(color=SANKEY_LINE_COLOR, width=SANKEY_LINE_WIDTH),
                     label=[node.get("label", "") for node in nodes],
                     color=[node["color"] for node in nodes],
                 ),
