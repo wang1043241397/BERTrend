@@ -5,6 +5,7 @@
 
 import pickle
 import shutil
+from typing import Literal
 
 import streamlit as st
 import numpy as np
@@ -63,7 +64,7 @@ from bertrend.demos.weak_signals.visualizations_utils import (
 
 # UI Settings
 PAGE_TITLE = "BERTrend - Trend Analysis"
-LAYOUT = "wide"
+LAYOUT: Literal["centered", "wide"] = "wide"
 
 
 def save_state():

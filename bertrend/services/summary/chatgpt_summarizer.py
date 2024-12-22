@@ -20,7 +20,7 @@ class GPTSummarizer(Summarizer):
     """Class that uses the GPT service to provide a summary of a text"""
 
     def __init__(self, api_key: str = None, endpoint: str = None):
-        # retrieve chat GPT config
+        # retrieve chatGPT config
         self.api = OpenAI_Client(
             api_key=LLM_CONFIG["api_key"] if not api_key else api_key,
             endpoint=LLM_CONFIG["endpoint"] if not endpoint else endpoint,

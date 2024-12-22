@@ -10,7 +10,7 @@ from pathlib import Path
 def _resolve_env_variables(config_dict: dict) -> dict:
     """
     Recursively resolve environment variables in a dictionary.
-    Enviroment variables must be defined as a string like: $VAR_NAME.
+    Environment variables must be defined as a string like: $VAR_NAME.
     """
     for key, value in config_dict.items():
         # If the value is a string, check for environment variable

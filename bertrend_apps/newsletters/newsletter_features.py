@@ -269,9 +269,9 @@ def get_most_representative_docs(
         Returns docs having the most occurences.
 
     - If df_split is None:
-        Uses mode to determine the method used. Currently support :
-            * cluster_probability : computes the probability for each docs to belong to the topic using the clustering model. Returns most likely docs.
-            * ctfidf_representation : computes c-TF-IDF representation for each docs and compare it to topic c-TF-IDF vector using cosine similarity. Returns highest similarity scores docs.
+        Uses mode to determine the method used. Currently, support :
+            * cluster_probability : computes the probability for each doc to belong to the topic using the clustering model. Returns most likely docs.
+            * ctfidf_representation : computes c-TF-IDF representation for each doc and compare it to topic c-TF-IDF vector using cosine similarity. Returns highest similarity scores docs.
 
     """
     # If df_split is not None :

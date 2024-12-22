@@ -66,7 +66,7 @@ class GoogleNewsProvider(DataProvider):
         return query
 
     def _parse_entry(self, entry: Dict) -> Optional[Dict]:
-        """Parses a Google news entry"""
+        """Parses a Google News entry"""
         try:
             # NB. we do not use the title from Gnews as it is sometimes truncated
             link = entry["link"]

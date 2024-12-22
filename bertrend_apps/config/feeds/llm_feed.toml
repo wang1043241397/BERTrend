@@ -1,6 +1,6 @@
 [data-feed]
 id = "feed_llm"
-# NB: LLM est aussi un mastère de droit
+# NB : LLM est aussi un mastère de droit !
 query = "LLM OR \"Retrieval Augmented Generation\""
 provider = "google"
 # maximum number of results *per day*

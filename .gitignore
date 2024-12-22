@@ -32,7 +32,6 @@ example*.json
 **/*.png
 **/*.jpg
 **/*.jpeg
-**/*.log
 **/*.psd
 **/*.tiff
 **/*.whl

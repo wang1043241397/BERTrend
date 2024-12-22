@@ -44,7 +44,7 @@ if "st.session_state.topic_expanded" not in st.session_state:
 
 @st.cache_data
 def parse_data_from_files(files: List[UploadedFile]) -> pd.DataFrame:
-    """Read a list of excel files and return a single dataframe containing the data"""
+    """Read a list of Excel files and return a single dataframe containing the data"""
     dataframes = []
 
     with TemporaryDirectory() as tmpdir:

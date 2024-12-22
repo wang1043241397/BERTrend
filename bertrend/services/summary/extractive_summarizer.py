@@ -66,7 +66,7 @@ def _summarize_based_on_cos_scores(cos_scores, summary_size: int) -> List[int]:
 
 
 def summarize_embeddings(embeddings: Tensor, summary_size: int) -> List[int]:
-    """Summarizes "something" on the basis of its embeddings representation.
+    """Summarizes "something" on the basis of its embeddings' representation.
     This approach may apply to text or a set of chunks.
 
     Parameters
@@ -127,7 +127,7 @@ class ExtractiveSummarizer(Summarizer):
         text : str
             Text from which we want to have sentences extracted
         use_spacy: bool
-            Indicates if uses spacy or nltk for sentence tokenization (nltk seems to beave better)
+            Indicates if it uses spacy or nltk for sentence tokenization (nltk seems to beave better)
 
         Returns
         -------

@@ -42,7 +42,7 @@ port = 6464
 # BERTrend can use any kind of openai-compatible deployment such as:
 # - local LLM deployed with VLLM or similar libraries
 # - the official OpenAI endpoint
-# - models deployed on a Azure cloud
+# - models deployed on Azure cloud
 api_key = "$AZURE_SE_WATTELSE_OPENAI_API_KEY_DEV"
 endpoint = "$AZURE_SE_WATTELSE_OPENAI_ENDPOINT_DEV"
 model = "$AZURE_SE_WATTELSE_OPENAI_DEFAULT_MODEL_NAME_DEV"

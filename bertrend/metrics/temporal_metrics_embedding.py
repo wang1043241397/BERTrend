@@ -201,7 +201,7 @@ class TempTopic:
         ):
             # Select documents for the current timestamp
             selection = documents.loc[documents.Timestamps == timestamp, :]
-            # Aggressively preprocess text before vocabulary extraction through custom function for french language
+            # Aggressively preprocess text before vocabulary extraction through custom function for French language
             selection["Document"] = selection["Document"].apply(
                 self._aggressive_text_preprocessing
             )

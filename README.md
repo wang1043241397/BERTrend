@@ -11,7 +11,7 @@
 
 ## Work in progress
 
-- make a independant `BERTrend` Class to simplify usage and integration
+- make an independant `BERTrend` Class to simplify usage and integration
 - make BERTrend available as a python package in PyPI
 
 ## Paper

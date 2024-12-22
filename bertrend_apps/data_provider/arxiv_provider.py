@@ -153,7 +153,7 @@ class ArxivProvider(DataProvider):
         d = defaultdict(dict)
 
         for item in semantic_scholar_items_list + entries:
-            # careful, order is important, semantic_scholar_items may contain less items than entries
+            # careful, order is important, semantic_scholar_items may contain fewer items than entries
             d[item["title"]].update(item)
 
         # filter out possible missing values
