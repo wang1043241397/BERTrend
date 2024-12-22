@@ -29,6 +29,7 @@ from bertrend.parameters import (
     STOPWORDS,
     DEFAULT_MMR_DIVERSITY,
     OUTLIER_REDUCTION_STRATEGY,
+    ENGLISH_STOPWORDS,
 )
 
 
@@ -94,7 +95,9 @@ class TopicModel:
             prediction_data=True,
         )
 
-        self.stopword_set = STOPWORDS if self.language == "French" else "english"
+        self.stopword_set = (
+            STOPWORDS if self.language == "French" else ENGLISH_STOPWORDS
+        )
         self.vectorizer_model = CountVectorizer(
             stop_words=self.stopword_set,
             min_df=self.min_df,

@@ -5,6 +5,7 @@
 import pickle
 import shutil
 from collections import defaultdict
+from pathlib import Path
 from typing import Dict, Tuple, List, Any
 
 import numpy as np
@@ -14,10 +15,7 @@ from loguru import logger
 from sentence_transformers import SentenceTransformer
 
 from bertrend import MODELS_DIR, CACHE_PATH
-from bertrend.demos.weak_signals.messages import (
-    NO_GRANULARITY_WARNING,
-)
-from bertrend.demos.weak_signals.session_state_manager import SessionStateManager
+
 from bertrend.topic_model import TopicModel
 from bertrend.parameters import (
     DEFAULT_MIN_SIMILARITY,
@@ -29,6 +27,7 @@ from bertrend.parameters import (
     EMB_GROUPS_FILE,
     GRANULARITY_FILE,
     HYPERPARAMS_FILE,
+    BERTOPIC_SERIALIZATION,
 )
 from bertrend.trend_analysis.topic_modeling import preprocess_model, merge_models
 from bertrend.trend_analysis.weak_signals import (
@@ -62,6 +61,7 @@ class BERTrend:
         )
         self.zeroshot_topic_list = zeroshot_topic_list
         self.zeroshot_min_similarity = zeroshot_min_similarity
+        self.granularity = DEFAULT_GRANULARITY
 
         # State variables of BERTrend
         self._is_fitted = False
@@ -429,17 +429,16 @@ class BERTrend:
         self.topic_last_popularity = topic_last_popularity
         self.topic_last_update = topic_last_update
 
-    def save_models(self):
-        if MODELS_DIR.exists():
-            shutil.rmtree(MODELS_DIR)
-        MODELS_DIR.mkdir(parents=True, exist_ok=True)
+    def save_models(self, models_path: Path = MODELS_DIR):
+        if models_path.exists():
+            shutil.rmtree(models_path)
+        models_path.mkdir(parents=True, exist_ok=True)
 
-        # TODO
-        """
+        # Save topic models using the selected serialization type
         for period, topic_model in self.topic_models.items():
-            model_dir = MODELS_DIR / period.strftime("%Y-%m-%d")
+            model_dir = models_path / period.strftime("%Y-%m-%d")
             model_dir.mkdir(exist_ok=True)
-            embedding_model = SessionStateManager.get("embedding_model")
+            embedding_model = topic_model.embedding_model
             topic_model.save(
                 model_dir,
                 serialization=BERTOPIC_SERIALIZATION,
@@ -449,44 +448,54 @@ class BERTrend:
 
             topic_model.doc_info_df.to_pickle(model_dir / DOC_INFO_DF_FILE)
             topic_model.topic_info_df.to_pickle(model_dir / TOPIC_INFO_DF_FILE)
-        """
 
+        # Save topic model parameters
+        with open(CACHE_PATH / HYPERPARAMS_FILE, "wb") as f:
+            pickle.dump(self.topic_model_parameters, f)
+        # Save granularity file
+        with open(CACHE_PATH / GRANULARITY_FILE, "wb") as f:
+            pickle.dump(self.granularity, f)
+        # Save doc_groups file
         with open(CACHE_PATH / DOC_GROUPS_FILE, "wb") as f:
             pickle.dump(self.doc_groups, f)
+        # Save emb_groups file
         with open(CACHE_PATH / EMB_GROUPS_FILE, "wb") as f:
             pickle.dump(self.emb_groups, f)
-
-        # FIXME: granularity currently not set at this stage
-        # with open(CACHE_PATH / GRANULARITY_FILE, "wb") as f:
-        #     pickle.dump(self.granularity)
-
         # Save the models_trained flag
         with open(CACHE_PATH / MODELS_TRAINED_FILE, "wb") as f:
             pickle.dump(self._is_fitted, f)
 
-        # TODO!
-        """
-        hyperparams = SessionStateManager.get_multiple(
-            "umap_n_components",
-            "umap_n_neighbors",
-            "hdbscan_min_cluster_size",
-            "hdbscan_min_samples",
-            "hdbscan_cluster_selection_method",
-            "top_n_words",
-            "vectorizer_ngram_range",
-            "min_df",
-        )
-        with open(CACHE_PATH / HYPERPARAMS_FILE, "wb") as f:
-            pickle.dump(hyperparams, f)
-        """
+        logger.info(f"Models saved to: {models_path}")
 
     @classmethod
-    def restore_models(cls):
-        if not MODELS_DIR.exists():
-            raise FileNotFoundError(f"MODELS_DIR={MODELS_DIR} does not exist")
+    def restore_models(cls, models_path: Path = MODELS_DIR) -> "BERTrend":
+        if not models_path.exists():
+            raise FileNotFoundError(f"models_path={models_path} does not exist")
 
+        logger.info(f"Loading models from: {models_path}")
+
+        # Create BERTrend object
+        bertrend = cls()
+
+        # load topic model parameters
+        with open(CACHE_PATH / HYPERPARAMS_FILE, "rb") as f:
+            bertrend.topic_model_parameters = pickle.load(f)
+        # load granularity file
+        with open(CACHE_PATH / GRANULARITY_FILE, "rb") as f:
+            bertrend.granularity = pickle.load(f)
+        # load doc_groups file
+        with open(CACHE_PATH / DOC_GROUPS_FILE, "rb") as f:
+            bertrend.doc_groups = pickle.load(f)
+        # load emb_groups file
+        with open(CACHE_PATH / EMB_GROUPS_FILE, "rb") as f:
+            bertrend.emb_groups = pickle.load(f)
+        # load the models_trained flag
+        with open(CACHE_PATH / MODELS_TRAINED_FILE, "rb") as f:
+            bertrend._is_fitted = pickle.load(f)
+
+        # Restore topic models using the selected serialization type
         topic_models = {}
-        for period_dir in MODELS_DIR.iterdir():
+        for period_dir in models_path.iterdir():
             if period_dir.is_dir():
                 topic_model = BERTopic.load(period_dir)
 
@@ -502,72 +511,9 @@ class BERTrend:
 
                 period = pd.Timestamp(period_dir.name.replace("_", ":"))
                 topic_models[period] = topic_model
+        bertrend.topic_models = topic_models
 
-        SessionStateManager.set("topic_models", topic_models)
+        return bertrend
 
-        for file, key in [
-            (DOC_GROUPS_FILE, "doc_groups"),
-            (EMB_GROUPS_FILE, "emb_groups"),
-        ]:
-            file_path = CACHE_PATH / file
-            if file_path.exists():
-                with open(file_path, "rb") as f:
-                    SessionStateManager.set(key, pickle.load(f))
-            else:
-                logger.warning(f"{file} not found.")
 
-        granularity_file = CACHE_PATH / GRANULARITY_FILE
-        if granularity_file.exists():
-            with open(granularity_file, "rb") as f:
-                SessionStateManager.set("granularity_select", pickle.load(f))
-        else:
-            logger.warning(NO_GRANULARITY_WARNING)
-
-        # Restore the models_trained flag
-        models_trained_file = CACHE_PATH / MODELS_TRAINED_FILE
-        if models_trained_file.exists():
-            with open(models_trained_file, "rb") as f:
-                # FIXME! set bertrend first!
-                SessionStateManager.set("models_trained", pickle.load(f))
-        else:
-            logger.warning("Models trained flag not found.")
-
-        hyperparams_file = CACHE_PATH / HYPERPARAMS_FILE
-        if hyperparams_file.exists():
-            with open(hyperparams_file, "rb") as f:
-                SessionStateManager.set_multiple(**pickle.load(f))
-        else:
-            logger.warning("Hyperparameters file not found.")
-
-    #####################################################################################################
-    # FIXME: WIP
-    # def merge_models2(self):
-    #     if not self._is_fitted:
-    #         raise RuntimeError("You must fit the BERTrend model before merging models.")
-    #
-    #     merged_data = self._initialize_merge_data()
-    #
-    #     logger.info("Merging models...")
-    #     for timestamp, model in self.topic_models.items():
-    #         if not merged_data:
-    #             merged_data = self._process_first_model(model)
-    #         else:
-    #             merged_data = self._merge_with_existing_data(
-    #                 merged_data, model, timestamp
-    #             )
-    #
-    #     self.merged_topics = merged_data
-    #
-    # def _merge_with_existing_data(
-    #     self, merged_data: Dict, model: BERTopic, timestamp: pd.Timestamp
-    # ) -> Dict:
-    #     # Extract topics and embeddings
-    #
-    #     # Compute similarity between current model's topics and the merged ones
-    #
-    #     # Update merged_data with this model's data based on computed similarities
-    #     # Implement business logic to handle merging decisions
-    #     # This can involve thresholding, updating topic IDs, and merging document and metadata entries
-    #
-    #     # return merged_data  # Return the updated merged data
-    #     pass
+# TODO: methods for prospective analysis (handle topic generation step by step)

@@ -10,9 +10,12 @@ import torch
 
 from bertrend import PARAMETERS_CONFIG
 
+stopwords_en_file = Path(__file__).parent / "resources" / "stopwords-en.json"
 stopwords_fr_file = Path(__file__).parent / "resources" / "stopwords-fr.json"
 stopwords_rte_file = Path(__file__).parent / "resources" / "stopwords-rte.json"
 common_ngrams_file = Path(__file__).parent / "resources" / "common_ngrams.json"
+with open(stopwords_en_file, "r", encoding="utf-8") as file:
+    ENGLISH_STOPWORDS = json.load(file)
 with open(stopwords_fr_file, "r", encoding="utf-8") as file:
     FRENCH_STOPWORDS = json.load(file)
 with open(stopwords_rte_file, "r", encoding="utf-8") as file:

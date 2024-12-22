@@ -16,10 +16,11 @@ import streamlit.components.v1 as components
 from loguru import logger
 from umap import UMAP
 
+from bertrend import OUTPUT_PATH
 from bertrend.demos.topic_analysis.app_utils import (
     plot_2d_topics,
 )
-from bertrend.demos.topic_analysis.state_utils import restore_widget_state
+from bertrend.demos.demos_utils.state_utils import restore_widget_state
 from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_CONFIG
 from bertrend.utils.data_loading import TEXT_COLUMN
 
@@ -207,7 +208,7 @@ def create_datamap(include_outliers):
             logo_width=100,
         )
 
-        save_path = Path(__file__).parent.parent / "datamapplot.html"
+        save_path = OUTPUT_PATH / "datamapplot.html"
         with open(save_path, "wb") as f:
             f.write(plot._html_str.encode(encoding="UTF-8", errors="replace"))
 

@@ -60,6 +60,8 @@ from pathlib import Path
 from typing import List, Union, Tuple
 import re
 
+from bertrend import OUTPUT_PATH
+
 
 class TempTopic:
     def __init__(
@@ -124,7 +126,7 @@ class TempTopic:
         self.representation_embeddings_df = None
         self.stemmer = PorterStemmer()
 
-        self.debug_file = Path(__file__).parent.parent / "match_debugging.txt"
+        self.debug_file = OUTPUT_PATH / "match_debugging.txt"
         open(self.debug_file, "w").close()
 
     def fit(

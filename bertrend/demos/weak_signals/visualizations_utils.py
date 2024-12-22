@@ -2,8 +2,7 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
-from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict
 
 import pandas as pd
 import streamlit as st
@@ -11,10 +10,15 @@ from bertopic import BERTopic
 from pandas import Timestamp
 from plotly import graph_objects as go
 
-from bertrend import OUTPUT_PATH
+from bertrend import OUTPUT_PATH, SIGNAL_EVOLUTION_DATA_DIR
 from bertrend.demos.weak_signals.messages import HTML_GENERATION_FAILED_WARNING
-from bertrend.demos.weak_signals.session_state_manager import SessionStateManager
-from bertrend.parameters import MAX_WINDOW_SIZE, DEFAULT_WINDOW_SIZE
+from bertrend.demos.demos_utils.session_state_manager import SessionStateManager
+from bertrend.parameters import (
+    MAX_WINDOW_SIZE,
+    DEFAULT_WINDOW_SIZE,
+    INDIVIDUAL_MODEL_TOPIC_COUNTS_FILE,
+    CUMULATIVE_MERGED_TOPIC_COUNTS_FILE,
+)
 from bertrend.trend_analysis.visualizations import (
     create_sankey_diagram_plotly,
     plot_newly_emerged_topics,
@@ -253,7 +257,8 @@ def display_topics_per_timestamp(topic_models: Dict[pd.Timestamp, BERTopic]) -> 
     Plot the topics discussed per source for each timestamp.
 
     Args:
-        topic_models (Dict[pd.Timestamp, BERTopic]): A dictionary of BERTopic models, where the key is the timestamp and the value is the corresponding model.
+        topic_models (Dict[pd.Timestamp, BERTopic]): A dictionary of BERTopic models, where the key is the timestamp
+        and the value is the corresponding model.
     """
     with st.expander("Explore topic models"):
         model_periods = sorted(topic_models.keys())
@@ -306,3 +311,47 @@ def display_signal_analysis(topic_number, output_file="signal_llm.html"):
                     st.markdown(summary)
                 with col2:
                     st.markdown(analysis)
+
+
+def retrieve_topic_counts(topic_models: Dict[pd.Timestamp, BERTopic]) -> None:
+    individual_model_topic_counts = [
+        (timestamp, model.topic_info_df["Topic"].max() + 1)
+        for timestamp, model in topic_models.items()
+    ]
+    df_individual_models = pd.DataFrame(
+        individual_model_topic_counts,
+        columns=["timestamp", "num_topics"],
+    )
+
+    # Number of topics per cumulative merged model
+    cumulative_merged_topic_counts = SessionStateManager.get(
+        "merge_df_size_over_time", []
+    )
+    df_cumulative_merged = pd.DataFrame(
+        cumulative_merged_topic_counts,
+        columns=["timestamp", "num_topics"],
+    )
+
+    # Convert to JSON
+    json_individual_models = df_individual_models.to_json(
+        orient="records", date_format="iso", indent=4
+    )
+    json_cumulative_merged = df_cumulative_merged.to_json(
+        orient="records", date_format="iso", indent=4
+    )
+
+    # Save individual model topic counts
+    json_file_path = (
+        SIGNAL_EVOLUTION_DATA_DIR
+        / f"retrospective_{SessionStateManager.get('window_size')}_days"
+    )
+    json_file_path.mkdir(parents=True, exist_ok=True)
+
+    (json_file_path / INDIVIDUAL_MODEL_TOPIC_COUNTS_FILE).write_text(
+        json_individual_models
+    )
+
+    # Save cumulative merged model topic counts
+    (json_file_path / CUMULATIVE_MERGED_TOPIC_COUNTS_FILE).write_text(
+        json_cumulative_merged
+    )

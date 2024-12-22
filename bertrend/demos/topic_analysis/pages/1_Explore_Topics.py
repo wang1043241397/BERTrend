@@ -19,7 +19,7 @@ from urllib.parse import urlparse
 from loguru import logger
 
 from bertrend import LLM_CONFIG
-from bertrend.demos.topic_analysis.state_utils import restore_widget_state
+from bertrend.demos.demos_utils.state_utils import restore_widget_state
 from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_CONFIG
 from bertrend.utils.data_loading import TIMESTAMP_COLUMN, TEXT_COLUMN

@@ -6,7 +6,6 @@
 import ast
 import datetime
 import re
-from pathlib import Path
 
 import pandas as pd
 import streamlit as st
@@ -14,7 +13,7 @@ from loguru import logger
 from sentence_transformers import SentenceTransformer
 from transformers import AutoTokenizer
 
-from bertrend import DATA_PATH
+from bertrend import DATA_PATH, OUTPUT_PATH
 
 from bertrend.demos.topic_analysis.app_utils import (
     embedding_model_options,
@@ -27,7 +26,7 @@ from bertrend.demos.topic_analysis.app_utils import (
     load_data_wrapper,
 )
 from bertrend.demos.topic_analysis.data_utils import data_overview, choose_data
-from bertrend.demos.topic_analysis.state_utils import (
+from bertrend.demos.demos_utils.state_utils import (
     register_widget,
     save_widget_state,
     restore_widget_state,
@@ -112,9 +111,7 @@ def save_model_interface():
             dynamic_model_name = generate_model_name(
                 base_model_name if base_model_name else "topic_model"
             )
-            model_save_path = (
-                Path(__file__).parent / "saved_models" / dynamic_model_name
-            )
+            model_save_path = OUTPUT_PATH / "saved_models" / dynamic_model_name
             logger.debug(
                 f"Saving the model in the following directory: {model_save_path}"
             )

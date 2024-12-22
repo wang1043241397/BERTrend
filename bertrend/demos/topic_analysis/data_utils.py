@@ -11,7 +11,7 @@ import streamlit as st
 from pathlib import Path
 
 from bertrend.demos.topic_analysis.app_utils import plot_docs_reparition_over_time
-from bertrend.demos.topic_analysis.state_utils import save_widget_state
+from bertrend.demos.demos_utils.state_utils import save_widget_state
 from bertrend.utils.data_loading import TEXT_COLUMN, TIMESTAMP_COLUMN
 
 

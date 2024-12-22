@@ -24,5 +24,4 @@ TOPIC_NOT_FOUND_WARNING = (
     "Topic {topic_number} not found in the merge histories within the specified window."
 )
 NO_GRANULARITY_WARNING = "Granularity value not found."
-NO_DATASET_WARNING = "Please select at least one dataset to proceed."
 HTML_GENERATION_FAILED_WARNING = "HTML generation failed. Displaying markdown instead."

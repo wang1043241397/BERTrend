@@ -13,12 +13,16 @@ import plotly.graph_objects as go
 from loguru import logger
 
 from bertrend import (
-    DATA_PATH,
     ZEROSHOT_TOPICS_DATA_DIR,
-    SIGNAL_EVOLUTION_DATA_DIR,
     CACHE_PATH,
 )
 from bertrend.BERTrend import BERTrend
+from bertrend.demos.demos_utils.data_loading_component import (
+    display_data_loading_component,
+)
+from bertrend.demos.demos_utils.parameters_component import (
+    display_bertopic_hyperparameters,
+)
 from bertrend.services.embedding_service import EmbeddingService
 from bertrend.topic_model import TopicModel
 from bertrend.demos.weak_signals.messages import (
@@ -32,19 +36,16 @@ from bertrend.demos.weak_signals.messages import (
     STATE_SAVED_MESSAGE,
     STATE_RESTORED_MESSAGE,
     MODELS_SAVED_MESSAGE,
-    NO_DATASET_WARNING,
     NO_MODELS_WARNING,
 )
 from bertrend.trend_analysis.weak_signals import detect_weak_signals_zeroshot
 
 from bertrend.utils.data_loading import (
-    load_and_preprocess_data,
     group_by_days,
-    find_compatible_files,
     TEXT_COLUMN,
 )
 from bertrend.parameters import *
-from session_state_manager import SessionStateManager
+from bertrend.demos.demos_utils.session_state_manager import SessionStateManager
 from bertrend.trend_analysis.visualizations import (
     plot_size_outliers,
     plot_num_topics,
@@ -57,6 +58,7 @@ from bertrend.demos.weak_signals.visualizations_utils import (
     display_popularity_evolution,
     save_signal_evolution,
     display_signal_analysis,
+    retrieve_topic_counts,
 )
 
 # UI Settings
@@ -147,7 +149,7 @@ def main():
         if st.button("Restore Previous Run", use_container_width=True):
             restore_state()
             try:
-                BERTrend.restore_models()
+                SessionStateManager.set("bertrend", BERTrend.restore_models())
                 st.success(MODELS_RESTORED_MESSAGE)
             except Exception as e:
                 st.warning(NO_MODELS_WARNING)
@@ -160,110 +162,7 @@ def main():
 
         # BERTopic Hyperparameters
         st.subheader("BERTopic Hyperparameters")
-        with st.expander("Embedding Model Settings", expanded=False):
-            language = st.selectbox("Select Language", LANGUAGES, key="language")
-            embedding_dtype = st.selectbox(
-                "Embedding Dtype", EMBEDDING_DTYPES, key="embedding_dtype"
-            )
-
-            embedding_models = (
-                ENGLISH_EMBEDDING_MODELS
-                if language == "English"
-                else FRENCH_EMBEDDING_MODELS
-            )
-            embedding_model_name = st.selectbox(
-                "Embedding Model", embedding_models, key="embedding_model_name"
-            )
-
-        for expander, params in [
-            (
-                "UMAP Hyperparameters",
-                [
-                    (
-                        "umap_n_components",
-                        "UMAP n_components",
-                        DEFAULT_UMAP_N_COMPONENTS,
-                        2,
-                        100,
-                    ),
-                    (
-                        "umap_n_neighbors",
-                        "UMAP n_neighbors",
-                        DEFAULT_UMAP_N_NEIGHBORS,
-                        2,
-                        100,
-                    ),
-                ],
-            ),
-            (
-                "HDBSCAN Hyperparameters",
-                [
-                    (
-                        "hdbscan_min_cluster_size",
-                        "HDBSCAN min_cluster_size",
-                        DEFAULT_HDBSCAN_MIN_CLUSTER_SIZE,
-                        2,
-                        100,
-                    ),
-                    (
-                        "hdbscan_min_samples",
-                        "HDBSCAN min_sample",
-                        DEFAULT_HDBSCAN_MIN_SAMPLES,
-                        1,
-                        100,
-                    ),
-                ],
-            ),
-            (
-                "Vectorizer Hyperparameters",
-                [
-                    ("top_n_words", "Top N Words", DEFAULT_TOP_N_WORDS, 1, 50),
-                    ("min_df", "min_df", DEFAULT_MIN_DF, 1, 50),
-                ],
-            ),
-        ]:
-            with st.expander(expander, expanded=False):
-                for key, label, default, min_val, max_val in params:
-                    st.number_input(
-                        label,
-                        value=default,
-                        min_value=min_val,
-                        max_value=max_val,
-                        key=key,
-                    )
-
-                if expander == "HDBSCAN Hyperparameters":
-                    st.selectbox(
-                        "Cluster Selection Method",
-                        HDBSCAN_CLUSTER_SELECTION_METHODS,
-                        key="hdbscan_cluster_selection_method",
-                    )
-                elif expander == "Vectorizer Hyperparameters":
-                    st.selectbox(
-                        "N-Gram range",
-                        VECTORIZER_NGRAM_RANGES,
-                        key="vectorizer_ngram_range",
-                    )
-
-        with st.expander("Merging Hyperparameters", expanded=False):
-            st.slider(
-                "Minimum Similarity for Merging",
-                0.0,
-                1.0,
-                DEFAULT_MIN_SIMILARITY,
-                0.01,
-                key="min_similarity",
-            )
-
-        with st.expander("Zero-shot Parameters", expanded=False):
-            st.slider(
-                "Zeroshot Minimum Similarity",
-                0.0,
-                1.0,
-                DEFAULT_ZEROSHOT_MIN_SIMILARITY,
-                0.01,
-                key="zeroshot_min_similarity",
-            )
+        display_bertopic_hyperparameters()
 
     # Main content
     tab1, tab2, tab3 = st.tabs(["Data Loading", "Model Training", "Results Analysis"])
@@ -271,102 +170,18 @@ def main():
     with tab1:
         st.header("Data Loading and Preprocessing")
 
-        # Find files in the current directory and subdirectories
-        compatible_extensions = ["csv", "parquet", "json", "jsonl"]
-        selected_files = st.multiselect(
-            "Select one or more datasets",
-            find_compatible_files(DATA_PATH, compatible_extensions),
-            default=SessionStateManager.get("selected_files", []),
-            key="selected_files",
-        )
+        display_data_loading_component()
 
-        if not selected_files:
-            st.warning(NO_DATASET_WARNING)
-            return
-
-        # Display number input and checkbox for preprocessing options
-        col1, col2 = st.columns(2)
-        with col1:
-            min_chars = st.number_input(
-                "Minimum Characters",
-                value=MIN_CHARS_DEFAULT,
-                min_value=0,
-                max_value=1000,
-                key="min_chars",
-            )
-        with col2:
-            split_by_paragraph = st.checkbox(
-                "Split text by paragraphs", value=False, key="split_by_paragraph"
-            )
-
-        # Load and preprocess each selected file, then concatenate them
-        dfs = []
-        for selected_file, ext in selected_files:
-            file_path = DATA_PATH / selected_file
-            df = load_and_preprocess_data(
-                (file_path, ext), language, min_chars, split_by_paragraph
-            )
-            dfs.append(df)
-
-        if not dfs:
-            st.warning(
-                "No data available after preprocessing. Please check the selected files and preprocessing options."
-            )
-        else:
-            df = pd.concat(dfs, ignore_index=True)
-
-            # Deduplicate using all columns
-            df = df.drop_duplicates()
-
-            # Select timeframe
-            min_date, max_date = df["timestamp"].dt.date.agg(["min", "max"])
-            start_date, end_date = st.slider(
-                "Select Timeframe",
-                min_value=min_date,
-                max_value=max_date,
-                value=(min_date, max_date),
-                key="timeframe_slider",
-            )
-
-            # Filter and sample the DataFrame
-            df_filtered = df[
-                (df["timestamp"].dt.date >= start_date)
-                & (df["timestamp"].dt.date <= end_date)
-            ]
-            df_filtered = df_filtered.sort_values(by="timestamp").reset_index(drop=True)
-
-            sample_size = st.number_input(
-                "Sample Size",
-                value=SAMPLE_SIZE_DEFAULT or len(df_filtered),
-                min_value=1,
-                max_value=len(df_filtered),
-                key="sample_size",
-            )
-            if sample_size < len(df_filtered):
-                df_filtered = df_filtered.sample(n=sample_size, random_state=42)
-
-            df_filtered = df_filtered.sort_values(by="timestamp").reset_index(drop=True)
-
-            SessionStateManager.set("timefiltered_df", df_filtered)
-            st.write(
-                f"Number of documents in selected timeframe: {len(SessionStateManager.get_dataframe('timefiltered_df'))}"
-            )
-            st.dataframe(
-                SessionStateManager.get_dataframe("timefiltered_df")[
-                    [TEXT_COLUMN, "timestamp"]
-                ],
-                use_container_width=True,
-            )
+        if "timefiltered_df" in st.session_state:
 
             # Embed documents
             if st.button("Embed Documents"):
-                embedding_service = EmbeddingService()
-
                 with st.spinner("Embedding documents..."):
                     embedding_dtype = SessionStateManager.get("embedding_dtype")
                     embedding_model_name = SessionStateManager.get(
                         "embedding_model_name"
                     )
+                    embedding_service = EmbeddingService()
 
                     texts = SessionStateManager.get_dataframe("timefiltered_df")[
                         TEXT_COLUMN
@@ -454,6 +269,7 @@ def main():
 
                     logger.debug(SessionStateManager.get("language"))
 
+                    # Initialize topic model
                     topic_model = TopicModel(
                         umap_n_components=SessionStateManager.get("umap_n_components"),
                         umap_n_neighbors=SessionStateManager.get("umap_n_neighbors"),
@@ -474,6 +290,7 @@ def main():
                         language=SessionStateManager.get("language"),
                     )
 
+                    # Created BERTrend object
                     bertrend = BERTrend(
                         topic_model=topic_model,
                         zeroshot_topic_list=zeroshot_topic_list,
@@ -481,20 +298,15 @@ def main():
                             "zeroshot_min_similarity"
                         ),
                     )
+                    # Train topic models on data
                     bertrend.train_topic_models(
                         grouped_data=grouped_data,
                         embedding_model=SessionStateManager.get("embedding_model"),
                         embeddings=SessionStateManager.get_embeddings(),
                     )
-
-                    # TODO: A supprimer / adapter - cf save/restore
-                    SessionStateManager.set_multiple(
-                        doc_groups=bertrend.doc_groups,
-                        emb_groups=bertrend.emb_groups,
-                    )
-
                     st.success(MODEL_TRAINING_COMPLETE_MESSAGE)
 
+                    # Save trained models
                     bertrend.save_models()
                     st.success(MODELS_SAVED_MESSAGE)
 
@@ -509,12 +321,12 @@ def main():
             else:
                 if st.button("Merge Models"):
                     with st.spinner("Merging models..."):
-                        # TODO: encapsulate into a merging function
-                        SessionStateManager.get("bertrend").merge_models(
+                        bertrend = SessionStateManager.get("bertrend")
+                        bertrend.merge_models(
                             min_similarity=SessionStateManager.get("min_similarity"),
                         )
 
-                        SessionStateManager.get("bertrend").calculate_signal_popularity(
+                        bertrend.calculate_signal_popularity(
                             granularity=SessionStateManager.get("granularity_select"),
                         )
 
@@ -676,48 +488,7 @@ def main():
                 if st.button("Retrieve Topic Counts"):
                     with st.spinner("Retrieving topic counts..."):
                         # Number of topics per individual topic model
-                        individual_model_topic_counts = [
-                            (timestamp, model.topic_info_df["Topic"].max() + 1)
-                            for timestamp, model in topic_models.items()
-                        ]
-                        df_individual_models = pd.DataFrame(
-                            individual_model_topic_counts,
-                            columns=["timestamp", "num_topics"],
-                        )
-
-                        # Number of topics per cumulative merged model
-                        cumulative_merged_topic_counts = SessionStateManager.get(
-                            "merge_df_size_over_time", []
-                        )
-                        df_cumulative_merged = pd.DataFrame(
-                            cumulative_merged_topic_counts,
-                            columns=["timestamp", "num_topics"],
-                        )
-
-                        # Convert to JSON
-                        json_individual_models = df_individual_models.to_json(
-                            orient="records", date_format="iso", indent=4
-                        )
-                        json_cumulative_merged = df_cumulative_merged.to_json(
-                            orient="records", date_format="iso", indent=4
-                        )
-
-                        # Save individual model topic counts
-                        json_file_path = (
-                            SIGNAL_EVOLUTION_DATA_DIR
-                            / f"retrospective_{SessionStateManager.get('window_size')}_days"
-                        )
-                        json_file_path.mkdir(parents=True, exist_ok=True)
-
-                        (
-                            json_file_path / INDIVIDUAL_MODEL_TOPIC_COUNTS_FILE
-                        ).write_text(json_individual_models)
-
-                        # Save cumulative merged model topic counts
-                        (
-                            json_file_path / CUMULATIVE_MERGED_TOPIC_COUNTS_FILE
-                        ).write_text(json_cumulative_merged)
-
+                        retrieve_topic_counts(topic_models)
                         st.success(
                             f"Topic counts for individual and cumulative merged models saved to {json_file_path}"
                         )

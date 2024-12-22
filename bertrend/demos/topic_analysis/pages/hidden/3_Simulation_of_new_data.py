@@ -14,7 +14,7 @@ from bertrend.demos.topic_analysis.app_utils import (
     compute_topics_over_time,
     plot_topics_over_time,
 )
-from bertrend.demos.topic_analysis.state_utils import (
+from bertrend.demos.demos_utils.state_utils import (
     restore_widget_state,
     register_widget,
     save_widget_state,

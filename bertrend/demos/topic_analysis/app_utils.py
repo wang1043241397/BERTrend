@@ -10,7 +10,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from bertrend.demos.topic_analysis.state_utils import register_widget
+from bertrend.demos.demos_utils.state_utils import register_widget
 from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_CONFIG
 from bertrend.utils.data_loading import (
     load_data,
