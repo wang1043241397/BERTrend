@@ -146,9 +146,9 @@ with st.sidebar:
 if generate_newsletter_clicked:
     if st.session_state["split_by_paragraphs"]:
         df = st.session_state["initial_df"]
-        df_split = st.session_state["timefiltered_df"]
+        df_split = st.session_state["time_filtered_df"]
     else:
-        df = st.session_state["timefiltered_df"]
+        df = st.session_state["time_filtered_df"]
         df_split = None
 
     with st.spinner("Generating newsletters..."):

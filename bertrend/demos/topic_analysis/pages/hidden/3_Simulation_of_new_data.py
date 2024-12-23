@@ -44,7 +44,7 @@ def main():
     ### TITLE ###
     st.title("Simulation of topic evolution with new data")
 
-    timestamp_max = st.session_state["timefiltered_df"][TIMESTAMP_COLUMN].max()
+    timestamp_max = st.session_state["time_filtered_df"][TIMESTAMP_COLUMN].max()
 
     # Replace "cleaned_df" with "split_df"
     if "split_df" in st.session_state:
@@ -77,7 +77,7 @@ def main():
             value="1M",
         )
         plot_remaining_docs_repartition_over_time(
-            st.session_state["timefiltered_df"], st.session_state["remaining_df"], freq
+            st.session_state["time_filtered_df"], st.session_state["remaining_df"], freq
         )
 
     # Select number of batches
@@ -117,7 +117,7 @@ def main():
 
     with st.spinner("Computing topics over time..."):
         with st.expander("Dynamic topic modelling"):
-            if TIMESTAMP_COLUMN in st.session_state["timefiltered_df"].keys():
+            if TIMESTAMP_COLUMN in st.session_state["time_filtered_df"].keys():
                 st.write("## Dynamic topic modelling")
 
                 # Parameters
@@ -132,7 +132,7 @@ def main():
                 st.session_state["new_topics_over_time"] = compute_topics_over_time(
                     st.session_state["parameters"],
                     st.session_state["topic_model"],
-                    st.session_state["timefiltered_df"],
+                    st.session_state["time_filtered_df"],
                     nr_bins=st.session_state["nr_bins"],
                     new_df=st.session_state["remaining_df"],
                     new_nr_bins=st.session_state["new_data_batches_nb"],

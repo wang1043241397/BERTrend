@@ -5,10 +5,11 @@
 import gzip
 import re
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict, Literal, List
 
 import pandas as pd
 from loguru import logger
+from sentence_transformers import SentenceTransformer
 from transformers import AutoTokenizer
 
 from bertrend import DATA_PATH
@@ -22,43 +23,42 @@ TITLE_COLUMN = "title"
 CITATION_COUNT_COL = "citation_count"
 
 
-def find_compatible_files(path, extensions):
-    return [
-        (str(f.relative_to(path)), f.suffix[1:])
-        for f in path.rglob("*")
-        if f.suffix[1:] in extensions
-    ]
+def find_compatible_files(path, extensions) -> List[Path]:
+    return [f.relative_to(path) for f in path.rglob("*") if f.suffix[1:] in extensions]
 
 
 # @st.cache_data
 def load_and_preprocess_data(
-    selected_file: Tuple[str, str],
+    selected_file: Path,
     language: str,
     min_chars: int,
-    split_by_paragraph: bool,
+    split_by_paragraph: Literal["no", "yes", "enhanced"],
+    embedding_model_name: str = None,
 ) -> pd.DataFrame:
     """
     Load and preprocess data from a selected file.
 
     Args:
-        selected_file (tuple): A tuple containing the selected file name and extension.
+        selected_file (Path): A path to the selected file
         language (str): The language of the text data ('French' or 'English').
         min_chars (int): The minimum number of characters required for a text to be included.
-        split_by_paragraph (bool): Whether to split the text data by paragraphs.
+        split_by_paragraph (Literal): Way to split the text data by paragraphs (no, yes, enhanced)
+        embedding_model_name (str): Name of the embedding model (if done locally), only useful if split_by_paragraph is 'enhanced'.
 
     Returns:
         pd.DataFrame: The loaded and preprocessed DataFrame.
     """
-    file_name, file_ext = selected_file
-
-    if file_ext == "csv":
-        df = pd.read_csv(DATA_PATH / file_name)
-    elif file_ext == "parquet":
-        df = pd.read_parquet(DATA_PATH / file_name)
-    elif file_ext == "json":
-        df = pd.read_json(DATA_PATH / file_name)
-    elif file_ext == "jsonl":
-        df = pd.read_json(DATA_PATH / file_name, lines=True)
+    file_ext = selected_file.suffix.lower()
+    if file_ext == ".csv":
+        df = pd.read_csv(DATA_PATH / selected_file)
+    elif file_ext == ".parquet":
+        df = pd.read_parquet(DATA_PATH / selected_file)
+    elif file_ext == ".json":
+        df = pd.read_json(DATA_PATH / selected_file)
+    elif file_ext == ".jsonl":
+        df = pd.read_json(DATA_PATH / selected_file, lines=True)
+    elif file_ext == ".xslsx":
+        df = pd.read_excel(DATA_PATH / selected_file)
 
     # Convert timestamp column to datetime
     df[TIMESTAMP_COLUMN] = pd.to_datetime(df[TIMESTAMP_COLUMN], errors="coerce")
@@ -80,7 +80,7 @@ def load_and_preprocess_data(
     if language == "French":
         df[TEXT_COLUMN] = df[TEXT_COLUMN].apply(preprocess_french_text)
 
-    if split_by_paragraph:
+    if split_by_paragraph == "yes":
         new_rows = []
         for _, row in df.iterrows():
             # Attempt splitting by \n\n first
@@ -93,6 +93,11 @@ def load_and_preprocess_data(
                 new_row["source"] = row["source"]
                 new_rows.append(new_row)
         df = pd.DataFrame(new_rows)
+    elif split_by_paragraph == "enhanced":
+        # FIXME: requires access to the tokenizer
+        df = split_df_by_paragraphs(
+            dataset=df, enhanced=True, embedding_model_name=embedding_model_name
+        )
 
     if min_chars > 0:
         df = df[df[TEXT_COLUMN].str.len() >= min_chars]
@@ -177,12 +182,9 @@ def clean_dataset(dataset: pd.DataFrame, length_criteria: int) -> pd.DataFrame:
     return cleaned_dataset
 
 
+# TODO: to be simplified!
 def split_df_by_paragraphs(
-    dataset: pd.DataFrame,
-    enhanced: bool = False,
-    tokenizer: AutoTokenizer = None,
-    max_length: int = 512,
-    min_length: int = 5,
+    dataset: pd.DataFrame, enhanced: bool = False, embedding_model_name: str = None
 ) -> pd.DataFrame:
     """
     Split texts into multiple paragraphs and return a concatenation of all extracts as a new DataFrame.
@@ -191,9 +193,7 @@ def split_df_by_paragraphs(
     Args:
         dataset (pd.DataFrame): The dataset to split.
         enhanced (bool): Whether to use the enhanced splitting method.
-        tokenizer (AutoTokenizer): The tokenizer to use for splitting (required if enhanced is True).
-        max_length (int): The maximum length of tokens (used if enhanced is True).
-        min_length (int): The minimum length of tokens (used if enhanced is True).
+        model_name (str): The name of the embedding model to use (only required if enhanced is True)
 
     Returns:
         pd.DataFrame: The dataset with texts split into paragraphs.
@@ -205,8 +205,14 @@ def split_df_by_paragraphs(
         df = df[df[TEXT_COLUMN] != ""]
         return df
 
-    if tokenizer is None:
+    if embedding_model_name is None:
         raise ValueError("Tokenizer is required for enhanced splitting.")
+
+    tokenizer = AutoTokenizer.from_pretrained(embedding_model_name)
+    max_length = SentenceTransformer(embedding_model_name).get_max_seq_length()
+    # Correcting the max seq length anomaly in certain embedding models description
+    if max_length == 514:
+        max_length = 512
 
     df = dataset.copy()
     new_rows = []
@@ -292,7 +298,7 @@ def preprocess_french_text(text: str) -> str:
     """
     Preprocess French text by normalizing apostrophes, replacing hyphens and similar characters with spaces,
     removing specific prefixes, removing unwanted punctuations (excluding apostrophes, periods, commas, and specific other punctuation),
-    replacing special characters with a space (preserving accented characters, llm_utils Latin extensions, and newlines),
+    replacing special characters with a space (preserving accented characters, utils Latin extensions, and newlines),
     normalizing superscripts and subscripts,
     splitting words containing capitals in the middle (while avoiding splitting fully capitalized words),
     and replacing multiple spaces with a single space.
@@ -309,7 +315,7 @@ def preprocess_french_text(text: str) -> str:
     # Replace hyphens and similar characters with spaces
     text = re.sub(r"\b(-|/|;|:)", " ", text)
 
-    # Replace special characters with a space (preserving specified punctuation, accented characters, llm_utils Latin extensions, and newlines)
+    # Replace special characters with a space (preserving specified punctuation, accented characters, utils Latin extensions, and newlines)
     text = re.sub(r"[^\w\s\nàâçéèêëîïôûùüÿñæœ.,\'\"\(\)\[\]]", " ", text)
 
     # Normalize superscripts and subscripts for both numbers and letters

@@ -27,12 +27,12 @@ if "topic_model" not in st.session_state:
 # Compute topics over time if not already done
 if (
     "topics_over_time" not in st.session_state
-    and TIMESTAMP_COLUMN in st.session_state["timefiltered_df"]
+    and TIMESTAMP_COLUMN in st.session_state["time_filtered_df"]
 ):
     st.session_state["topics_over_time"] = compute_topics_over_time(
         st.session_state["parameters"],
         st.session_state["topic_model"],
-        st.session_state["timefiltered_df"],
+        st.session_state["time_filtered_df"],
         nr_bins=10,
     )
 

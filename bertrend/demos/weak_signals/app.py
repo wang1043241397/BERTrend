@@ -173,7 +173,7 @@ def main():
 
         display_data_loading_component()
 
-        if "timefiltered_df" in st.session_state:
+        if "time_filtered_df" in st.session_state:
 
             # Embed documents
             if st.button("Embed Documents"):
@@ -186,7 +186,7 @@ def main():
                         local=True, embedding_model_name=embedding_model_name
                     )
 
-                    texts = SessionStateManager.get_dataframe("timefiltered_df")[
+                    texts = SessionStateManager.get_dataframe("time_filtered_df")[
                         TEXT_COLUMN
                     ].tolist()
 
@@ -230,7 +230,7 @@ def main():
         # Show documents per grouped timestamp
         with st.expander("Documents per Timestamp", expanded=True):
             grouped_data = group_by_days(
-                SessionStateManager.get_dataframe("timefiltered_df"),
+                SessionStateManager.get_dataframe("time_filtered_df"),
                 day_granularity=SessionStateManager.get("granularity_select"),
             )
             non_empty_timestamps = [
@@ -272,7 +272,7 @@ def main():
                 with st.spinner("Training models..."):
                     # FIXME: called twice (see above)
                     grouped_data = group_by_days(
-                        SessionStateManager.get_dataframe("timefiltered_df"),
+                        SessionStateManager.get_dataframe("time_filtered_df"),
                         day_granularity=SessionStateManager.get("granularity_select"),
                     )
 

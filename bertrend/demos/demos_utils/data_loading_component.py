@@ -15,16 +15,28 @@ from bertrend.utils.data_loading import (
 )
 
 NO_DATASET_WARNING = "Please select at least one dataset to proceed."
+FORMAT_ICONS = {
+    "csv": "📊",
+    "parquet": "📦",
+    "json": "📜",
+    "jsonl": "📜",
+    "xlsx": "📊",
+}
 
 
 def display_data_loading_component():
+    """
+    Component for a streamlit app about topic modelling. It allows to choose data to load and preprocess data.
+    The final dataframe is stored inside the Streamlit state variable "time_filtered_df"
+    """
     # Find files in the current directory and subdirectories
-    compatible_extensions = ["csv", "parquet", "json", "jsonl"]
+    compatible_extensions = FORMAT_ICONS.keys()
     selected_files = st.multiselect(
-        "Select one or more datasets",
+        "Select one or more datasets from the server data",
         find_compatible_files(DATA_PATH, compatible_extensions),
         default=SessionStateManager.get("selected_files", []),
         key="selected_files",
+        format_func=lambda x: FORMAT_ICONS[x.suffix.lstrip(".")] + " " + str(x),
     )
 
     if not selected_files:
@@ -42,19 +54,30 @@ def display_data_loading_component():
             key="min_chars",
         )
     with col2:
-        split_by_paragraph = st.checkbox(
-            "Split text by paragraphs", value=False, key="split_by_paragraph"
+        split_by_paragraph = st.segmented_control(
+            "Split text by paragraphs",
+            key="split_by_paragraph",
+            options=["no", "yes", "enhanced"],
+            default="yes",
+            selection_mode="single",
+            help="""- No split: No splitting on the documents.
+            
+            - Split by paragraphs: Split documents into paragraphs.
+            
+            - Enhanced split: uses a more advanced but slower method for splitting that considers the embedding model's maximum input length.
+            """,
         )
 
     # Load and preprocess each selected file, then concatenate them
     dfs = []
-    for selected_file, ext in selected_files:
+    for selected_file in selected_files:
         file_path = DATA_PATH / selected_file
         df = load_and_preprocess_data(
-            (file_path, ext),
+            file_path,
             st.session_state["language"],
             min_chars,
             split_by_paragraph,
+            embedding_model_name=SessionStateManager.get("embedding_model_name"),
         )
         dfs.append(df)
 
@@ -97,12 +120,12 @@ def display_data_loading_component():
 
         df_filtered = df_filtered.sort_values(by="timestamp").reset_index(drop=True)
 
-        SessionStateManager.set("timefiltered_df", df_filtered)
+        SessionStateManager.set("time_filtered_df", df_filtered)
         st.write(
-            f"Number of documents in selected timeframe: {len(SessionStateManager.get_dataframe('timefiltered_df'))}"
+            f"Number of documents in selected timeframe: {len(SessionStateManager.get_dataframe('time_filtered_df'))}"
         )
         st.dataframe(
-            SessionStateManager.get_dataframe("timefiltered_df")[
+            SessionStateManager.get_dataframe("time_filtered_df")[
                 [TEXT_COLUMN, "timestamp"]
             ],
             use_container_width=True,

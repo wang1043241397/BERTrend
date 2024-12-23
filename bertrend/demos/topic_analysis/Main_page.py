@@ -5,15 +5,16 @@
 
 import ast
 import datetime
-import re
 
-import pandas as pd
 import streamlit as st
 from loguru import logger
 from sentence_transformers import SentenceTransformer
 from transformers import AutoTokenizer
 
 from bertrend import DATA_PATH, OUTPUT_PATH
+from bertrend.demos.demos_utils.data_loading_component import (
+    display_data_loading_component,
+)
 
 from bertrend.demos.topic_analysis.app_utils import (
     embedding_model_options,
@@ -132,181 +133,13 @@ def save_model_interface():
             st.error("No model available to save. Please train a model first.")
 
 
-def select_data():
-    st.write("## Data selection")
-
-    choose_data(DATA_PATH, ["*.csv", "*.jsonl*", "*.parquet"])
-
-    # Check if selected files have changed
-    if (
-        "previous_selected_files" not in st.session_state
-        or st.session_state["previous_selected_files"]
-        != st.session_state["selected_files"]
-    ):
-        st.session_state["previous_selected_files"] = st.session_state[
-            "selected_files"
-        ].copy()
-
-        if st.session_state["selected_files"]:
-            loaded_dfs = []
-            for file_path in st.session_state["selected_files"]:
-                df = load_data_wrapper(file_path)
-                df.sort_values(by=TIMESTAMP_COLUMN, ascending=False, inplace=True)
-                loaded_dfs.append(df)
-
-            st.session_state["raw_df"] = (
-                pd.concat(loaded_dfs) if len(loaded_dfs) > 1 else loaded_dfs[0]
-            )
-
-            # Add optional columns if not present
-            if URL_COLUMN not in list(st.session_state["raw_df"].columns.values):
-                logger.warning(f"{URL_COLUMN} not found in data")
-                st.session_state["raw_df"][URL_COLUMN] = ""
-
-            # Remove duplicates from raw_df
-            st.session_state["raw_df"] = st.session_state["raw_df"].drop_duplicates(
-                subset=TEXT_COLUMN, keep="first"
-            )
-            st.session_state["raw_df"].sort_values(
-                by=[TIMESTAMP_COLUMN], ascending=True, inplace=True
-            )
-            st.session_state["initial_df"] = st.session_state["raw_df"].copy()
-
-            # Reset the timestamp range when new files are selected
-            min_max = st.session_state["raw_df"][TIMESTAMP_COLUMN].agg(["min", "max"])
-            st.session_state["timestamp_range"] = (
-                min_max["min"].to_pydatetime(),
-                min_max["max"].to_pydatetime(),
-            )
-
-            # Trigger re-processing of the data
-            st.session_state["data_changed"] = True
-        else:
-            st.error("Please select at least one file to proceed.")
-            st.stop()
-
-    st.divider()
-
-    with st.container(border=True):
-        # Select time range
-        min_max = st.session_state["raw_df"][TIMESTAMP_COLUMN].agg(["min", "max"])
-        register_widget("timestamp_range")
-        timestamp_range = st.slider(
-            "Select the range of timestamps you want to use for training",
-            min_value=min_max["min"].to_pydatetime(),
-            max_value=min_max["max"].to_pydatetime(),
-            key="timestamp_range",
-            on_change=save_widget_state,
-        )
-
-        # Filter text length parameter
-        register_widget("min_text_length")
-        min_text_length = st.number_input(
-            "Select the minimum number of characters each document should contain",
-            min_value=0,
-            value=100,
-            key="min_text_length",
-            on_change=save_widget_state,
-        )
-
-        # Split or no split
-        register_widget("split_option")
-        split_options = ["No split", "Split by paragraphs"]
-        split_option = st.radio(
-            "Select the split option",
-            split_options,
-            key="split_option",
-            on_change=save_widget_state,
-            help="""
-            - No split: No splitting on the documents.
-            - Split by paragraphs: Split documents into paragraphs.
-            """,
-        )
-        # Add a checkbox for enhanced splitting
-        register_widget("enhanced_split")
-        enhanced_split = st.checkbox(
-            "Use enhanced splitting",
-            key="enhanced_split",
-            on_change=save_widget_state,
-            help="If checked, uses a more advanced but slower method for splitting that considers the embedding model's maximum input length.",
-        )
-
-    # Check if any parameters have changed or if data has changed
-    if (
-        st.session_state.get("data_changed", False)
-        or "split_method" not in st.session_state
-        or st.session_state["split_method"] != split_option
-        or "enhanced_splitting" not in st.session_state
-        or st.session_state["enhanced_splitting"] != enhanced_split
-        or "prev_timestamp_range" not in st.session_state
-        or st.session_state["prev_timestamp_range"] != timestamp_range
-        or "prev_min_text_length" not in st.session_state
-        or st.session_state["prev_min_text_length"] != min_text_length
-    ):
-        st.session_state["split_method"] = split_option
-        st.session_state["enhanced_splitting"] = enhanced_split
-        st.session_state["prev_timestamp_range"] = timestamp_range
-        st.session_state["prev_min_text_length"] = min_text_length
-
-        if split_option != "No split":
-            split_dataframe(split_option, enhanced_split)
-        else:  # If No Splitting is done
-            st.session_state["split_df"] = st.session_state["raw_df"]
-            st.session_state["split_by_paragraphs"] = False
-
-        # Preprocess the text
-        st.session_state["split_df"][TEXT_COLUMN] = st.session_state["split_df"][
-            TEXT_COLUMN
-        ].apply(preprocess_french_text)
-
-        # Remove unwanted rows from split_df
-        st.session_state["split_df"] = st.session_state["split_df"][
-            (st.session_state["split_df"][TEXT_COLUMN].str.strip() != "")
-            & (
-                st.session_state["split_df"][TEXT_COLUMN].apply(
-                    lambda x: len(re.findall(r"[a-zA-Z]", x)) >= 5
-                )
-            )
-        ]
-
-        st.session_state["split_df"].reset_index(drop=True, inplace=True)
-        st.session_state["split_df"]["index"] = st.session_state["split_df"].index
-
-        # Filter dataset to select only text within time range
-        st.session_state["timefiltered_df"] = st.session_state["split_df"].query(
-            f"timestamp >= '{timestamp_range[0]}' and timestamp <= '{timestamp_range[1]}'"
-        )
-
-        # Clean dataset using min_text_length
-        st.session_state["timefiltered_df"] = clean_dataset(
-            st.session_state["timefiltered_df"],
-            min_text_length,
-        )
-
-        st.session_state["timefiltered_df"] = (
-            st.session_state["timefiltered_df"].reset_index(drop=True).reset_index()
-        )
-
-        # Reset the data_changed flag
-        st.session_state["data_changed"] = False
-
-    if st.session_state["timefiltered_df"].empty:
-        st.error("Not enough remaining data after cleaning", icon="🚨")
-        st.stop()
-    else:
-        st.info(
-            f"Found {len(st.session_state['timefiltered_df'])} documents after final cleaning."
-        )
-        st.divider()
-
-
 def train_model():
     if (
-        "timefiltered_df" in st.session_state
-        and not st.session_state["timefiltered_df"].empty
+        "time_filtered_df" in st.session_state
+        and not st.session_state["time_filtered_df"].empty
     ):
         with st.spinner("Training model..."):
-            full_dataset = st.session_state["timefiltered_df"]
+            full_dataset = st.session_state["time_filtered_df"]
             indices = full_dataset.index.tolist()
 
             form_parameters = ast.literal_eval(st.session_state["parameters"])
@@ -351,7 +184,7 @@ def train_model():
             coherence = get_coherence_value(
                 st.session_state["topic_model"],
                 st.session_state["topics"],
-                st.session_state["timefiltered_df"][TEXT_COLUMN],
+                st.session_state["time_filtered_df"][TEXT_COLUMN],
                 coherence_score_type,
             )
             logger.success(f"Coherence score [{coherence_score_type}]: {coherence}")
@@ -365,7 +198,7 @@ def train_model():
             diversity = get_diversity_value(
                 st.session_state["topic_model"],
                 st.session_state["topics"],
-                st.session_state["timefiltered_df"][TEXT_COLUMN],
+                st.session_state["time_filtered_df"][TEXT_COLUMN],
                 diversity_score_type="puw",
             )
             logger.success(f"Diversity score [{diversity_score_type}]: {diversity}")
@@ -394,7 +227,7 @@ st.set_page_config(page_title="BERTrend - Topic Analysis", layout="wide")
 restore_widget_state()
 
 ### TITLE ###
-st.title("Topic modelling")
+st.title(":part_alternation_mark: Topic analysis demo")
 
 if "model_trained" not in st.session_state:
     st.session_state["model_trained"] = False
@@ -468,10 +301,14 @@ if "parameters" in st.session_state:
     st.sidebar.write(st.session_state["parameters"])
 
 # Load selected DataFrame
-select_data()
+if "language" not in st.session_state:
+    st.session_state["language"] = "fr"
+display_data_loading_component()
 
 # Data overview
-data_overview(st.session_state["timefiltered_df"])
+if "time_filtered_df" not in st.session_state:
+    st.stop()
+data_overview(st.session_state["time_filtered_df"])
 
 # Save the model button
 save_model_interface()

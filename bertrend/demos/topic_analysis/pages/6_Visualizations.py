@@ -55,7 +55,7 @@ def overall_results():
 @st.cache_data
 def create_topic_info_dataframe():
     """Create a DataFrame containing topics, number of documents per topic, and list of documents for each topic."""
-    docs = st.session_state["timefiltered_df"][TEXT_COLUMN].tolist()
+    docs = st.session_state["time_filtered_df"][TEXT_COLUMN].tolist()
     topic_assignments = st.session_state["topics"]
 
     topic_info = pd.DataFrame({"Document": docs, "Topic": topic_assignments})
@@ -134,7 +134,7 @@ def create_datamap(include_outliers):
         for _, row in topic_info.iterrows()
         if row["Topic"] in topic_nums
     }
-    docs = st.session_state["timefiltered_df"][TEXT_COLUMN].tolist()
+    docs = st.session_state["time_filtered_df"][TEXT_COLUMN].tolist()
 
     df = pd.DataFrame(
         {

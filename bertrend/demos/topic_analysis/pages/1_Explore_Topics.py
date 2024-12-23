@@ -104,12 +104,12 @@ def check_model_and_prepare_topics():
 
     if (
         "topics_over_time" not in st.session_state
-        and TIMESTAMP_COLUMN in st.session_state["timefiltered_df"]
+        and TIMESTAMP_COLUMN in st.session_state["time_filtered_df"]
     ):
         st.session_state["topics_over_time"] = compute_topics_over_time(
             st.session_state["parameters"],
             st.session_state["topic_model"],
-            st.session_state["timefiltered_df"],
+            st.session_state["time_filtered_df"],
             nr_bins=10,
         )
 
@@ -168,7 +168,7 @@ def display_topic_info():
 
 def plot_topic_over_time():
     """Plot the topic evolution over time."""
-    if TIMESTAMP_COLUMN in st.session_state["timefiltered_df"]:
+    if TIMESTAMP_COLUMN in st.session_state["time_filtered_df"]:
         if "new_topics_over_time" not in st.session_state:
             st.plotly_chart(
                 plot_topics_over_time(
@@ -185,7 +185,7 @@ def plot_topic_over_time():
                     st.session_state["new_topics_over_time"],
                     str(st.session_state["selected_topic_number"]),
                     st.session_state["topic_model"],
-                    time_split=st.session_state["timefiltered_df"][
+                    time_split=st.session_state["time_filtered_df"][
                         TIMESTAMP_COLUMN
                     ].max(),
                 ),
@@ -201,14 +201,14 @@ def get_representative_documents(top_n_docs):
             st.session_state["topic_model"],
             st.session_state["initial_df"],
             st.session_state["topics"],
-            df_split=st.session_state["timefiltered_df"],
+            df_split=st.session_state["time_filtered_df"],
             topic_number=st.session_state["selected_topic_number"],
             top_n_docs=top_n_docs,
         )
     else:
         docs_by_cluster_probability = get_most_representative_docs(
             st.session_state["topic_model"],
-            st.session_state["timefiltered_df"],
+            st.session_state["time_filtered_df"],
             st.session_state["topics"],
             topic_number=st.session_state["selected_topic_number"],
             mode="cluster_probability",
@@ -216,7 +216,7 @@ def get_representative_documents(top_n_docs):
         )
         docs_by_ctfidf_similarity = get_most_representative_docs(
             st.session_state["topic_model"],
-            st.session_state["timefiltered_df"],
+            st.session_state["time_filtered_df"],
             st.session_state["topics"],
             topic_number=st.session_state["selected_topic_number"],
             mode="ctfidf_representation",

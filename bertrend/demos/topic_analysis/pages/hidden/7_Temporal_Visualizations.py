@@ -133,8 +133,8 @@ with st.sidebar:
 
 
 # Determine available time granularities based on data
-min_date = st.session_state["timefiltered_df"]["timestamp"].min()
-max_date = st.session_state["timefiltered_df"]["timestamp"].max()
+min_date = st.session_state["time_filtered_df"]["timestamp"].min()
+max_date = st.session_state["time_filtered_df"]["timestamp"].max()
 time_diff = max_date - min_date
 
 available_granularities = ["Day"]
@@ -172,7 +172,7 @@ if time_granularity != "":
     ):
         # Aggregate dataframe based on selected time granularity
         df = st.session_state[
-            "timefiltered_df"
+            "time_filtered_df"
         ].copy()  # Create a copy to avoid modifying the original dataframe
 
         # Convert 'timestamp' column to datetime if it's not already
@@ -194,8 +194,8 @@ if time_granularity != "":
             .reset_index()
         )
 
-        # Extract indices from st.session_state["timefiltered_df"]["index"]
-        indices = st.session_state["timefiltered_df"]["index"]
+        # Extract indices from st.session_state["time_filtered_df"]["index"]
+        indices = st.session_state["time_filtered_df"]["index"]
 
         # Extract docs using the indices
         docs = [st.session_state["split_df"][TEXT_COLUMN][i] for i in indices]
@@ -355,7 +355,7 @@ if time_granularity != "":
 
 with st.spinner("Computing topics over time..."):
     with st.expander("Popularity of topics over time"):
-        if TIMESTAMP_COLUMN in st.session_state["timefiltered_df"].keys():
+        if TIMESTAMP_COLUMN in st.session_state["time_filtered_df"].keys():
             st.write("## Popularity of topics over time")
 
             # Parameters
@@ -370,7 +370,7 @@ with st.spinner("Computing topics over time..."):
             st.session_state["topics_over_time"] = compute_topics_over_time(
                 st.session_state["parameters"],
                 st.session_state["topic_model"],
-                st.session_state["timefiltered_df"],
+                st.session_state["time_filtered_df"],
                 nr_bins=st.session_state["nr_bins"],
             )
 

@@ -493,7 +493,7 @@ def group_timestamps(timestamps, granularity):
 
 def process_data_and_fit_temptopic(time_granularity):
     """Process data and fit TempTopic with custom time granularity."""
-    df = st.session_state["timefiltered_df"].copy()
+    df = st.session_state["time_filtered_df"].copy()
     df["timestamp"] = pd.to_datetime(df["timestamp"])
 
     # Convert time_granularity to timedelta if it's not already
@@ -508,7 +508,7 @@ def process_data_and_fit_temptopic(time_granularity):
         .agg({TEXT_COLUMN: list, "index": list})
         .reset_index()
     )
-    indices = st.session_state["timefiltered_df"]["index"]
+    indices = st.session_state["time_filtered_df"]["index"]
     docs = [st.session_state["split_df"][TEXT_COLUMN][i] for i in indices]
 
     index_to_timestamp = {
@@ -710,7 +710,7 @@ def display_topics_popularity():
     """Display the popularity of topics over time."""
     with st.spinner("Computing topics over time..."):
         with st.expander("Popularity of topics over time"):
-            if TIMESTAMP_COLUMN in st.session_state["timefiltered_df"]:
+            if TIMESTAMP_COLUMN in st.session_state["time_filtered_df"]:
                 st.write("## Popularity of topics over time")
 
                 # Parameters
@@ -726,7 +726,7 @@ def display_topics_popularity():
                 st.session_state["topics_over_time"] = compute_topics_over_time(
                     st.session_state["parameters"],
                     st.session_state["topic_model"],
-                    st.session_state["timefiltered_df"],
+                    st.session_state["time_filtered_df"],
                     nr_bins=st.session_state["nr_bins"],
                 )
 
@@ -754,7 +754,7 @@ def main():
     display_sidebar()
 
     # Calculate max granularity
-    max_granularity = calculate_max_granularity(st.session_state["timefiltered_df"])
+    max_granularity = calculate_max_granularity(st.session_state["time_filtered_df"])
 
     # Select time granularity
     time_granularity = select_time_granularity(max_granularity)
