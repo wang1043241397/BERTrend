@@ -211,6 +211,12 @@ def main():
     with tab2:
         st.header("Model Training")
 
+        if not SessionStateManager.get("data_embedded", False):
+            st.warning(
+                "Please embed data and train models before proceeding to analysis."
+            )
+            st.stop()
+
         # Select granularity
         st.number_input(
             "Select Granularity",
