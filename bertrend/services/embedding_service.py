@@ -36,7 +36,7 @@ class EmbeddingService:
         texts: List[str],
         embedding_model_name: str,
         embedding_dtype: str,
-    ) -> Tuple[SentenceTransformer, np.ndarray]:
+    ) -> Tuple[str | SentenceTransformer, np.ndarray]:
         """
         Embed a list of documents using a Sentence Transformer model.
 
@@ -70,8 +70,6 @@ class EmbeddingService:
         else:
             return self._remote_embed_documents(
                 texts,
-                embedding_model_name,
-                embedding_dtype,
             )
 
     def _local_embed_documents(
@@ -150,7 +148,7 @@ class EmbeddingService:
 
     def _remote_embed_documents(
         self, texts: List[str], show_progress_bar: bool = True
-    ) -> List[List[float]]:
+    ) -> Tuple[str, np.ndarray]:
         """
         Embed a list of documents using a Sentence Transformer model.
 
@@ -175,7 +173,6 @@ class EmbeddingService:
         Raises:
             ValueError: If an invalid embedding_dtype is provided.
         """
-        # TODO: implement call to embedding service (cf wattElse)
         logger.debug(f"Computing embeddings...")
         response = requests.post(
             self.url + "/encode",
@@ -184,7 +181,22 @@ class EmbeddingService:
         if response.status_code == 200:
             embeddings = np.array(response.json()["embeddings"])
             logger.debug(f"Computing embeddings done for batch")
-            return embeddings.tolist()
+            return self._get_remote_model_name(), embeddings
         else:
             logger.error(f"Error: {response.status_code}")
-            return []
+            raise Exception(f"Error: {response.status_code}")
+
+    def _get_remote_model_name(self) -> str:
+        """
+        Return currently loaded model name in Embedding API.
+        """
+        response = requests.get(
+            self.url + "/model_name",
+        )
+        if response.status_code == 200:
+            model_name = response.json()
+            logger.debug(f"Model name: {model_name}")
+            return model_name
+        else:
+            logger.error(f"Error: {response.status_code}")
+            raise Exception(f"Error: {response.status_code}")

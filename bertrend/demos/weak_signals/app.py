@@ -182,7 +182,9 @@ def main():
                     embedding_model_name = SessionStateManager.get(
                         "embedding_model_name"
                     )
-                    embedding_service = EmbeddingService()
+                    embedding_service = EmbeddingService(
+                        local=True, embedding_model_name=embedding_model_name
+                    )
 
                     texts = SessionStateManager.get_dataframe("timefiltered_df")[
                         TEXT_COLUMN

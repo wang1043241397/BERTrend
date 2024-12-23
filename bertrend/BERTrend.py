@@ -210,6 +210,7 @@ class BERTrend:
         ]
 
         # Set up progress bar
+        # TODO: tqdm
         # progress_bar = st.progress(0)
         # progress_text = st.empty()
 
@@ -269,6 +270,7 @@ class BERTrend:
         all_new_topics = []
 
         # progress_bar = st.progress(0)
+        # TODO: tqdm
         merge_df_size_over_time = []
 
         for i, (current_timestamp, next_timestamp) in enumerate(
@@ -353,7 +355,7 @@ class BERTrend:
 
         if not self._are_models_merged:
             # FIXME: RuntimeError
-            raise RuntimeError(
+            raise RuntimeWarning(
                 "You must merge topic models first before computing signal popularity."
             )
 
