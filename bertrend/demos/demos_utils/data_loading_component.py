@@ -2,8 +2,13 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from typing import List, Literal
+
 import pandas as pd
 import streamlit as st
+from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 from bertrend import DATA_PATH
 from bertrend.demos.demos_utils.session_state_manager import SessionStateManager
@@ -24,22 +29,77 @@ FORMAT_ICONS = {
 }
 
 
+def _process_uploaded_files(
+    files: List[UploadedFile],
+    min_chars: int,
+    split_by_paragraph=Literal["yes", "no", "enhanced"],
+) -> List[pd.DataFrame]:
+    """Read a list of Excel files and return a single dataframe containing the data"""
+    dataframes = []
+    with TemporaryDirectory() as tmpdir:
+        for f in files:
+            with open(tmpdir + "/" + f.name, "wb") as tmp_file:
+                tmp_file.write(f.getvalue())
+            if tmp_file is not None:
+                df = load_and_preprocess_data(
+                    Path(tmp_file.name),
+                    st.session_state["language"],
+                    min_chars,
+                    split_by_paragraph,
+                    embedding_model_name=SessionStateManager.get(
+                        "embedding_model_name"
+                    ),
+                )
+                dataframes.append(df)
+        return dataframes
+
+
+def _load_files(
+    files: List[Path],
+    min_chars: int,
+    split_by_paragraph=Literal["yes", "no", "enhanced"],
+) -> List[pd.DataFrame]:
+    dfs = []
+    for selected_file in files:
+        file_path = DATA_PATH / selected_file
+        df = load_and_preprocess_data(
+            file_path,
+            st.session_state["language"],
+            min_chars,
+            split_by_paragraph,
+            embedding_model_name=SessionStateManager.get("embedding_model_name"),
+        )
+        dfs.append(df)
+    return dfs
+
+
 def display_data_loading_component():
     """
     Component for a streamlit app about topic modelling. It allows to choose data to load and preprocess data.
     The final dataframe is stored inside the Streamlit state variable "time_filtered_df"
     """
     # Find files in the current directory and subdirectories
+    tab1, tab2 = st.tabs(["Data from local storage", "Data from server data"])
     compatible_extensions = FORMAT_ICONS.keys()
-    selected_files = st.multiselect(
-        "Select one or more datasets from the server data",
-        find_compatible_files(DATA_PATH, compatible_extensions),
-        default=SessionStateManager.get("selected_files", []),
-        key="selected_files",
-        format_func=lambda x: FORMAT_ICONS[x.suffix.lstrip(".")] + " " + str(x),
-    )
 
-    if not selected_files:
+    with tab1:
+        uploaded_files = st.file_uploader(
+            label="Select dataset from local storage (.xlsx, .csv, .json, .jsonl, .parquet)",
+            type=compatible_extensions,
+            accept_multiple_files=True,
+            help="Drag and drop files to be used as dataset in this area",
+        )
+
+    with tab2:
+        selected_files = st.multiselect(
+            label="Select one or more datasets from the server data",
+            options=find_compatible_files(DATA_PATH, compatible_extensions),
+            default=SessionStateManager.get("selected_files", []),
+            key="selected_files",
+            format_func=lambda x: FORMAT_ICONS[x.suffix.lstrip(".")] + " " + str(x),
+        )
+
+    if uploaded_files is None and not selected_files:
         st.warning(NO_DATASET_WARNING)
         return
 
@@ -67,19 +127,12 @@ def display_data_loading_component():
             - Enhanced split: uses a more advanced but slower method for splitting that considers the embedding model's maximum input length.
             """,
         )
-
     # Load and preprocess each selected file, then concatenate them
-    dfs = []
-    for selected_file in selected_files:
-        file_path = DATA_PATH / selected_file
-        df = load_and_preprocess_data(
-            file_path,
-            st.session_state["language"],
-            min_chars,
-            split_by_paragraph,
-            embedding_model_name=SessionStateManager.get("embedding_model_name"),
-        )
-        dfs.append(df)
+    # Priority to local data if both are set
+    if uploaded_files is not None:
+        dfs = _process_uploaded_files(uploaded_files, min_chars, split_by_paragraph)
+    elif selected_files:
+        dfs = _load_files(selected_files, min_chars, split_by_paragraph)
 
     if not dfs:
         st.warning(

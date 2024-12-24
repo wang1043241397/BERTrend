@@ -63,7 +63,7 @@ from bertrend.demos.weak_signals.visualizations_utils import (
 )
 
 # UI Settings
-PAGE_TITLE = "BERTrend - Trend Analysis"
+PAGE_TITLE = "BERTrend - Retrospective Trend Analysis demo"
 LAYOUT: Literal["centered", "wide"] = "wide"
 
 

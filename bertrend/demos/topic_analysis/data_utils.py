@@ -36,9 +36,7 @@ def data_overview(df: pd.DataFrame):
             plot_docs_reparition_over_time(df, freq)
         with col2:
             st.dataframe(
-                st.session_state["time_filtered_df"][
-                    ["index", TEXT_COLUMN, TIMESTAMP_COLUMN]
-                ],
+                st.session_state["time_filtered_df"][[TEXT_COLUMN, TIMESTAMP_COLUMN]],
                 use_container_width=True,
             )
 
