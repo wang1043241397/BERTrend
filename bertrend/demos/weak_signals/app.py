@@ -18,6 +18,7 @@ from bertrend import (
     CACHE_PATH,
 )
 from bertrend.BERTrend import BERTrend
+from bertrend.demos.demos_utils import is_admin_mode
 from bertrend.demos.demos_utils.data_loading_component import (
     display_data_loading_component,
 )
@@ -131,7 +132,9 @@ def purge_cache():
 
 def main():
     st.set_page_config(
-        page_title=PAGE_TITLE, layout=LAYOUT, initial_sidebar_state="expanded"
+        page_title=PAGE_TITLE,
+        layout=LAYOUT,
+        initial_sidebar_state="expanded" if is_admin_mode() else "collapsed",
     )
 
     st.title(":part_alternation_mark: " + PAGE_TITLE)

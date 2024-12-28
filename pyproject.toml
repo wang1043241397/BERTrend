@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bertrend"
-version = "0.1.1"
+version = "0.2.0"
 description = "BERTrend analyses topic evolution over time using state-of-the-art transformer models: topic modelling and LLM"
 authors = ["Jérôme Picault <jerome.picault@rte-france.com>", "Guillaume Grosjean <guillaume.grosjean@rte-france.com>", "Allaa Boutaleb <allaa.boutaleb@lip6.fr>"]
 license = "LICENSE.md"
