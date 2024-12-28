@@ -56,7 +56,6 @@ from tqdm import tqdm
 import itertools
 from scipy.sparse import csr_matrix
 from sklearn.preprocessing import normalize
-from pathlib import Path
 from typing import List, Union, Tuple
 import re
 
@@ -823,7 +822,7 @@ class TempTopic:
         - Replacing hyphens and similar characters with spaces
         - Removing specific prefixes
         - Removing all punctuation
-        - Replacing special characters with spaces (preserving accented characters, llm_utils Latin extensions, and newlines)
+        - Replacing special characters with spaces (preserving accented characters, util Latin extensions, and newlines)
         - Normalizing superscripts and subscripts
         - Splitting words containing capitals in the middle (while avoiding splitting fully capitalized words)
         - Lowercasing all text

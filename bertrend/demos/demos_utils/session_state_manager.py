@@ -34,16 +34,6 @@ class SessionStateManager:
             st.session_state[key] = value
 
     @staticmethod
-    def update(key: str, value: Any) -> None:
-        if key in st.session_state:
-            st.session_state[key] = value
-
-    @staticmethod
-    def delete(key: str) -> None:
-        if key in st.session_state:
-            del st.session_state[key]
-
-    @staticmethod
     def clear() -> None:
         st.session_state.clear()
 
@@ -51,11 +41,6 @@ class SessionStateManager:
     def get_dataframe(key: str) -> Optional[pd.DataFrame]:
         df = st.session_state.get(key)
         return df if isinstance(df, pd.DataFrame) else None
-
-    # FIXME: no usage?
-    @staticmethod
-    def get_model(key: str) -> Optional[Any]:
-        return st.session_state.get(key)
 
     @staticmethod
     def get_embeddings(key: str = "embeddings") -> Optional[np.ndarray]:
