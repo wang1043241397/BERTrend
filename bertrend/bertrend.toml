@@ -32,7 +32,7 @@ default_zeroshot_topics = ""  # empty string or a default list of topics
 # It is generally more efficient to use a dedicated service for embeddings.
 use_local = false
 local_embedding_name = "OrdalieTech/Solon-embeddings-large-0.1"
-host = "localhost"
+host = "10.132.6.110"
 port = 6464
 
 [llm_service]

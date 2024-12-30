@@ -21,12 +21,16 @@ from bertrend.parameters import (
 
 
 class EmbeddingService:
-    def __init__(self, local: bool = True, embedding_model_name: str = None):
+    def __init__(
+        self,
+        local: bool = True,
+        embedding_model_name: str = None,
+        host: str = EMBEDDING_CONFIG["host"],
+        port: str = EMBEDDING_CONFIG["port"],
+    ):
         self.local = local
         if not self.local:
-            self.port = EMBEDDING_CONFIG["port"]
-            self.host = EMBEDDING_CONFIG["host"]
-            self.url = f"http://{self.host}:{self.port}"
+            self.url = f"http://{host}:{port}"
         self.embedding_model_name = embedding_model_name
 
     # TODO: harmonize interfaces for local / remote services

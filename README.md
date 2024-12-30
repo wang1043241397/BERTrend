@@ -129,8 +129,8 @@ Supported formats:
 
 #### Launch the Demonstrator
 ```bash
-cd bertrend/topic_analysis
-CUDA_VISIBLE_DEVICES=<gpu_number> streamlit run Main_page.py
+cd bertrend/demos/topic_analysis
+CUDA_VISIBLE_DEVICES=<gpu_number> streamlit run app.py
 ```
 
 #### Description of Main Pages
@@ -188,8 +188,8 @@ Key Features of the demonstrator:
 
 #### Launch the Weak Signal Analysis Demonstrator
 ```bash
-cd bertrend/weak_signals
-CUDA_VISIBLE_DEVICES=<gpu_number> streamlit run summarizer_app.py
+cd bertrend/demos/weak_signals
+CUDA_VISIBLE_DEVICES=<gpu_number> streamlit run app.py
 ```
 
 #### Data Preparation

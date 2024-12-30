@@ -114,9 +114,9 @@ def test_create_topic_model_with_valid_input(
     mock_bertopic.fit_transform.return_value = ([], [])
     mock_bertopic.reduce_outliers.return_value = []
 
-    topic_model.create_topic_model = MagicMock(return_value=mock_bertopic)
+    topic_model.fit = MagicMock(return_value=mock_bertopic)
 
-    result = topic_model.create_topic_model(
+    result = topic_model.fit(
         docs,
         mock_sentence_transformer,
         embeddings,
@@ -124,7 +124,7 @@ def test_create_topic_model_with_valid_input(
         zeroshot_min_similarity,
     )
 
-    topic_model.create_topic_model.assert_called_once_with(
+    topic_model.fit.assert_called_once_with(
         docs,
         mock_sentence_transformer,
         embeddings,
@@ -142,7 +142,7 @@ def test_create_topic_model_with_empty_zeroshot_topic_list(
     zeroshot_topic_list = []
     zeroshot_min_similarity = 0.7
 
-    result = topic_model.create_topic_model(
+    result = topic_model.fit(
         docs,
         None,  # mock_sentence_transformer,
         np.random.random((len(docs), 768)),
@@ -166,10 +166,10 @@ def test_create_topic_model_exception_handling(
     zeroshot_min_similarity = 0.7
 
     # Simulate an error in the create_topic_model method
-    topic_model.create_topic_model = MagicMock(side_effect=Exception("Test Exception"))
+    topic_model.fit = MagicMock(side_effect=Exception("Test Exception"))
 
     with pytest.raises(Exception, match="Test Exception"):
-        topic_model.create_topic_model(
+        topic_model.fit(
             docs,
             mock_sentence_transformer,
             embeddings,

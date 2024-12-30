@@ -7,6 +7,7 @@ import os
 import streamlit as st
 from loguru import logger
 
+from bertrend.demos.demos_utils.icons import WARNING_ICON
 from bertrend.services.summary.abstractive_summarizer import AbstractiveSummarizer
 from bertrend.services.summary.chatgpt_summarizer import GPTSummarizer
 from bertrend.services.summary.extractive_summarizer import (
@@ -49,7 +50,8 @@ def app():
 
     st.warning(
         "Warning: be sure that when using a GPT summarizer, the server is on Azure or local. "
-        "Otherwise, use it EXCLUSIVELY on public data."
+        "Otherwise, use it EXCLUSIVELY on public data.",
+        icon=WARNING_ICON,
     )
 
     summary_model = st.selectbox(

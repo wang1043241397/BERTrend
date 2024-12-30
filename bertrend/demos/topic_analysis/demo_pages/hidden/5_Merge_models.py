@@ -8,6 +8,7 @@ from pathlib import Path
 from bertopic import BERTopic
 from typing import List, Optional, Union
 
+from bertrend.demos.demos_utils.icons import WARNING_ICON
 from bertrend.demos.demos_utils.state_utils import restore_widget_state
 
 
@@ -200,5 +201,5 @@ st.sidebar.button(
 if st.session_state.get("min_similarity_changed", False):
     st.warning(
         "You've changed the 'min_similarity' value. Please perform the merge again to see the updated results.",
-        icon="⚠️",
+        icon=WARNING_ICON,
     )

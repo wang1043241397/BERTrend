@@ -8,6 +8,7 @@ from statistics import StatisticsError
 import pandas as pd
 import streamlit as st
 
+from bertrend.demos.demos_utils.icons import WARNING_ICON, ERROR_ICON
 from bertrend.demos.topic_analysis.app_utils import (
     plot_remaining_docs_repartition_over_time,
     transform_new_data,
@@ -33,12 +34,13 @@ def main():
     # Stop script if no model is trained
     if "topic_model" not in st.session_state.keys():
         st.error(
-            "Train a model to explore the impact of new data on topics.", icon="🚨"
+            "Train a model to explore the impact of new data on topics.",
+            icon=ERROR_ICON,
         )
         st.stop()
 
     if "topics_over_time" not in st.session_state.keys():
-        st.error("Topics over time required.", icon="🚨")
+        st.error("Topics over time required.", icon=ERROR_ICON)
         st.stop()
 
     ### TITLE ###
@@ -54,7 +56,7 @@ def main():
     else:
         st.error(
             "No split dataset available. Please ensure the dataset is properly loaded and processed.",
-            icon="🚨",
+            icon=ERROR_ICON,
         )
         st.stop()
 
@@ -172,7 +174,7 @@ def plot_animated_topic_map(
         TEM_map = tm.identify_signals(TEM_map, TEM_x, TEM_y)
         TEM_map["batch"] = 0
     except StatisticsError as se:
-        st.warning(f"Try to change the Time Weight value: {se}", icon="⚠️")
+        st.warning(f"Try to change the Time Weight value: {se}", icon=WARNING_ICON)
         st.stop()
 
     # Use new data
@@ -194,7 +196,7 @@ def plot_animated_topic_map(
             batch_TEM_map["batch"] = i + 1
             TEM_map = pd.concat([TEM_map, batch_TEM_map])
         except StatisticsError as se:
-            st.warning(f"Try to change the Time Weight value: {se}", icon="⚠️")
+            st.warning(f"Try to change the Time Weight value: {se}", icon=WARNING_ICON)
             st.stop()
 
     # Plot the resulting map as an animation

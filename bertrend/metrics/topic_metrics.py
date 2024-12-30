@@ -10,6 +10,7 @@ import pandas as pd
 import gensim.corpora as corpora
 from gensim.models.coherencemodel import CoherenceModel
 from bertopic import BERTopic
+from loguru import logger
 
 
 def get_coherence_value(
@@ -120,6 +121,43 @@ def get_diversity_value(
         return pairwise_jaccard_diversity(topic_words, topk)
     else:
         raise ValueError(f"Unknown diversity score type: {diversity_score_type}")
+
+
+def compute_cluster_metrics(bertopic: BERTopic, topics: list[int], dataset: list[str]):
+    """Print topic model coherence and diversity metrics"""
+    coherence_score_type = "c_npmi"
+    diversity_score_type = "puw"
+    logger.info(
+        f"Calculating {coherence_score_type} coherence and {diversity_score_type} diversity..."
+    )
+
+    try:
+        coherence = get_coherence_value(
+            bertopic,
+            topics,
+            dataset,
+            coherence_score_type,
+        )
+        logger.success(f"Coherence score [{coherence_score_type}]: {coherence}")
+
+    except IndexError as e:
+        logger.error(
+            "Error while calculating coherence metric. This likely happens when you're using an LLM to represent "
+            "the topics instead of keywords."
+        )
+    try:
+        diversity = get_diversity_value(
+            bertopic,
+            topics,
+            dataset,
+            diversity_score_type="puw",
+        )
+        logger.success(f"Diversity score [{diversity_score_type}]: {diversity}")
+    except IndexError as e:
+        logger.error(
+            "Error while calculating diversity metric. This likely happens when you're using an LLM to represent "
+            "the topics instead of keywords."
+        )
 
 
 def proportion_unique_words(topics: List[List[str]], topk: int) -> float:

@@ -3,7 +3,6 @@
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
 
-import locale
 from pathlib import Path
 
 import datamapplot
@@ -17,23 +16,18 @@ from loguru import logger
 from umap import UMAP
 
 from bertrend import OUTPUT_PATH
+from bertrend.demos.demos_utils.icons import ERROR_ICON, WARNING_ICON
 from bertrend.demos.topic_analysis.app_utils import (
     plot_2d_topics,
 )
-from bertrend.demos.demos_utils.state_utils import restore_widget_state
+from bertrend.demos.topic_analysis.messages import TRAIN_MODEL_FIRST_ERROR
 from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_CONFIG
 from bertrend.utils.data_loading import TEXT_COLUMN
 
-# Set locale for French date names
-locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
-
-# Restore widget state and set up page
-restore_widget_state()
-st.set_page_config(page_title="BERTrend topic analysis", layout="wide")
 
 # Check if a model is trained
 if "topic_model" not in st.session_state:
-    st.error("Train a model to explore different visualizations.", icon="🚨")
+    st.error(TRAIN_MODEL_FIRST_ERROR, icon=ERROR_ICON)
     st.stop()
 
 
@@ -41,9 +35,7 @@ if "topic_model" not in st.session_state:
 def overall_results():
     """Display overall results visualization."""
     try:
-        return plot_2d_topics(
-            st.session_state.parameters, st.session_state["topic_model"]
-        )
+        return plot_2d_topics(st.session_state["topic_model"])
     except TypeError as te:
         logger.error(f"Error occurred: {te}")
         return None
@@ -238,8 +230,8 @@ with st.expander("Overall Results", expanded=False):
             use_container_width=True,
         )
     else:
-        st.error("Cannot display overall results", icon="🚨")
-        st.warning("Try to change the UMAP parameters", icon="⚠️")
+        st.error("Cannot display overall results", icon=ERROR_ICON)
+        st.warning("Try to change the UMAP parameters", icon=WARNING_ICON)
 
 # Topics Treemap
 with st.expander("Topics Treemap", expanded=False):
@@ -273,7 +265,8 @@ with st.expander("Data Map", expanded=True):
             )
         else:
             st.warning(
-                "No valid topics to visualize. All documents might be classified as outliers."
+                "No valid topics to visualize. All documents might be classified as outliers.",
+                icon=WARNING_ICON,
             )
 
 

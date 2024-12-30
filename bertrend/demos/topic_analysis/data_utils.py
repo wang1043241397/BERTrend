@@ -10,6 +10,7 @@ import pandas as pd
 import streamlit as st
 from pathlib import Path
 
+from bertrend.demos.demos_utils.icons import WARNING_ICON
 from bertrend.demos.topic_analysis.app_utils import plot_docs_reparition_over_time
 from bertrend.demos.demos_utils.state_utils import save_widget_state
 from bertrend.utils.data_loading import TEXT_COLUMN, TIMESTAMP_COLUMN
@@ -74,7 +75,7 @@ def choose_data(base_dir: Path, filters: List[str]):
 
     folder_options = [folder.name for folder in data_folders]
     if not folder_options:
-        st.warning("No data available!")
+        st.warning("No data available!", icon=WARNING_ICON)
         st.stop()
 
     selected_folder_index = st.selectbox("Base folder", index=0, options=folder_options)

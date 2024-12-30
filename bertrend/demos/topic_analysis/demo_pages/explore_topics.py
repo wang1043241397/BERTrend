@@ -4,8 +4,6 @@
 #  This file is part of BERTrend.
 
 import io
-import locale
-import os
 import re
 import zipfile
 
@@ -19,10 +17,16 @@ from urllib.parse import urlparse
 from loguru import logger
 
 from bertrend import LLM_CONFIG
-from bertrend.demos.demos_utils.state_utils import restore_widget_state
+from bertrend.demos.demos_utils.icons import ERROR_ICON, WARNING_ICON
+from bertrend.demos.demos_utils.session_state_manager import SessionStateManager
+from bertrend.demos.topic_analysis.messages import (
+    NO_DOCUMENT_FOR_TOPIC,
+    TRAIN_MODEL_FIRST_ERROR,
+)
 from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_CONFIG
-from bertrend.utils.data_loading import TIMESTAMP_COLUMN, TEXT_COLUMN
+from bertrend.llm_utils.prompts import TOPIC_DESCRIPTION_PROMPT
+from bertrend.utils.data_loading import TIMESTAMP_COLUMN, TEXT_COLUMN, URL_COLUMN
 from bertrend_apps.newsletters.newsletter_features import get_most_representative_docs
 from bertrend.demos.topic_analysis.app_utils import (
     compute_topics_over_time,
@@ -30,13 +34,11 @@ from bertrend.demos.topic_analysis.app_utils import (
     print_docs_for_specific_topic,
 )
 
+# Constants
+EXPORT_BASE_FOLDER = Path(__file__).parent.parent / "exported_topics"
+
 
 def generate_topic_description(topic_model, topic_number, filtered_docs):
-    # Ensure OpenAI API key is set in the environment variables
-    if "OPENAI_API_KEY" not in os.environ:
-        logger.error("OpenAI API key not found in environment variables")
-        return "Error: OpenAI API key not set"
-
     # Get topic representation
     topic_words = topic_model.get_topic(topic_number)
     topic_representation = ", ".join(
@@ -52,46 +54,24 @@ def generate_topic_description(topic_model, topic_number, filtered_docs):
     )
 
     # Prepare the prompt
-    prompt = f"""En tant qu'expert en analyse thématique, votre tâche est de générer un titre et une description pour un thème spécifique.
-
-
-    Représentation du thème : {topic_representation}
-
-    Voici le contexte de ce thème :
-
-    {docs_text}
-
-    Basé sur ces informations, veuillez fournir :
-    1. Un titre concis et informatif pour ce thème (maximum 10 mots)
-    2. Une description détaillée du thème (environ 100 mots)
-
-    Format de réponse :
-    ### Titre : [Votre titre ici]
-    [Votre description ici]
-    """
+    prompt = TOPIC_DESCRIPTION_PROMPT[SessionStateManager.get("language", "fr")]
 
     # logger.debug(f"Prompt for GPT:\n{prompt}")
-
     try:
         client = OpenAI_Client(
             api_key=LLM_CONFIG["api_key"],
             endpoint=LLM_CONFIG["endpoint"],
             model=LLM_CONFIG["model"],
         )
-        return client.generate(user_prompt=prompt)
+        return client.generate(
+            user_prompt=prompt.format(
+                topic_representation=topic_representation,
+                docs_text=docs_text,
+            )
+        )
     except Exception as e:
         logger.error(f"Error calling OpenAI API: {e}")
         return f"Error generating description: {str(e)}"
-
-
-# Set locale for French date names
-locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
-
-# Constants
-EXPORT_BASE_FOLDER = Path(__file__).parent.parent / "exported_topics"
-
-# Restore widget state
-restore_widget_state()
 
 
 def check_model_and_prepare_topics():
@@ -99,7 +79,7 @@ def check_model_and_prepare_topics():
     Check if a model is trained and prepare topics over time if necessary.
     """
     if "topic_model" not in st.session_state:
-        st.error("Train a model to explore generated topics.", icon="🚨")
+        st.error(TRAIN_MODEL_FIRST_ERROR, icon=ERROR_ICON)
         st.stop()
 
     if (
@@ -107,7 +87,6 @@ def check_model_and_prepare_topics():
         and TIMESTAMP_COLUMN in st.session_state["time_filtered_df"]
     ):
         st.session_state["topics_over_time"] = compute_topics_over_time(
-            st.session_state["parameters"],
             st.session_state["topic_model"],
             st.session_state["time_filtered_df"],
             nr_bins=10,
@@ -196,7 +175,7 @@ def plot_topic_over_time():
 
 def get_representative_documents(top_n_docs):
     """Get representative documents for the selected topic."""
-    if st.session_state["split_by_paragraphs"]:
+    if st.session_state["split_by_paragraph"] in ["yes", "enhanced"]:
         return get_most_representative_docs(
             st.session_state["topic_model"],
             st.session_state["initial_df"],
@@ -230,7 +209,7 @@ def get_representative_documents(top_n_docs):
 def display_source_distribution(representative_df, selected_sources):
     """Display the distribution of sources in a pie chart."""
 
-    source_counts = representative_df["url"].apply(get_website_name).value_counts()
+    source_counts = representative_df[URL_COLUMN].apply(get_website_name).value_counts()
 
     # Create a list to store the 'pull' values for each slice
     pull = []
@@ -309,7 +288,7 @@ def create_topic_documents(
     """Create topic documents grouped by a given time granularity."""
     topic_docs = filtered_df.sort_values(by=TIMESTAMP_COLUMN)
     documents = []
-
+    folder_name = None
     if not topic_docs.empty:
         topic_number = st.session_state["selected_topic_number"]
         topic_words = [word for word, _ in topic_model.get_topic(topic_number)]
@@ -370,7 +349,7 @@ def main():
     representative_df = representative_df.sort_values(by="timestamp", ascending=False)
 
     # Get unique sources
-    sources = representative_df["url"].apply(get_website_name).unique()
+    sources = representative_df[URL_COLUMN].apply(get_website_name).unique()
 
     # Multi-select for sources
     selected_sources = st.multiselect(
@@ -379,13 +358,15 @@ def main():
         default=["All"],
     )
 
+    """
     # Filter the dataframe based on selected sources
     if "All" not in selected_sources:
         filtered_df = representative_df[
-            representative_df["url"].apply(get_website_name).isin(selected_sources)
+            representative_df[URL_COLUMN].apply(get_website_name).isin(selected_sources)
         ]
     else:
         filtered_df = representative_df
+    """
 
     # Create two columns
     col1, col2 = st.columns([0.5, 0.5])
@@ -398,7 +379,9 @@ def main():
         # Filter the dataframe only for document display
         if "All" not in selected_sources:
             filtered_df = representative_df[
-                representative_df["url"].apply(get_website_name).isin(selected_sources)
+                representative_df[URL_COLUMN]
+                .apply(get_website_name)
+                .isin(selected_sources)
             ]
         else:
             filtered_df = representative_df
@@ -466,7 +449,7 @@ def main():
                 mime="application/zip",
             )
         else:
-            st.warning("No documents found for the selected topic.")
+            st.warning(NO_DOCUMENT_FOR_TOPIC, icon=WARNING_ICON)
     else:
         if st.button("Export Topic Documents"):
             folder_name, documents = create_topic_documents(
@@ -490,11 +473,13 @@ def main():
                     f"Successfully exported documents to folder: {export_folder}"
                 )
             else:
-                st.warning("No documents found for the selected topic.")
+                st.warning(
+                    NO_DOCUMENT_FOR_TOPIC,
+                    icon=WARNING_ICON,
+                )
 
 
-if __name__ == "__main__":
-    main()
+main()
 
 # FIXME: The number of documents being displayed per topic corresponds to the paragraphs, it should instead correspond to the number of original articles before splitting.
 # TODO: Granularity to export multiple .txt files in order to use them later with Text2KG hasn't been properly checked (Scenario where granularity is bigger than number of days a topic spans over, or bigger than half... etc)

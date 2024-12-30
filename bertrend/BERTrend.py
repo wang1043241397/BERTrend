@@ -124,13 +124,13 @@ class BERTrend:
         logger.debug(f"Number of documents: {len(docs)}")
 
         logger.debug("Creating topic model...")
-        topic_model = self.topic_model_parameters.create_topic_model(
+        topic_model = self.topic_model_parameters.fit(
             docs=docs,
             embedding_model=embedding_model,
             embeddings=embeddings_subset,
             zeroshot_topic_list=self.zeroshot_topic_list,
             zeroshot_min_similarity=self.zeroshot_min_similarity,
-        )
+        ).topic_model
 
         logger.debug("Topic model created successfully")
 

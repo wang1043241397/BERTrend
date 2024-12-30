@@ -6,6 +6,7 @@
 import streamlit as st
 from statistics import StatisticsError
 
+from bertrend.demos.demos_utils.icons import ERROR_ICON, WARNING_ICON
 from bertrend.demos.topic_analysis.app_utils import compute_topics_over_time
 from bertrend.demos.demos_utils.state_utils import (
     restore_widget_state,
@@ -21,7 +22,7 @@ restore_widget_state()
 
 # Check if a model is trained
 if "topic_model" not in st.session_state:
-    st.error("Train a model to explore generated topics.", icon="🚨")
+    st.error("Train a model to explore generated topics.", icon=ERROR_ICON)
     st.stop()
 
 # Compute topics over time if not already done
@@ -65,5 +66,5 @@ try:
         use_container_width=True,
     )
 except StatisticsError as se:
-    st.warning(f"Try to change the Time Weight value: {se}", icon="⚠️")
+    st.warning(f"Try to change the Time Weight value: {se}", icon=WARNING_ICON)
     st.stop()

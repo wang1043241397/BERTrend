@@ -3,7 +3,6 @@
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
 
-import locale
 from datetime import timedelta
 
 import numpy as np
@@ -13,6 +12,8 @@ import plotly.graph_objects as go
 import streamlit as st
 import umap
 
+from bertrend.demos.demos_utils.icons import ERROR_ICON, INFO_ICON
+from bertrend.demos.topic_analysis.messages import TRAIN_MODEL_FIRST_ERROR
 from bertrend.metrics.temporal_metrics_embedding import TempTopic
 from bertrend.demos.topic_analysis.app_utils import (
     plot_topics_over_time,
@@ -21,16 +22,9 @@ from bertrend.demos.topic_analysis.app_utils import (
 from bertrend.demos.demos_utils.state_utils import (
     register_widget,
     save_widget_state,
-    restore_widget_state,
 )
 from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_CONFIG
 from bertrend.utils.data_loading import TIMESTAMP_COLUMN, TEXT_COLUMN
-
-# Set locale for French date names
-locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
-
-# Page configuration
-st.set_page_config(page_title="BERTrend topic analysis", layout="wide")
 
 
 # TempTopic output visualization functions
@@ -267,7 +261,8 @@ def check_model_trained():
     """Check if a model is trained and display an error if not."""
     if "topic_model" not in st.session_state:
         st.error(
-            "Train a model to explore different temporal visualizations.", icon="🚨"
+            TRAIN_MODEL_FIRST_ERROR,
+            icon=ERROR_ICON,
         )
         st.stop()
 
@@ -389,7 +384,7 @@ def get_available_granularities(min_date, max_date):
 #     register_widget("granularity")
 #     time_granularity = st.selectbox("Select time granularity", [""] + available_granularities, key="granularity", on_change=save_widget_state)
 #     if time_granularity == "":
-#         st.info("Please select a time granularity to view the temporal visualizations.")
+#         st.info("Please select a time granularity to view the temporal visualizations.", icon=INFO_ICON)
 #         st.stop()
 #     return time_granularity
 
@@ -447,7 +442,8 @@ def select_time_granularity(max_granularity):
     formatted_max = format_timedelta(max_granularity)
 
     st.info(
-        f"Granularity must be greater than zero and less than or equal to {formatted_max}."
+        f"Granularity must be greater than zero and less than or equal to {formatted_max}.",
+        icon=INFO_ICON,
     )
 
     if (
@@ -724,7 +720,6 @@ def display_topics_popularity():
 
                 # Compute topics over time
                 st.session_state["topics_over_time"] = compute_topics_over_time(
-                    st.session_state["parameters"],
                     st.session_state["topic_model"],
                     st.session_state["time_filtered_df"],
                     nr_bins=st.session_state["nr_bins"],
@@ -745,7 +740,7 @@ def display_topics_popularity():
 def main():
     """Main function to run the Streamlit topic_analysis."""
     # Restore widget state
-    restore_widget_state()
+    # restore_widget_state()
 
     # Check if model is trained
     check_model_trained()
@@ -777,11 +772,11 @@ def main():
         display_temptopic_visualizations()
     else:
         st.info(
-            "Please apply granularity and parameters to view the temporal visualizations."
+            "Please apply granularity and parameters to view the temporal visualizations.",
+            icon=INFO_ICON,
         )
 
 
-if __name__ == "__main__":
-    main()
+main()
 
 # FIXME: Popularity of topics over time visualization is based on the number of paragraphs instead of original articles, since it's the default BERTopic method

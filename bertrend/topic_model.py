@@ -33,6 +33,32 @@ from bertrend.parameters import (
 )
 
 
+class TopicModelOutput:
+    """Wrapper to encapsulate all results related to topic model output"""
+
+    def __init__(self, topic_model: BERTopic):
+        """
+        - a topic model
+        - a list of topics indices corresponding to the documents
+        - an array of probabilities
+        - the document embeddings
+        - the token embeddings of each document
+        - the tokens (str) of each documents
+        """
+        # Topic model
+        self.topic_model = topic_model
+        # List of topics indices corresponding to the documents
+        self.topics = None
+        # Array of probabilities
+        self.probs = None
+        # Document embeddings
+        self.embeddings = None
+        # Token embeddings of each document
+        self.token_embeddings = None
+        # Tokens (str) of each document
+        self.token_strings = None
+
+
 class TopicModel:
     """
     Class that encapsulates the parameters for topic models.
@@ -108,17 +134,16 @@ class TopicModel:
             reduce_frequent_words=True, bm25_weighting=False
         )
 
-    # FIXME: from topic_modelling / create_topic_model -> rename to fit_topic_model
-    def create_topic_model(
+    def fit(
         self,
         docs: List[str],
         embedding_model: SentenceTransformer,
         embeddings: np.ndarray,
-        zeroshot_topic_list: List[str],
-        zeroshot_min_similarity: float,
-    ) -> BERTopic:
+        zeroshot_topic_list=None,
+        zeroshot_min_similarity: float = 0,
+    ) -> TopicModelOutput:
         """
-        Create a BERTopic model.
+        Create a TopicModelOutput model.
 
         Args:
             docs (List[str]): List of documents.
@@ -135,8 +160,12 @@ class TopicModel:
         Returns:
             BERTopic: A fitted BERTopic model.
         """
+        if zeroshot_topic_list is None:
+            zeroshot_topic_list = list()
+        if zeroshot_topic_list is None:
+            zeroshot_topic_list = []
         logger.debug(
-            f"Creating topic model with zeroshot_topic_list: {zeroshot_topic_list}"
+            f"\tCreating topic model with zeroshot_topic_list: {zeroshot_topic_list}"
         )
         try:
             # Handle scenario where user enters a bunch of white space characters or any scenario where we can't extract zeroshot topics
@@ -181,7 +210,9 @@ class TopicModel:
             )
 
             logger.success("\tBERTopic model fitted successfully")
-            return topic_model
+            output = TopicModelOutput(topic_model)
+
+            return output
         except Exception as e:
             logger.error(f"\tError in create_topic_model: {str(e)}")
             logger.exception("\tTraceback:")

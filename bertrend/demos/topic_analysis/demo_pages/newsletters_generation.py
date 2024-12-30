@@ -7,11 +7,12 @@ import inspect
 import streamlit as st
 from pathlib import Path
 
+from bertrend.demos.demos_utils.icons import ERROR_ICON
 from bertrend.demos.demos_utils.state_utils import (
-    restore_widget_state,
     register_widget,
     save_widget_state,
 )
+from bertrend.demos.topic_analysis.messages import TRAIN_MODEL_FIRST_ERROR
 from bertrend.services.summary.abstractive_summarizer import AbstractiveSummarizer
 from bertrend.services.summary.chatgpt_summarizer import GPTSummarizer
 from bertrend.services.summary.extractive_summarizer import (
@@ -20,9 +21,6 @@ from bertrend.services.summary.extractive_summarizer import (
 )
 from bertrend_apps.newsletters.newsletter_features import generate_newsletter, md2html
 
-
-# Restore widget state
-restore_widget_state()
 
 # Define summarizer options
 SUMMARIZER_OPTIONS_MAPPER = {
@@ -63,7 +61,7 @@ def generate_newsletter_wrapper():
 
 # Check if a topic model exists
 if "topic_model" not in st.session_state:
-    st.error("Train a model to explore generated topics.", icon="🚨")
+    st.error(TRAIN_MODEL_FIRST_ERROR, icon=ERROR_ICON)
     st.stop()
 
 # Title
@@ -144,7 +142,7 @@ with st.sidebar:
 
 # Generate newsletters when button is clicked
 if generate_newsletter_clicked:
-    if st.session_state["split_by_paragraphs"]:
+    if st.session_state["split_by_paragraph"] in ["yes", "enhanced"]:
         df = st.session_state["initial_df"]
         df_split = st.session_state["time_filtered_df"]
     else:

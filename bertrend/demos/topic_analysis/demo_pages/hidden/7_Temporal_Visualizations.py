@@ -6,6 +6,8 @@
 import streamlit as st
 import locale
 
+from bertrend.demos.demos_utils.icons import ERROR_ICON
+
 # from langchain_openai import ChatOpenAI
 # from langchain_core.messages import HumanMessage, SystemMessage
 
@@ -21,7 +23,7 @@ from bertrend.demos.demos_utils.state_utils import (
     register_widget,
     save_widget_state,
 )
-from bertrend.demos.topic_analysis.pages.hidden.temporal_metrics import TempTopic
+from bertrend.demos.topic_analysis.demo_pages.hidden.temporal_metrics import TempTopic
 from bertrend.utils.data_loading import TIMESTAMP_COLUMN, TEXT_COLUMN
 
 
@@ -52,7 +54,10 @@ st.set_page_config(page_title="BERTrend topic analysis", layout="wide")
 
 # Stop script if no model is trained
 if "topic_model" not in st.session_state.keys():
-    st.error("Train a model to explore different temporal visualizations.", icon="🚨")
+    st.error(
+        "Train a model to explore different temporal visualizations.",
+        icon=ERROR_ICON,
+    )
     st.stop()
 
 # Restore widget state

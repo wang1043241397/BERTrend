@@ -22,8 +22,24 @@ from bertrend.demos.demos_utils import is_admin_mode
 from bertrend.demos.demos_utils.data_loading_component import (
     display_data_loading_component,
 )
+from bertrend.demos.demos_utils.embed_documents_component import (
+    display_embed_documents_component,
+)
+from bertrend.demos.demos_utils.icons import (
+    WARNING_ICON,
+    SUCCESS_ICON,
+    SETTINGS_ICON,
+    TOPIC_ICON,
+    TREND_ICON,
+    ERROR_ICON,
+)
+from bertrend.demos.demos_utils.messages import (
+    NO_EMBEDDINGS_WARNING_MESSAGE,
+    MODEL_TRAINING_COMPLETE_MESSAGE,
+)
 from bertrend.demos.demos_utils.parameters_component import (
     display_bertopic_hyperparameters,
+    display_bertrend_hyperparameters,
 )
 from bertrend.services.embedding_service import EmbeddingService
 from bertrend.topic_model import TopicModel
@@ -32,13 +48,16 @@ from bertrend.demos.weak_signals.messages import (
     NO_CACHE_WARNING,
     CACHE_PURGED_MESSAGE,
     MODELS_RESTORED_MESSAGE,
-    EMBEDDINGS_CALCULATED_MESSAGE,
     NO_DATA_WARNING,
-    MODEL_TRAINING_COMPLETE_MESSAGE,
     STATE_SAVED_MESSAGE,
     STATE_RESTORED_MESSAGE,
     MODELS_SAVED_MESSAGE,
     NO_MODELS_WARNING,
+    NO_STATE_WARNING,
+    EMBED_WARNING,
+    EMBED_TRAIN_WARNING,
+    TRAIN_WARNING,
+    MERGE_WARNING,
 )
 from bertrend.trend_analysis.weak_signals import detect_weak_signals_zeroshot
 
@@ -68,6 +87,7 @@ PAGE_TITLE = "BERTrend - Retrospective Trend Analysis demo"
 LAYOUT: Literal["centered", "wide"] = "wide"
 
 
+# TODO: handle uploaded files
 def save_state():
     state_file = CACHE_PATH / STATE_FILE
     embeddings_file = CACHE_PATH / EMBEDDINGS_FILE
@@ -96,9 +116,10 @@ def save_state():
         pickle.dump(state, f)
 
     np.save(embeddings_file, SessionStateManager.get_embeddings())
-    st.success(STATE_SAVED_MESSAGE)
+    st.success(STATE_SAVED_MESSAGE, icon=SUCCESS_ICON)
 
 
+# TODO: handle uploaded files
 def restore_state():
     state_file = CACHE_PATH / STATE_FILE
     embeddings_file = CACHE_PATH / EMBEDDINGS_FILE
@@ -114,20 +135,20 @@ def restore_state():
         # Restore other states
         SessionStateManager.set_multiple(**state)
         SessionStateManager.set("embeddings", np.load(embeddings_file))
-        st.success(STATE_RESTORED_MESSAGE)
+        st.success(STATE_RESTORED_MESSAGE, icon=SUCCESS_ICON)
 
         # Update the multiselect widget with restored selected files
         st.session_state["selected_files"] = selected_files
     else:
-        st.warning("No saved state found.")
+        st.warning(NO_STATE_WARNING, icon=WARNING_ICON)
 
 
 def purge_cache():
     if CACHE_PATH.exists():
         shutil.rmtree(CACHE_PATH)
-        st.success(CACHE_PURGED_MESSAGE)
+        st.success(CACHE_PURGED_MESSAGE, icon=SUCCESS_ICON)
     else:
-        st.warning(NO_CACHE_WARNING)
+        st.warning(NO_CACHE_WARNING, icon=WARNING_ICON)
 
 
 def main():
@@ -135,6 +156,7 @@ def main():
         page_title=PAGE_TITLE,
         layout=LAYOUT,
         initial_sidebar_state="expanded" if is_admin_mode() else "collapsed",
+        page_icon=":part_alternation_mark:",
     )
 
     st.title(":part_alternation_mark: " + PAGE_TITLE)
@@ -145,7 +167,7 @@ def main():
 
     # Sidebar
     with st.sidebar:
-        st.header("Settings and Controls")
+        st.header(SETTINGS_ICON + " Settings and Controls")
 
         # State Management
         st.subheader("State Management")
@@ -154,9 +176,9 @@ def main():
             restore_state()
             try:
                 SessionStateManager.set("bertrend", BERTrend.restore_models())
-                st.success(MODELS_RESTORED_MESSAGE)
+                st.success(MODELS_RESTORED_MESSAGE, icon=SUCCESS_ICON)
             except Exception as e:
-                st.warning(NO_MODELS_WARNING)
+                st.warning(NO_MODELS_WARNING, icon=WARNING_ICON)
 
         if st.button("Purge Cache", use_container_width=True):
             purge_cache()
@@ -165,8 +187,10 @@ def main():
             SessionStateManager.clear()
 
         # BERTopic Hyperparameters
-        st.subheader("BERTopic Hyperparameters")
+        st.subheader(TOPIC_ICON + " BERTopic Hyperparameters")
         display_bertopic_hyperparameters()
+        st.subheader(TREND_ICON + " BERTrend Hyperparameters")
+        display_bertrend_hyperparameters()
 
     # Main content
     tab1, tab2, tab3 = st.tabs(["Data Loading", "Model Training", "Results Analysis"])
@@ -177,47 +201,22 @@ def main():
         display_data_loading_component()
 
         if "time_filtered_df" in st.session_state:
-
-            # Embed documents
-            if st.button("Embed Documents"):
-                with st.spinner("Embedding documents..."):
-                    embedding_dtype = SessionStateManager.get("embedding_dtype")
-                    embedding_model_name = SessionStateManager.get(
-                        "embedding_model_name"
-                    )
-                    embedding_service = EmbeddingService(
-                        local=True, embedding_model_name=embedding_model_name
-                    )
-
-                    texts = SessionStateManager.get_dataframe("time_filtered_df")[
-                        TEXT_COLUMN
-                    ].tolist()
-
-                    try:
-                        embedding_model, embeddings = embedding_service.embed_documents(
-                            texts=texts,
-                            embedding_model_name=embedding_model_name,
-                            embedding_dtype=embedding_dtype,
-                        )
-
-                        SessionStateManager.set("embedding_model", embedding_model)
-                        SessionStateManager.set("embeddings", embeddings)
-                        SessionStateManager.set("data_embedded", True)
-
-                        st.success(EMBEDDINGS_CALCULATED_MESSAGE)
-                        save_state()
-                    except Exception as e:
-                        st.error(
-                            f"An error occurred while embedding documents: {str(e)}"
-                        )
+            try:
+                display_embed_documents_component()
+                if SessionStateManager.get("data_embedded", False):
+                    save_state()
+            except Exception as e:
+                logger.error(f"An error occurred while embedding documents: {str(e)}")
+                st.error(
+                    f"An error occurred while embedding documents: {str(e)}",
+                    icon=ERROR_ICON,
+                )
 
     with tab2:
         st.header("Model Training")
 
         if not SessionStateManager.get("data_embedded", False):
-            st.warning(
-                "Please embed data and train models before proceeding to analysis."
-            )
+            st.warning(NO_EMBEDDINGS_WARNING_MESSAGE, icon=WARNING_ICON)
             st.stop()
 
         # Select granularity
@@ -255,10 +254,13 @@ def main():
                     use_container_width=True,
                 )
             else:
-                st.warning(NO_DATA_WARNING)
+                st.warning(NO_DATA_WARNING, icon=WARNING_ICON)
 
         if not SessionStateManager.get("data_embedded", False):
-            st.warning("Please embed data before proceeding to model training.")
+            st.warning(
+                EMBED_WARNING,
+                icon=WARNING_ICON,
+            )
             st.stop()
         else:
             # Zero-shot topic definition
@@ -316,11 +318,11 @@ def main():
                         embedding_model=SessionStateManager.get("embedding_model"),
                         embeddings=SessionStateManager.get_embeddings(),
                     )
-                    st.success(MODEL_TRAINING_COMPLETE_MESSAGE)
+                    st.success(MODEL_TRAINING_COMPLETE_MESSAGE, icon=SUCCESS_ICON)
 
                     # Save trained models
                     bertrend.save_models()
-                    st.success(MODELS_SAVED_MESSAGE)
+                    st.success(MODELS_SAVED_MESSAGE, icon=SUCCESS_ICON)
 
                     # Store bertrend object
                     SessionStateManager.set("bertrend", bertrend)
@@ -344,19 +346,23 @@ def main():
 
                         SessionStateManager.set("popularity_computed", True)
 
-                    st.success(MODEL_MERGING_COMPLETE_MESSAGE)
+                    st.success(MODEL_MERGING_COMPLETE_MESSAGE, icon=SUCCESS_ICON)
 
     with tab3:
         st.header("Results Analysis")
 
         if not SessionStateManager.get("data_embedded", False):
             st.warning(
-                "Please embed data and train models before proceeding to analysis."
+                EMBED_TRAIN_WARNING,
+                icon=WARNING_ICON,
             )
             st.stop()
 
         elif not SessionStateManager.get("bertrend")._is_fitted:
-            st.warning("Please train models before proceeding to analysis.")
+            st.warning(
+                TRAIN_WARNING,
+                icon=WARNING_ICON,
+            )
             st.stop()
 
         else:
@@ -444,10 +450,16 @@ def main():
                         date_format="iso",
                         indent=4,
                     )
-                    st.success(f"Zeroshot topics data saved to {json_file_path}")
+                    st.success(
+                        f"Zeroshot topics data saved to {json_file_path}",
+                        icon=SUCCESS_ICON,
+                    )
 
             if not SessionStateManager.get("popularity_computed", False):
-                st.warning("Please merge models to view additional analyses.")
+                st.warning(
+                    MERGE_WARNING,
+                    icon=WARNING_ICON,
+                )
                 st.stop()
 
             else:
@@ -482,7 +494,10 @@ def main():
                     try:
                         display_signal_analysis(topic_number)
                     except Exception as e:
-                        st.error(f"Error while trying to generate signal summary: {e}")
+                        st.error(
+                            f"Error while trying to generate signal summary: {e}",
+                            icon=ERROR_ICON,
+                        )
 
                 # Create the Sankey Diagram
                 st.subheader("Topic Evolution")
@@ -502,7 +517,8 @@ def main():
                         # Number of topics per individual topic model
                         retrieve_topic_counts(topic_models)
                         st.success(
-                            f"Topic counts for individual and cumulative merged models saved to {json_file_path}"
+                            f"Topic counts for individual and cumulative merged models saved to {json_file_path}",
+                            icon=SUCCESS_ICON,
                         )
 
 

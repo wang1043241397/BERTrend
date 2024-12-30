@@ -288,17 +288,13 @@ def representation_model_options():
 
 
 @st.cache_data
-def plot_topic_treemap(form_parameters, _topic_model, width=700):
-    pass
-
-
-@st.cache_data
-def plot_2d_topics(form_parameters, _topic_model, width=700):
+def plot_2d_topics(_topic_model, width=700):
     return _topic_model.visualize_topics(width=width)
 
 
+# FIXME: not used?
 @st.cache_data
-def plot_topics_hierarchy(form_parameters, _topic_model, width=700):
+def plot_topics_hierarchy(_topic_model, width=700):
     return _topic_model.visualize_hierarchy(width=width)
 
 
@@ -313,9 +309,9 @@ def make_dynamic_topics_split(df, nr_bins):
     return pd.concat(split_df)
 
 
+# TODO: simplify function - last 3 params not used!
 @st.cache_data
 def compute_topics_over_time(
-    form_parameters,
     _topic_model,
     df,
     nr_bins,

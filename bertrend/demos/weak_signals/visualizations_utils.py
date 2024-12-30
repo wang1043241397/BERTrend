@@ -11,6 +11,7 @@ from pandas import Timestamp
 from plotly import graph_objects as go
 
 from bertrend import OUTPUT_PATH, SIGNAL_EVOLUTION_DATA_DIR
+from bertrend.demos.demos_utils.icons import WARNING_ICON, SUCCESS_ICON, INFO_ICON
 from bertrend.demos.weak_signals.messages import HTML_GENERATION_FAILED_WARNING
 from bertrend.demos.demos_utils.session_state_manager import SessionStateManager
 from bertrend.parameters import (
@@ -101,7 +102,9 @@ def display_signal_categories_df(
             )
         )
     else:
-        st.info(f"No noisy signals were detected at timestamp {window_end}.")
+        st.info(
+            f"No noisy signals were detected at timestamp {window_end}.", icon=INFO_ICON
+        )
 
     st.subheader(":orange[Weak Signals]")
     if not weak_signal_topics_df.empty:
@@ -111,7 +114,9 @@ def display_signal_categories_df(
             )
         )
     else:
-        st.info(f"No weak signals were detected at timestamp {window_end}.")
+        st.info(
+            f"No weak signals were detected at timestamp {window_end}.", icon=INFO_ICON
+        )
 
     st.subheader(":green[Strong Signals]")
     if not strong_signal_topics_df.empty:
@@ -121,7 +126,10 @@ def display_signal_categories_df(
             )
         )
     else:
-        st.info(f"No strong signals were detected at timestamp {window_end}.")
+        st.info(
+            f"No strong signals were detected at timestamp {window_end}.",
+            icon=INFO_ICON,
+        )
 
 
 def display_popularity_evolution():
@@ -220,7 +228,10 @@ def save_signal_evolution():
                 start_timestamp=pd.Timestamp(start_date),
                 end_timestamp=pd.Timestamp(end_date),
             )
-            st.success(f"Signal evolution data saved successfully at {save_path}")
+            st.success(
+                f"Signal evolution data saved successfully at {save_path}",
+                icon=SUCCESS_ICON,
+            )
         except Exception as e:
             st.error(f"Error encountered while saving signal evolution data: {e}")
 
@@ -304,7 +315,7 @@ def display_signal_analysis(topic_number, output_file="signal_llm.html"):
                 # Display the HTML content
                 st.html(html_content)
             else:
-                st.warning(HTML_GENERATION_FAILED_WARNING)
+                st.warning(HTML_GENERATION_FAILED_WARNING, icon=WARNING_ICON)
                 # Fallback to displaying markdown if HTML generation fails
                 col1, col2 = st.columns(spec=[0.5, 0.5], gap="medium")
                 with col1:

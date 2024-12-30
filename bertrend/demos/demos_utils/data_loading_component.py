@@ -2,6 +2,7 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
+
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import List, Literal
@@ -11,7 +12,15 @@ import streamlit as st
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 from bertrend import DATA_PATH
+from bertrend.demos.demos_utils.icons import (
+    WARNING_ICON,
+    JSON_ICON,
+    CSV_ICON,
+    PARQUET_ICON,
+    XLSX_ICON,
+)
 from bertrend.demos.demos_utils.session_state_manager import SessionStateManager
+from bertrend.demos.demos_utils.state_utils import save_widget_state, register_widget
 from bertrend.parameters import MIN_CHARS_DEFAULT, SAMPLE_SIZE_DEFAULT
 from bertrend.utils.data_loading import (
     find_compatible_files,
@@ -21,11 +30,11 @@ from bertrend.utils.data_loading import (
 
 NO_DATASET_WARNING = "Please select at least one dataset to proceed."
 FORMAT_ICONS = {
-    "csv": "📊",
-    "parquet": "📦",
-    "json": "📜",
-    "jsonl": "📜",
-    "xlsx": "📊",
+    "csv": CSV_ICON,
+    "parquet": PARQUET_ICON,
+    "json": JSON_ICON,
+    "jsonl": JSON_ICON,
+    "xlsx": XLSX_ICON,
 }
 
 
@@ -73,6 +82,9 @@ def _load_files(
     return dfs
 
 
+# TODO: if loaded data column names do not match our default values, show a popup for column data mapping
+
+
 def display_data_loading_component():
     """
     Component for a streamlit app about topic modelling. It allows to choose data to load and preprocess data.
@@ -83,60 +95,73 @@ def display_data_loading_component():
     compatible_extensions = FORMAT_ICONS.keys()
 
     with tab1:
-        uploaded_files = st.file_uploader(
+        st.file_uploader(
             label="Select dataset from local storage (.xlsx, .csv, .json, .jsonl, .parquet)",
             type=compatible_extensions,
             accept_multiple_files=True,
             help="Drag and drop files to be used as dataset in this area",
+            on_change=save_widget_state,
+            key="uploaded_files",
         )
 
     with tab2:
-        selected_files = st.multiselect(
+        register_widget("selected_files")
+        st.multiselect(
             label="Select one or more datasets from the server data",
             options=find_compatible_files(DATA_PATH, compatible_extensions),
             default=SessionStateManager.get("selected_files", []),
             key="selected_files",
             format_func=lambda x: FORMAT_ICONS[x.suffix.lstrip(".")] + " " + str(x),
+            on_change=save_widget_state,
         )
 
-    if uploaded_files is None and not selected_files:
-        st.warning(NO_DATASET_WARNING)
-        return
+    if not SessionStateManager.get(
+        "uploaded_files", []
+    ) and not SessionStateManager.get("selected_files"):
+        st.warning(NO_DATASET_WARNING, icon=WARNING_ICON)
+        st.stop()
 
     # Display number input and checkbox for preprocessing options
     col1, col2 = st.columns(2)
     with col1:
+        register_widget("min_chars")
         min_chars = st.number_input(
             "Minimum Characters",
             value=MIN_CHARS_DEFAULT,
             min_value=0,
             max_value=1000,
             key="min_chars",
+            on_change=save_widget_state,
         )
     with col2:
+        register_widget("split_by_paragraph")
+        SessionStateManager.get_or_set("split_by_paragraph", "yes")
         split_by_paragraph = st.segmented_control(
             "Split text by paragraphs",
             key="split_by_paragraph",
             options=["no", "yes", "enhanced"],
-            default="yes",
             selection_mode="single",
-            help="""- No split: No splitting on the documents.
-            
-            - Split by paragraphs: Split documents into paragraphs.
-            
-            - Enhanced split: uses a more advanced but slower method for splitting that considers the embedding model's maximum input length.
-            """,
+            help="'No split': No splitting on the documents ; 'Split by paragraphs': Split documents into paragraphs ; "
+            "'Enhanced split': uses a more advanced but slower method for splitting that considers the embedding "
+            "model's maximum input length.",
+            on_change=save_widget_state,
         )
     # Load and preprocess each selected file, then concatenate them
     # Priority to local data if both are set
-    if uploaded_files is not None:
-        dfs = _process_uploaded_files(uploaded_files, min_chars, split_by_paragraph)
-    elif selected_files:
-        dfs = _load_files(selected_files, min_chars, split_by_paragraph)
+    dfs = None
+    if SessionStateManager.get("uploaded_files"):
+        dfs = _process_uploaded_files(
+            SessionStateManager.get("uploaded_files"), min_chars, split_by_paragraph
+        )
+    elif SessionStateManager.get("selected_files"):
+        dfs = _load_files(
+            SessionStateManager.get("selected_files"), min_chars, split_by_paragraph
+        )
 
     if not dfs:
         st.warning(
-            "No data available after preprocessing. Please check the selected files and preprocessing options."
+            "No data available after preprocessing. Please check the selected files and preprocessing options.",
+            icon=WARNING_ICON,
         )
     else:
         df = pd.concat(dfs, ignore_index=True)
@@ -146,12 +171,14 @@ def display_data_loading_component():
 
         # Select timeframe
         min_date, max_date = df["timestamp"].dt.date.agg(["min", "max"])
+        register_widget("timeframe_slider")
         start_date, end_date = st.slider(
             "Select Timeframe",
             min_value=min_date,
             max_value=max_date,
             value=(min_date, max_date),
             key="timeframe_slider",
+            on_change=save_widget_state,
         )
 
         # Filter and sample the DataFrame
@@ -161,12 +188,14 @@ def display_data_loading_component():
         ]
         df_filtered = df_filtered.sort_values(by="timestamp").reset_index(drop=True)
 
+        register_widget("sample_size")
         sample_size = st.number_input(
             "Sample Size",
             value=SAMPLE_SIZE_DEFAULT or len(df_filtered),
             min_value=1,
             max_value=len(df_filtered),
             key="sample_size",
+            on_change=save_widget_state,
         )
         if sample_size < len(df_filtered):
             df_filtered = df_filtered.sample(n=sample_size, random_state=42)
