@@ -32,7 +32,7 @@ SUMMARIZER_OPTIONS_MAPPER = {
 }
 
 
-def generate_newsletter_wrapper():
+def generate_newsletter_wrapper(df, df_split):
     """Wrapper function to generate newsletters based on user settings."""
     top_n_topics = (
         None
@@ -154,7 +154,7 @@ def main():
             df_split = None
 
         with st.spinner("Generating newsletters..."):
-            st.session_state["newsletters"] = generate_newsletter_wrapper()
+            st.session_state["newsletters"] = generate_newsletter_wrapper(df, df_split)
 
     # Display generated newsletters
     if "newsletters" in st.session_state:

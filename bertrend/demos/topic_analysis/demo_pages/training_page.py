@@ -37,6 +37,7 @@ from bertrend.demos.demos_utils.parameters_component import (
 )
 from bertrend.demos.demos_utils.session_state_manager import SessionStateManager
 from bertrend.demos.topic_analysis.data_utils import data_overview
+from bertrend.metrics.topic_metrics import compute_cluster_metrics
 from bertrend.parameters import BERTOPIC_SERIALIZATION
 from bertrend.topic_model import TopicModel
 from bertrend.utils.data_loading import (
@@ -143,8 +144,7 @@ def train_model():
     ]  # exclude -1 topic from topic list
 
     # compute cluster metrics (optional)
-    # TODO: fix session state parameter
-    # compute_cluster_metrics(bertopic, st.session_state["topics"], dataset)
+    compute_cluster_metrics(bertopic, st.session_state["topics"], dataset)
 
     # update state
     st.session_state["model_trained"] = True
