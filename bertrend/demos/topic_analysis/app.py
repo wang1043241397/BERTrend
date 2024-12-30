@@ -54,7 +54,6 @@ def define_pages():
         {
             "Topic Anaysis": [
                 data_page,
-                data_page2,
                 topic_exploration_page,
                 topic_visualization_page,
                 temporal_visualization_page,
@@ -73,7 +72,7 @@ def main():
         initial_sidebar_state="expanded",
         page_icon=":part_alternation_mark:",
     )
-    # Restore widget state (all pages)
+    # Restore widget state
     restore_widget_state()
     pg.run()
 

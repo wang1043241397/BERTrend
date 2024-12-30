@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 
 from bertopic import BERTopic
 
-from bertrend.topic_model import TopicModel
+from bertrend.topic_model import TopicModel, TopicModelOutput
 from bertrend.parameters import (
     DEFAULT_UMAP_N_COMPONENTS,
     DEFAULT_UMAP_N_NEIGHBORS,
@@ -152,7 +152,7 @@ def test_create_topic_model_with_empty_zeroshot_topic_list(
 
     assert result is not None
     assert (
-        result.zeroshot_topic_list is None
+        result.topic_model.zeroshot_topic_list is None
     )  # Check that it was set to None internally
 
 

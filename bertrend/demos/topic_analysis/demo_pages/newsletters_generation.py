@@ -11,6 +11,7 @@ from bertrend.demos.demos_utils.icons import ERROR_ICON
 from bertrend.demos.demos_utils.state_utils import (
     register_widget,
     save_widget_state,
+    restore_widget_state,
 )
 from bertrend.demos.topic_analysis.messages import TRAIN_MODEL_FIRST_ERROR
 from bertrend.services.summary.abstractive_summarizer import AbstractiveSummarizer
@@ -59,108 +60,116 @@ def generate_newsletter_wrapper():
     )
 
 
-# Check if a topic model exists
-if "topic_model" not in st.session_state:
-    st.error(TRAIN_MODEL_FIRST_ERROR, icon=ERROR_ICON)
-    st.stop()
+def main():
+    # Check if a topic model exists
+    if "topic_model" not in st.session_state:
+        st.error(TRAIN_MODEL_FIRST_ERROR, icon=ERROR_ICON)
+        st.stop()
 
-# Title
-st.title("Automatic newsletters generation")
+    # Title
+    st.title("Automatic newsletters generation")
 
-# Initialize session state variables
-default_values = {
-    "newsletter_nb_topics": 4,
-    "newsletter_nb_docs": 3,
-    "summarizer_classname": list(SUMMARIZER_OPTIONS_MAPPER.keys())[0],
-    "summary_mode": "topic",
-    "newsletter_all_topics": False,
-    "newsletter_all_docs": False,
-}
+    # Initialize session state variables
+    default_values = {
+        "newsletter_nb_topics": 4,
+        "newsletter_nb_docs": 3,
+        "summarizer_classname": list(SUMMARIZER_OPTIONS_MAPPER.keys())[0],
+        "summary_mode": "topic",
+        "newsletter_all_topics": False,
+        "newsletter_all_docs": False,
+    }
 
-for key, value in default_values.items():
-    if key not in st.session_state:
-        st.session_state[key] = value
+    for key, value in default_values.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
 
-# Newsletter parameters sidebar
-with st.sidebar:
-    register_widget("newsletter_all_topics")
-    register_widget("newsletter_all_docs")
-    register_widget("newsletter_nb_topics")
-    register_widget("newsletter_nb_docs")
-    register_widget("newsletter_improve_description")
-    register_widget("summarizer_classname")
-    register_widget("summary_mode")
+    # Newsletter parameters sidebar
+    with st.sidebar:
+        register_widget("newsletter_all_topics")
+        register_widget("newsletter_all_docs")
+        register_widget("newsletter_nb_topics")
+        register_widget("newsletter_nb_docs")
+        register_widget("newsletter_improve_description")
+        register_widget("summarizer_classname")
+        register_widget("summary_mode")
 
-    all_topics = st.checkbox(
-        "Include all topics", on_change=save_widget_state, key="newsletter_all_topics"
-    )
-    st.slider(
-        "Number of topics",
-        min_value=1,
-        max_value=20,
-        on_change=save_widget_state,
-        key="newsletter_nb_topics",
-        disabled=all_topics,
-    )
+        all_topics = st.checkbox(
+            "Include all topics",
+            on_change=save_widget_state,
+            key="newsletter_all_topics",
+        )
+        st.slider(
+            "Number of topics",
+            min_value=1,
+            max_value=20,
+            on_change=save_widget_state,
+            key="newsletter_nb_topics",
+            disabled=all_topics,
+        )
 
-    all_documents = st.checkbox(
-        "Include all documents per topic",
-        on_change=save_widget_state,
-        key="newsletter_all_docs",
-    )
-    st.slider(
-        "Number of docs per topic",
-        min_value=1,
-        max_value=10,
-        on_change=save_widget_state,
-        key="newsletter_nb_docs",
-        disabled=all_documents,
-    )
+        all_documents = st.checkbox(
+            "Include all documents per topic",
+            on_change=save_widget_state,
+            key="newsletter_all_docs",
+        )
+        st.slider(
+            "Number of docs per topic",
+            min_value=1,
+            max_value=10,
+            on_change=save_widget_state,
+            key="newsletter_nb_docs",
+            disabled=all_documents,
+        )
 
-    st.toggle(
-        "Improve topic description",
-        value=True,
-        on_change=save_widget_state,
-        key="newsletter_improve_description",
-    )
-    st.selectbox(
-        "Summary mode",
-        ["topic", "document", "none"],
-        on_change=save_widget_state,
-        key="summary_mode",
-    )
-    st.selectbox(
-        "Summarizer class",
-        list(SUMMARIZER_OPTIONS_MAPPER.keys()),
-        on_change=save_widget_state,
-        key="summarizer_classname",
-    )
+        st.toggle(
+            "Improve topic description",
+            value=True,
+            on_change=save_widget_state,
+            key="newsletter_improve_description",
+        )
+        st.selectbox(
+            "Summary mode",
+            ["topic", "document", "none"],
+            on_change=save_widget_state,
+            key="summary_mode",
+        )
+        st.selectbox(
+            "Summarizer class",
+            list(SUMMARIZER_OPTIONS_MAPPER.keys()),
+            on_change=save_widget_state,
+            key="summarizer_classname",
+        )
 
-    generate_newsletter_clicked = st.button(
-        "Generate newsletters", type="primary", use_container_width=True
-    )
+        generate_newsletter_clicked = st.button(
+            "Generate newsletters", type="primary", use_container_width=True
+        )
 
-# Generate newsletters when button is clicked
-if generate_newsletter_clicked:
-    if st.session_state["split_by_paragraph"] in ["yes", "enhanced"]:
-        df = st.session_state["initial_df"]
-        df_split = st.session_state["time_filtered_df"]
-    else:
-        df = st.session_state["time_filtered_df"]
-        df_split = None
+    # Generate newsletters when button is clicked
+    if generate_newsletter_clicked:
+        if st.session_state["split_type"] in ["yes", "enhanced"]:
+            df = st.session_state["initial_df"]
+            df_split = st.session_state["time_filtered_df"]
+        else:
+            df = st.session_state["time_filtered_df"]
+            df_split = None
 
-    with st.spinner("Generating newsletters..."):
-        st.session_state["newsletters"] = generate_newsletter_wrapper()
+        with st.spinner("Generating newsletters..."):
+            st.session_state["newsletters"] = generate_newsletter_wrapper()
 
-# Display generated newsletters
-if "newsletters" in st.session_state:
-    st.components.v1.html(
-        md2html(
-            st.session_state["newsletters"][0],
-            Path(inspect.getfile(generate_newsletter)).parent / "newsletter.css",
-        ),
-        height=800,
-        scrolling=True,
-    )
+    # Display generated newsletters
+    if "newsletters" in st.session_state:
+        st.components.v1.html(
+            md2html(
+                st.session_state["newsletters"][0],
+                Path(inspect.getfile(generate_newsletter)).parent / "newsletter.css",
+            ),
+            height=800,
+            scrolling=True,
+        )
+
+
+# Restore widget state
+restore_widget_state()
+main()
 
 # TODO: Properly handle the streamlit interface's session state to automatically gray out the number of topics/document sliders if all topics/all documents checkboxes are activated.

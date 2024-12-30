@@ -125,7 +125,7 @@ def display_data_loading_component():
     col1, col2 = st.columns(2)
     with col1:
         register_widget("min_chars")
-        min_chars = st.number_input(
+        st.number_input(
             "Minimum Characters",
             value=MIN_CHARS_DEFAULT,
             min_value=0,
@@ -136,7 +136,7 @@ def display_data_loading_component():
     with col2:
         register_widget("split_by_paragraph")
         SessionStateManager.get_or_set("split_by_paragraph", "yes")
-        split_by_paragraph = st.segmented_control(
+        st.segmented_control(
             "Split text by paragraphs",
             key="split_by_paragraph",
             options=["no", "yes", "enhanced"],
@@ -151,11 +151,15 @@ def display_data_loading_component():
     dfs = None
     if SessionStateManager.get("uploaded_files"):
         dfs = _process_uploaded_files(
-            SessionStateManager.get("uploaded_files"), min_chars, split_by_paragraph
+            SessionStateManager.get("uploaded_files"),
+            SessionStateManager.get("min_chars"),
+            SessionStateManager.get("split_by_paragraph"),
         )
     elif SessionStateManager.get("selected_files"):
         dfs = _load_files(
-            SessionStateManager.get("selected_files"), min_chars, split_by_paragraph
+            SessionStateManager.get("selected_files"),
+            SessionStateManager.get("min_chars"),
+            SessionStateManager.get("split_by_paragraph"),
         )
 
     if not dfs:

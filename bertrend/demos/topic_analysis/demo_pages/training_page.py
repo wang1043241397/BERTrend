@@ -26,6 +26,7 @@ from bertrend.demos.demos_utils.messages import (
     NO_EMBEDDINGS_WARNING_MESSAGE,
     MODEL_TRAINING_COMPLETE_MESSAGE,
 )
+from bertrend.demos.demos_utils.state_utils import restore_widget_state
 from bertrend.demos.topic_analysis.messages import (
     EMBEDDINGS_CACHE_INFO,
     SAVE_MODEL_REMINDER,
@@ -172,6 +173,7 @@ def main():
     if "time_filtered_df" not in st.session_state:
         st.stop()
     data_overview(st.session_state["time_filtered_df"])
+    SessionStateManager.set("split_type", st.session_state["split_by_paragraph"])
 
     # Embed documents
     try:
@@ -202,4 +204,6 @@ def main():
         # to save a BERTopic model to either load it up later or load it up somewhere else
 
 
+# Restore widget state
+restore_widget_state()
 main()

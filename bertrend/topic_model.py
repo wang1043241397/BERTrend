@@ -211,7 +211,8 @@ class TopicModel:
 
             logger.success("\tBERTopic model fitted successfully")
             output = TopicModelOutput(topic_model)
-
+            output.topics = new_topics
+            output.probs = probs
             return output
         except Exception as e:
             logger.error(f"\tError in create_topic_model: {str(e)}")

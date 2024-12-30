@@ -16,9 +16,10 @@ from urllib.parse import urlparse
 
 from loguru import logger
 
-from bertrend import LLM_CONFIG
+from bertrend import LLM_CONFIG, OUTPUT_PATH
 from bertrend.demos.demos_utils.icons import ERROR_ICON, WARNING_ICON
 from bertrend.demos.demos_utils.session_state_manager import SessionStateManager
+from bertrend.demos.demos_utils.state_utils import restore_widget_state
 from bertrend.demos.topic_analysis.messages import (
     NO_DOCUMENT_FOR_TOPIC,
     TRAIN_MODEL_FIRST_ERROR,
@@ -35,7 +36,8 @@ from bertrend.demos.topic_analysis.app_utils import (
 )
 
 # Constants
-EXPORT_BASE_FOLDER = Path(__file__).parent.parent / "exported_topics"
+EXPORT_BASE_FOLDER = OUTPUT_PATH / "exported_topics"
+EXPORT_BASE_FOLDER.mkdir(parents=True, exist_ok=True)
 
 
 def generate_topic_description(topic_model, topic_number, filtered_docs):
@@ -175,7 +177,7 @@ def plot_topic_over_time():
 
 def get_representative_documents(top_n_docs):
     """Get representative documents for the selected topic."""
-    if st.session_state["split_by_paragraph"] in ["yes", "enhanced"]:
+    if st.session_state["split_type"] in ["yes", "enhanced"]:
         return get_most_representative_docs(
             st.session_state["topic_model"],
             st.session_state["initial_df"],
@@ -479,6 +481,8 @@ def main():
                 )
 
 
+# Restore widget state
+restore_widget_state()
 main()
 
 # FIXME: The number of documents being displayed per topic corresponds to the paragraphs, it should instead correspond to the number of original articles before splitting.

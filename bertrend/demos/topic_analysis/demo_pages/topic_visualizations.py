@@ -17,18 +17,13 @@ from umap import UMAP
 
 from bertrend import OUTPUT_PATH
 from bertrend.demos.demos_utils.icons import ERROR_ICON, WARNING_ICON
+from bertrend.demos.demos_utils.state_utils import restore_widget_state
 from bertrend.demos.topic_analysis.app_utils import (
     plot_2d_topics,
 )
 from bertrend.demos.topic_analysis.messages import TRAIN_MODEL_FIRST_ERROR
 from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_CONFIG
 from bertrend.utils.data_loading import TEXT_COLUMN
-
-
-# Check if a model is trained
-if "topic_model" not in st.session_state:
-    st.error(TRAIN_MODEL_FIRST_ERROR, icon=ERROR_ICON)
-    st.stop()
 
 
 @st.cache_data
@@ -196,8 +191,6 @@ def create_datamap(include_outliers):
             enable_search=True,
             search_field="hover_text",
             point_line_width=0,
-            logo="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/RTE_logo.svg/1024px-RTE_logo.svg.png",
-            logo_width=100,
         )
 
         save_path = OUTPUT_PATH / "datamapplot.html"
@@ -213,62 +206,70 @@ def create_datamap(include_outliers):
         return None
 
 
-# Main execution
-st.title("Visualizations")
+def main():
+    # Check if a model is trained
+    if "topic_model" not in st.session_state:
+        st.error(TRAIN_MODEL_FIRST_ERROR, icon=ERROR_ICON)
+        st.stop()
 
-# Sidebar
-with st.sidebar:
-    include_outliers = st.checkbox("Include outliers (Topic = -1)", value=True)
+    # Main execution
+    st.title("Visualizations")
 
-# Overall Results
-with st.expander("Overall Results", expanded=False):
-    overall_results_plot = overall_results()
-    if overall_results_plot is not None:
-        st.plotly_chart(
-            overall_results_plot,
-            config=PLOTLY_BUTTON_SAVE_CONFIG,
-            use_container_width=True,
-        )
-    else:
-        st.error("Cannot display overall results", icon=ERROR_ICON)
-        st.warning("Try to change the UMAP parameters", icon=WARNING_ICON)
+    # Sidebar
+    with st.sidebar:
+        include_outliers = st.checkbox("Include outliers (Topic = -1)", value=True)
 
-# Topics Treemap
-with st.expander("Topics Treemap", expanded=False):
-    with st.spinner("Computing topics treemap..."):
-        treemap_plot = create_treemap()
-        st.plotly_chart(
-            treemap_plot, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True
-        )
-
-
-# Data Map
-with st.expander("Data Map", expanded=True):
-    with st.spinner("Loading Data-map plot..."):
-        datamap_html = create_datamap(include_outliers)
-        if datamap_html is not None:
-            # Using st.html does fix the width and height issue by making it adaptive, but the html never loads (it loops indefinitely)
-            # This is the best solution so far, with a button to save the html and view it in fullscreen later.
-            components.html(datamap_html, width=1200, height=1000, scrolling=True)
-
-            # Add the fullscreen button
-            save_path = Path(__file__).parent.parent / "datamapplot.html"
-
-            # Create a download button
-            st.download_button(
-                label="View in fullscreen",
-                data=get_binary_file_downloader_html(save_path),
-                file_name="datamapplot.html",
-                mime="text/html",
+    # Overall Results
+    with st.expander("Overall Results", expanded=False):
+        overall_results_plot = overall_results()
+        if overall_results_plot is not None:
+            st.plotly_chart(
+                overall_results_plot,
+                config=PLOTLY_BUTTON_SAVE_CONFIG,
                 use_container_width=True,
-                type="secondary",
             )
         else:
-            st.warning(
-                "No valid topics to visualize. All documents might be classified as outliers.",
-                icon=WARNING_ICON,
+            st.error("Cannot display overall results", icon=ERROR_ICON)
+            st.warning("Try to change the UMAP parameters", icon=WARNING_ICON)
+
+    # Topics Treemap
+    with st.expander("Topics Treemap", expanded=False):
+        with st.spinner("Computing topics treemap..."):
+            treemap_plot = create_treemap()
+            st.plotly_chart(
+                treemap_plot, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True
             )
 
+    # Data Map
+    with st.expander("Data Map", expanded=True):
+        with st.spinner("Loading Data-map plot..."):
+            datamap_html = create_datamap(include_outliers)
+            if datamap_html is not None:
+                # Using st.html does fix the width and height issue by making it adaptive, but the html never loads (it loops indefinitely)
+                # This is the best solution so far, with a button to save the html and view it in fullscreen later.
+                components.html(datamap_html, width=1200, height=1000, scrolling=True)
 
+                # Add the fullscreen button
+                save_path = OUTPUT_PATH / "datamapplot.html"
+
+                # Create a download button
+                st.download_button(
+                    label="View in fullscreen",
+                    data=get_binary_file_downloader_html(save_path),
+                    file_name="datamapplot.html",
+                    mime="text/html",
+                    use_container_width=True,
+                    type="secondary",
+                )
+            else:
+                st.warning(
+                    "No valid topics to visualize. All documents might be classified as outliers.",
+                    icon=WARNING_ICON,
+                )
+
+
+# Restore widget state
+restore_widget_state()
+main()
 # FIXME: cluster_boundary_polygons=True causes a "pop from an empty set" error in the data map plot's generation process.
 # It's not urgent, but should be looked into to see what's causing the problem and potentially get a better visualization where clusters are delimitted with contours.
