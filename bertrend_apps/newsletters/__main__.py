@@ -26,7 +26,7 @@ from bertrend import FEED_BASE_PATH, BEST_CUDA_DEVICE, OUTPUT_PATH
 from bertrend.parameters import BERTOPIC_SERIALIZATION
 from bertrend.utils.config_utils import load_toml_config
 from bertrend.utils.data_loading import (
-    split_df_by_paragraphs,
+    enhanced_split_df_by_paragraphs,
     TIMESTAMP_COLUMN,
     TEXT_COLUMN,
     load_data,
@@ -103,7 +103,7 @@ if __name__ == "__main__":
         # split data by paragraphs if required
         dataset = (
             (
-                split_df_by_paragraphs(original_dataset)
+                enhanced_split_df_by_paragraphs(original_dataset)
                 .drop("index", axis=1)
                 .sort_values(
                     by=TIMESTAMP_COLUMN,

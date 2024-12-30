@@ -17,7 +17,7 @@ from bertrend.train import train_BERTopic
 from bertrend.utils.data_loading import (
     load_data,
     TIMESTAMP_COLUMN,
-    split_df_by_paragraphs,
+    enhanced_split_df_by_paragraphs,
     clean_dataset,
 )
 
@@ -92,7 +92,7 @@ def parse_data_from_feed(feed_url):
 
 def split_data():
     st.session_state["df_split"] = (
-        split_df_by_paragraphs(st.session_state["df"])
+        enhanced_split_df_by_paragraphs(st.session_state["df"])
         .drop("index", axis=1)
         .sort_values(
             by=TIMESTAMP_COLUMN,

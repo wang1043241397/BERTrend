@@ -34,7 +34,7 @@ def load_and_preprocess_data(
     min_chars: int,
     split_by_paragraph: Literal["no", "yes", "enhanced"],
     embedding_model_name: str = None,
-) -> pd.DataFrame:
+) -> pd.DataFrame | None:
     """
     Load and preprocess data from a selected file.
 
@@ -59,6 +59,8 @@ def load_and_preprocess_data(
         df = pd.read_json(DATA_PATH / selected_file, lines=True)
     elif file_ext == ".xslsx":
         df = pd.read_excel(DATA_PATH / selected_file)
+    else:
+        return None
 
     # Convert timestamp column to datetime
     df[TIMESTAMP_COLUMN] = pd.to_datetime(df[TIMESTAMP_COLUMN], errors="coerce")
@@ -95,8 +97,8 @@ def load_and_preprocess_data(
         df = pd.DataFrame(new_rows)
     elif split_by_paragraph == "enhanced":
         # FIXME: requires access to the tokenizer
-        df = split_df_by_paragraphs(
-            dataset=df, enhanced=True, embedding_model_name=embedding_model_name
+        df = enhanced_split_df_by_paragraphs(
+            dataset=df, embedding_model_name=embedding_model_name
         )
 
     if min_chars > 0:
@@ -183,8 +185,8 @@ def clean_dataset(dataset: pd.DataFrame, length_criteria: int) -> pd.DataFrame:
 
 
 # TODO: to be simplified!
-def split_df_by_paragraphs(
-    dataset: pd.DataFrame, enhanced: bool = False, embedding_model_name: str = None
+def enhanced_split_df_by_paragraphs(
+    dataset: pd.DataFrame, embedding_model_name: str = None
 ) -> pd.DataFrame:
     """
     Split texts into multiple paragraphs and return a concatenation of all extracts as a new DataFrame.
@@ -198,13 +200,6 @@ def split_df_by_paragraphs(
     Returns:
         pd.DataFrame: The dataset with texts split into paragraphs.
     """
-    if not enhanced:
-        df = dataset.copy()
-        df[TEXT_COLUMN] = df[TEXT_COLUMN].str.split("\n")
-        df = df.explode(TEXT_COLUMN)
-        df = df[df[TEXT_COLUMN] != ""]
-        return df
-
     if embedding_model_name is None:
         raise ValueError("Tokenizer is required for enhanced splitting.")
 

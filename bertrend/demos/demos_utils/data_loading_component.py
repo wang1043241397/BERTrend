@@ -59,7 +59,8 @@ def _process_uploaded_files(
                         "embedding_model_name"
                     ),
                 )
-                dataframes.append(df)
+                if df is not None:
+                    dataframes.append(df)
         return dataframes
 
 
@@ -78,7 +79,8 @@ def _load_files(
             split_by_paragraph,
             embedding_model_name=SessionStateManager.get("embedding_model_name"),
         )
-        dfs.append(df)
+        if df is not None:
+            dfs.append(df)
     return dfs
 
 

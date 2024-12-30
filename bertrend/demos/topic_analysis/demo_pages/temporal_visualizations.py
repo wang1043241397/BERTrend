@@ -740,9 +740,6 @@ def display_topics_popularity():
 
 def main():
     """Main function to run the Streamlit topic_analysis."""
-    # Restore widget state
-    # restore_widget_state()
-
     # Check if model is trained
     check_model_trained()
 
