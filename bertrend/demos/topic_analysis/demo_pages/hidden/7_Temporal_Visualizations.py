@@ -12,9 +12,9 @@ from bertrend.demos.demos_utils.icons import ERROR_ICON
 # from langchain_core.messages import HumanMessage, SystemMessage
 
 from bertrend.demos.topic_analysis.app_utils import (
-    plot_topics_over_time,
     compute_topics_over_time,
 )
+from bertrend.topic_analysis.visualizations import plot_topics_over_time
 
 import pandas as pd
 

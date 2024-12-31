@@ -16,9 +16,9 @@ from bertrend.demos.demos_utils.icons import ERROR_ICON, INFO_ICON
 from bertrend.demos.topic_analysis.messages import TRAIN_MODEL_FIRST_ERROR
 from bertrend.metrics.temporal_metrics_embedding import TempTopic
 from bertrend.demos.topic_analysis.app_utils import (
-    plot_topics_over_time,
     compute_topics_over_time,
 )
+from bertrend.topic_analysis.visualizations import plot_topics_over_time
 from bertrend.demos.demos_utils.state_utils import (
     register_widget,
     save_widget_state,

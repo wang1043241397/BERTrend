@@ -28,12 +28,12 @@ from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_CONFIG
 from bertrend.llm_utils.prompts import TOPIC_DESCRIPTION_PROMPT
 from bertrend.utils.data_loading import TIMESTAMP_COLUMN, TEXT_COLUMN, URL_COLUMN
-from bertrend_apps.newsletters.newsletter_features import get_most_representative_docs
+from bertrend.topic_analysis.representative_docs import get_most_representative_docs
 from bertrend.demos.topic_analysis.app_utils import (
     compute_topics_over_time,
-    plot_topics_over_time,
     print_docs_for_specific_topic,
 )
+from bertrend.topic_analysis.visualizations import plot_topics_over_time
 
 # Constants
 EXPORT_BASE_FOLDER = OUTPUT_PATH / "exported_topics"

@@ -7,11 +7,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import plotly.express as px
 import streamlit as st
 
 from bertrend.demos.demos_utils.state_utils import register_widget
-from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_CONFIG
 from bertrend.utils.data_loading import (
     load_data,
     TIMESTAMP_COLUMN,
@@ -334,37 +332,6 @@ def compute_topics_over_time(
     return res
 
 
-def plot_topics_over_time(
-    topics_over_time, dynamic_topics_list, topic_model, time_split=None, width=900
-):
-    if dynamic_topics_list != "":
-        if ":" in dynamic_topics_list:
-            dynamic_topics_list = [
-                i
-                for i in range(
-                    int(dynamic_topics_list.split(":")[0]),
-                    int(dynamic_topics_list.split(":")[1]),
-                )
-            ]
-        else:
-            dynamic_topics_list = [int(i) for i in dynamic_topics_list.split(",")]
-        fig = topic_model.visualize_topics_over_time(
-            topics_over_time,
-            topics=dynamic_topics_list,
-            width=width,
-            title="",
-        )
-        if time_split:
-            fig.add_vline(
-                x=time_split,
-                line_width=3,
-                line_dash="dash",
-                line_color="black",
-                opacity=1,
-            )
-        return fig
-
-
 def print_docs_for_specific_topic(df, topics, topic_number):
     """
     Print documents for a specific topic
@@ -399,49 +366,6 @@ def transform_new_data(_topic_model, df, embeddings):
     Tuple of (topics, probabilities)
     """
     return _topic_model.transform(df[TEXT_COLUMN], embeddings=embeddings)
-
-
-def plot_docs_reparition_over_time(df, freq):
-    """
-    Plot document distribution over time
-    """
-    count = df.groupby(pd.Grouper(key="timestamp", freq=freq), as_index=False).size()
-    count["timestamp"] = count["timestamp"].dt.strftime("%Y-%m-%d")
-
-    fig = px.bar(count, x="timestamp", y="size")
-    st.plotly_chart(fig, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True)
-
-
-def plot_remaining_docs_repartition_over_time(df_base, df_remaining, freq):
-    """
-    Plot remaining document distribution over time
-    """
-    df = pd.concat([df_base, df_remaining])
-
-    # Get split time value
-    split_time = str(df_remaining["timestamp"].min())
-
-    # Print aggregated docs
-    df["timestamp"] = pd.to_datetime(df["timestamp"])
-
-    count = df.groupby(pd.Grouper(key="timestamp", freq=freq), as_index=False).size()
-    count["timestamp"] = count["timestamp"].dt.strftime("%Y-%m-%d")
-    # Split to set a different color to each DF
-    count["category"] = [
-        "Base" if time < split_time else "Remaining" for time in count["timestamp"]
-    ]
-
-    fig = px.bar(
-        count,
-        x="timestamp",
-        y="size",
-        color="category",
-        color_discrete_map={
-            "Base": "light blue",  # default plotly color to match main page graphs
-            "Remaining": "orange",
-        },
-    )
-    st.plotly_chart(fig, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True)
 
 
 # TODO: Remove "put embeddings in cache" option since it's unadvised due to the large size of embeddings returned by embedding model (sentence and token embeddings)

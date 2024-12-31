@@ -11,8 +11,9 @@ import streamlit as st
 from pathlib import Path
 
 from bertrend.demos.demos_utils.icons import WARNING_ICON
-from bertrend.demos.topic_analysis.app_utils import plot_docs_reparition_over_time
+from bertrend.topic_analysis.visualizations import plot_docs_repartition_over_time
 from bertrend.demos.demos_utils.state_utils import save_widget_state
+from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_CONFIG
 from bertrend.utils.data_loading import TEXT_COLUMN, TIMESTAMP_COLUMN
 
 
@@ -34,7 +35,10 @@ def data_overview(df: pd.DataFrame):
             value="1M",
         )
         with col1:
-            plot_docs_reparition_over_time(df, freq)
+            fig = plot_docs_repartition_over_time(df, freq)
+            st.plotly_chart(
+                fig, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True
+            )
         with col2:
             st.dataframe(
                 st.session_state["time_filtered_df"][[TEXT_COLUMN, TIMESTAMP_COLUMN]],

@@ -10,10 +10,13 @@ import streamlit as st
 
 from bertrend.demos.demos_utils.icons import WARNING_ICON, ERROR_ICON
 from bertrend.demos.topic_analysis.app_utils import (
-    plot_remaining_docs_repartition_over_time,
     transform_new_data,
     compute_topics_over_time,
+)
+from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_CONFIG
+from bertrend.topic_analysis.visualizations import (
     plot_topics_over_time,
+    plot_remaining_docs_repartition_over_time,
 )
 from bertrend.demos.demos_utils.state_utils import (
     restore_widget_state,
@@ -78,9 +81,11 @@ def main():
             ),
             value="1M",
         )
-        plot_remaining_docs_repartition_over_time(
+
+        fig = plot_remaining_docs_repartition_over_time(
             st.session_state["time_filtered_df"], st.session_state["remaining_df"], freq
         )
+        st.plotly_chart(fig, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True)
 
     # Select number of batches
     register_widget("new_data_batches_nb")
