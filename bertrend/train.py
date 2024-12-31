@@ -26,7 +26,7 @@ from bertrend import BASE_CACHE_PATH, LLM_CONFIG
 from bertrend.parameters import STOPWORDS
 from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend.utils.data_loading import TEXT_COLUMN
-from bertrend_apps.newsletters.prompts import FRENCH_TOPIC_REPRESENTATION_PROMPT
+from bertrend.llm_utils.prompts import BERTOPIC_FRENCH_TOPIC_REPRESENTATION_PROMPT
 
 from bertrend.utils.cache_utils import load_embeddings, save_embeddings, get_hash
 
@@ -345,7 +345,7 @@ def train_BERTopic(
                         model=os.environ["OPENAI_DEFAULT_MODEL_NAME"],
                         nr_docs=form_parameters["OpenAI_nr_docs"],
                         prompt=(
-                            FRENCH_TOPIC_REPRESENTATION_PROMPT
+                            BERTOPIC_FRENCH_TOPIC_REPRESENTATION_PROMPT
                             if form_parameters.get("OpenAI_language", "Français")
                             == "Français"
                             else None

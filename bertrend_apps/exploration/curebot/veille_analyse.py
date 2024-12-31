@@ -22,7 +22,7 @@ from bertrend.utils.data_loading import (
 )
 
 from bertrend_apps.data_provider.curebot_provider import CurebotProvider
-from bertrend_apps.newsletters.newsletter_features import generate_newsletter, md2html
+from bertrend.llm_utils.newsletter_features import generate_newsletter, md2html
 
 COLUMN_URL = "url"
 MIN_TEXT_LENGTH = 150

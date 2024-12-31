@@ -17,11 +17,9 @@ from loguru import logger
 from bertrend import LLM_CONFIG
 from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend.topic_analysis.representative_docs import get_most_representative_docs
-from bertrend_apps.newsletters.prompts import (
-    FR_USER_SUMMARY_MULTIPLE_DOCS,
-    EN_USER_SUMMARY_MULTIPLE_DOCS,
-    FR_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2,
-    EN_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2,
+from bertrend.llm_utils.prompts import (
+    USER_SUMMARY_MULTIPLE_DOCS,
+    USER_GENERATE_TOPIC_LABEL_SUMMARIES,
 )
 from bertrend.services.summarizer import Summarizer
 from bertrend.services.summary.abstractive_summarizer import AbstractiveSummarizer
@@ -131,11 +129,7 @@ def generate_newsletter(
                 article_list += f"Titre : {doc.title}\nContenu : {doc.text}\n\n"
 
             topic_summary = openai_api.generate(
-                (
-                    FR_USER_SUMMARY_MULTIPLE_DOCS
-                    if prompt_language == "fr"
-                    else EN_USER_SUMMARY_MULTIPLE_DOCS
-                ).format(
+                (USER_SUMMARY_MULTIPLE_DOCS[prompt_language]).format(
                     keywords=", ".join(topics_info["Representation"].iloc[i]),
                     article_list=article_list,
                     nb_sentences=nb_sentences,
@@ -156,11 +150,7 @@ def generate_newsletter(
             titles = [doc.title for _, doc in sub_df.iterrows()]
 
             improved_topic_description_v2 = openai_api.generate(
-                (
-                    FR_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2
-                    if prompt_language == "fr"
-                    else EN_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2
-                ).format(
+                (USER_GENERATE_TOPIC_LABEL_SUMMARIES[prompt_language]).format(
                     newsletter_title=newsletter_title,
                     title_list=(
                         " ; ".join(summaries)

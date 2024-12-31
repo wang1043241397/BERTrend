@@ -2,6 +2,7 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
+from bertrend.parameters import BERTOPIC_SERIALIZATION
 
 FR_USER_SUMMARY_MULTIPLE_DOCS = (
     "Vous êtes une IA hautement qualifiée, formée à la compréhension et à la synthèse du langage. "
@@ -27,13 +28,22 @@ EN_USER_SUMMARY_MULTIPLE_DOCS = (
 )
 # keywords: list of keywords describing the topic
 # list of articles and their title
-
+USER_SUMMARY_MULTIPLE_DOCS = {
+    "fr": FR_USER_SUMMARY_MULTIPLE_DOCS,
+    "en": EN_USER_SUMMARY_MULTIPLE_DOCS,
+}
 
 ###################### TOPIC PROMPTS
 
 FR_USER_GENERATE_TOPIC_LABEL_SUMMARIES = (
     "Décrit en une courte expression le thème associé à l'ensemble des extraits "
     "suivants. Le thème doit être court et spécifique en 4 mots maximum. "
+    '\n"{title_list}"'
+)
+
+EN_USER_GENERATE_TOPIC_LABEL_SUMMARIES = (
+    "Describe in a short sentence the topic associated with the following extracts. "
+    "The topic description should be short and specific, no more than 4 words. "
     '\n"{title_list}"'
 )
 
@@ -49,12 +59,6 @@ FR_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2 = (
 # title_list: list of documents extracts belonging to the topic
 
 EN_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2 = (
-    "Describe in a short sentence the topic associated with the following extracts. "
-    "The topic description should be short and specific, no more than 4 words. "
-    '\n"{title_list}"'
-)
-
-EN_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2 = (
     'Within the framework of the generation of a newsletter on the topic "{newsletter_title}", '
     "describe in a short sentence the sub-topic associated with the following text. "
     "The sentence should be short, no more than 4 words. "
@@ -63,6 +67,12 @@ EN_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2 = (
     '\n"{title_list}"'
 )
 # title_list: list of documents extracts belonging to the topic
+
+USER_GENERATE_TOPIC_LABEL_SUMMARIES = {
+    "fr": FR_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2,
+    "en": EN_USER_GENERATE_TOPIC_LABEL_SUMMARIES_V2,
+}
+
 
 FR_USER_GENERATE_TOPIC_LABEL_TITLE = (
     "Vous êtes une IA hautement qualifiée, formée à la compréhension et à la synthèse du langage. "
@@ -74,11 +84,11 @@ FR_USER_GENERATE_TOPIC_LABEL_TITLE = (
 # title_list: list of documents title belonging to the topic
 
 
-FRENCH_TOPIC_REPRESENTATION_PROMPT = (
+BERTOPIC_FRENCH_TOPIC_REPRESENTATION_PROMPT = (
     "J'ai un topic qui contient les documents suivants :\n"
     "[DOCUMENTS]\n"
     "Le topic est décrit par les mots-clés suivants : [KEYWORDS]\n"
     "Sur la base des informations ci-dessus, extraire une courte étiquette de topic dans le format suivant :\n"
     "Topic : <étiquette du sujet>"
 )
-# Passed directly to BERTopic's OpenAI wrapper, formatted similar to BERTopic's original prompt which can be found in its source code
+# Passed directly to BERTopic's OpenAI wrapper, formatted similarly to BERTopic's original prompt which can be found in its source code

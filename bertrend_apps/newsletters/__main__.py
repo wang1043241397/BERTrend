@@ -31,7 +31,7 @@ from bertrend.utils.data_loading import (
     TEXT_COLUMN,
     load_data,
 )
-from bertrend_apps.newsletters.newsletter_features import (
+from bertrend.llm_utils.newsletter_features import (
     generate_newsletter,
     export_md_string,
 )

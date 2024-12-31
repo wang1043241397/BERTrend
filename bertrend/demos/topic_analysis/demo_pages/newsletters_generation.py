@@ -20,7 +20,7 @@ from bertrend.services.summary.extractive_summarizer import (
     ExtractiveSummarizer,
     EnhancedExtractiveSummarizer,
 )
-from bertrend_apps.newsletters.newsletter_features import generate_newsletter, md2html
+from bertrend.llm_utils.newsletter_features import generate_newsletter, md2html
 
 
 # Define summarizer options
