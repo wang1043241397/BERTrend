@@ -20,6 +20,8 @@ TIMESTAMP_COLUMN = "timestamp"
 GROUPED_TIMESTAMP_COLUMN = "grouped_timestamp"
 URL_COLUMN = "url"
 TITLE_COLUMN = "title"
+DOCUMENT_ID_COLUMN = "document_id"
+SOURCE_COLUMN = "source"
 CITATION_COUNT_COL = "citation_count"
 
 
@@ -27,39 +29,22 @@ def find_compatible_files(path, extensions) -> List[Path]:
     return [f.relative_to(path) for f in path.rglob("*") if f.suffix[1:] in extensions]
 
 
-# @st.cache_data
-def load_and_preprocess_data(
+def load_data(
     selected_file: Path,
-    language: str,
-    min_chars: int,
-    split_by_paragraph: Literal["no", "yes", "enhanced"],
-    embedding_model_name: str = None,
+    language: str = "French",
 ) -> pd.DataFrame | None:
     """
-    Load and preprocess data from a selected file.
+    Load and preprocess data (adds additional columns if needed) from a selected file.
 
     Args:
         selected_file (Path): A path to the selected file
         language (str): The language of the text data ('French' or 'English').
-        min_chars (int): The minimum number of characters required for a text to be included.
-        split_by_paragraph (Literal): Way to split the text data by paragraphs (no, yes, enhanced)
-        embedding_model_name (str): Name of the embedding model (if done locally), only useful if split_by_paragraph is 'enhanced'.
 
     Returns:
         pd.DataFrame: The loaded and preprocessed DataFrame.
     """
-    file_ext = selected_file.suffix.lower()
-    if file_ext == ".csv":
-        df = pd.read_csv(DATA_PATH / selected_file)
-    elif file_ext == ".parquet":
-        df = pd.read_parquet(DATA_PATH / selected_file)
-    elif file_ext == ".json":
-        df = pd.read_json(DATA_PATH / selected_file)
-    elif file_ext == ".jsonl":
-        df = pd.read_json(DATA_PATH / selected_file, lines=True)
-    elif file_ext == ".xslsx":
-        df = pd.read_excel(DATA_PATH / selected_file)
-    else:
+    df = _file_to_pd(selected_file)
+    if df is None:
         return None
 
     # Convert timestamp column to datetime
@@ -69,19 +54,43 @@ def load_and_preprocess_data(
     df = df.dropna(subset=[TIMESTAMP_COLUMN])
 
     df = df.sort_values(by=TIMESTAMP_COLUMN, ascending=True).reset_index(drop=True)
-    df["document_id"] = df.index
+    df[DOCUMENT_ID_COLUMN] = df.index
 
     if URL_COLUMN in df.columns:
         df["source"] = df[URL_COLUMN].apply(
             lambda x: x.split("/")[2] if pd.notna(x) else None
         )
     else:
-        df["source"] = None
+        df[SOURCE_COLUMN] = None
         df[URL_COLUMN] = None
 
     if language == "French":
         df[TEXT_COLUMN] = df[TEXT_COLUMN].apply(preprocess_french_text)
 
+    if TITLE_COLUMN in df.columns:
+        df.drop_duplicates(subset=[TITLE_COLUMN], keep="first", inplace=True)
+
+    return df
+
+
+def split_data(
+    df: pd.DataFrame,
+    min_chars: int,
+    split_by_paragraph: Literal["no", "yes", "enhanced"],
+    embedding_model_name: str = None,
+) -> pd.DataFrame | None:
+    """
+    Load and preprocess data from a selected file.
+
+    Args:
+        df (pd.DataFrame): A dataframe containing loaded documents
+        min_chars (int): The minimum number of characters required for a text to be included.
+        split_by_paragraph (Literal): Way to split the text data by paragraphs (no, yes, enhanced)
+        embedding_model_name (str): Name of the embedding model (if done locally), only useful if split_by_paragraph is 'enhanced'.
+
+    Returns:
+        pd.DataFrame: The split DataFrame.
+    """
     if split_by_paragraph == "yes":
         new_rows = []
         for _, row in df.iterrows():
@@ -128,23 +137,7 @@ def group_by_days(
     return dict_of_dfs
 
 
-def load_data(full_data_name: Path) -> pd.DataFrame:
-    """
-    Load data from a file into a pandas DataFrame.
-
-    Args:
-        full_data_name (Path): The path to the data file.
-
-    Returns:
-        pd.DataFrame: Loaded data with timestamp column converted to datetime.
-    """
-    logger.info(f"Loading data from: {full_data_name}")
-    df = file_to_pd(str(full_data_name), full_data_name.parent)
-    df[TIMESTAMP_COLUMN] = pd.to_datetime(df[TIMESTAMP_COLUMN])
-    return df.drop_duplicates(subset=["title"], keep="first")
-
-
-def file_to_pd(file_name: str, base_dir: Path = None) -> pd.DataFrame:
+def _file_to_pd(file_name: Path, base_dir: Path = None) -> pd.DataFrame | None:
     """
     Read data in various formats and convert it to a DataFrame.
 
@@ -155,18 +148,22 @@ def file_to_pd(file_name: str, base_dir: Path = None) -> pd.DataFrame:
     Returns:
         pd.DataFrame: The loaded data.
     """
-    data_path = base_dir / file_name if base_dir else Path(file_name)
-    data_path_str = str(data_path)
-
-    if file_name.endswith(".csv"):
-        return pd.read_csv(data_path_str)
-    elif file_name.endswith(".jsonl") or file_name.endswith(".jsonlines"):
-        return pd.read_json(data_path_str, lines=True)
-    elif file_name.endswith(".jsonl.gz") or file_name.endswith(".jsonlines.gz"):
-        with gzip.open(data_path_str, "rt") as f_in:
+    file_ext = file_name.suffix.lower()
+    if file_ext == ".csv":
+        return pd.read_csv(DATA_PATH / file_name)
+    elif file_ext == ".parquet":
+        return pd.read_parquet(DATA_PATH / file_name)
+    elif file_ext == ".json":
+        return pd.read_json(DATA_PATH / file_name)
+    elif file_ext == ".jsonl" or file_ext == ".jsonlines":
+        return pd.read_json(DATA_PATH / file_name, lines=True)
+    elif file_ext == ".jsonl.gz" or file_ext == ".jsonlines.gz":
+        with gzip.open(file_name, "rt") as f_in:
             return pd.read_json(f_in, lines=True)
-    elif file_name.endswith(".parquet"):
-        return pd.read_parquet(data_path_str)
+    elif file_ext == ".xslsx":
+        return pd.read_excel(DATA_PATH / file_name)
+    else:
+        return None
 
 
 def clean_dataset(dataset: pd.DataFrame, length_criteria: int) -> pd.DataFrame:

@@ -19,29 +19,31 @@ from bertrend.demos.demos_utils.icons import (
     PARQUET_ICON,
     XLSX_ICON,
 )
+from bertrend.demos.demos_utils.messages import NO_DATA_AFTER_PREPROCESSING_MESSAGE
 from bertrend.demos.demos_utils.session_state_manager import SessionStateManager
 from bertrend.demos.demos_utils.state_utils import save_widget_state, register_widget
 from bertrend.parameters import MIN_CHARS_DEFAULT, SAMPLE_SIZE_DEFAULT
 from bertrend.utils.data_loading import (
     find_compatible_files,
-    load_and_preprocess_data,
     TEXT_COLUMN,
+    load_data,
+    split_data,
 )
 
 NO_DATASET_WARNING = "Please select at least one dataset to proceed."
 FORMAT_ICONS = {
+    "xlsx": XLSX_ICON,
     "csv": CSV_ICON,
     "parquet": PARQUET_ICON,
     "json": JSON_ICON,
     "jsonl": JSON_ICON,
-    "xlsx": XLSX_ICON,
+    "jsonlines": JSON_ICON,
+    "jsonl.gz": JSON_ICON,
 }
 
 
 def _process_uploaded_files(
     files: List[UploadedFile],
-    min_chars: int,
-    split_by_paragraph=Literal["yes", "no", "enhanced"],
 ) -> List[pd.DataFrame]:
     """Read a list of Excel files and return a single dataframe containing the data"""
     dataframes = []
@@ -50,14 +52,9 @@ def _process_uploaded_files(
             with open(tmpdir + "/" + f.name, "wb") as tmp_file:
                 tmp_file.write(f.getvalue())
             if tmp_file is not None:
-                df = load_and_preprocess_data(
+                df = load_data(
                     Path(tmp_file.name),
                     st.session_state["language"],
-                    min_chars,
-                    split_by_paragraph,
-                    embedding_model_name=SessionStateManager.get(
-                        "embedding_model_name"
-                    ),
                 )
                 if df is not None:
                     dataframes.append(df)
@@ -66,18 +63,13 @@ def _process_uploaded_files(
 
 def _load_files(
     files: List[Path],
-    min_chars: int,
-    split_by_paragraph=Literal["yes", "no", "enhanced"],
 ) -> List[pd.DataFrame]:
     dfs = []
     for selected_file in files:
         file_path = DATA_PATH / selected_file
-        df = load_and_preprocess_data(
+        df = load_data(
             file_path,
             st.session_state["language"],
-            min_chars,
-            split_by_paragraph,
-            embedding_model_name=SessionStateManager.get("embedding_model_name"),
         )
         if df is not None:
             dfs.append(df)
@@ -154,23 +146,29 @@ def display_data_loading_component():
     if SessionStateManager.get("uploaded_files"):
         dfs = _process_uploaded_files(
             SessionStateManager.get("uploaded_files"),
-            SessionStateManager.get("min_chars"),
-            SessionStateManager.get("split_by_paragraph"),
         )
     elif SessionStateManager.get("selected_files"):
         dfs = _load_files(
             SessionStateManager.get("selected_files"),
-            SessionStateManager.get("min_chars"),
-            SessionStateManager.get("split_by_paragraph"),
         )
 
     if not dfs:
         st.warning(
-            "No data available after preprocessing. Please check the selected files and preprocessing options.",
+            NO_DATA_AFTER_PREPROCESSING_MESSAGE,
             icon=WARNING_ICON,
         )
     else:
         df = pd.concat(dfs, ignore_index=True)
+
+        # Save state of initial DF (before split and data selection)
+        st.session_state["initial_df"] = df.copy()
+
+        df = split_data(
+            df,
+            SessionStateManager.get("min_chars"),
+            SessionStateManager.get("split_by_paragraph"),
+            embedding_model_name=SessionStateManager.get("embedding_model_name"),
+        )
 
         # Deduplicate using all columns
         df = df.drop_duplicates()

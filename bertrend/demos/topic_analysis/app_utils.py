@@ -11,7 +11,6 @@ import streamlit as st
 
 from bertrend.demos.demos_utils.state_utils import register_widget
 from bertrend.utils.data_loading import (
-    load_data,
     TIMESTAMP_COLUMN,
     GROUPED_TIMESTAMP_COLUMN,
     TEXT_COLUMN,
@@ -57,12 +56,6 @@ def initialize_default_parameters_keys():
         if k not in st.session_state:
             st.session_state[k] = v
         register_widget(k)
-
-
-# Cache data loading function
-@st.cache_data
-def load_data_wrapper(data_name: Path):
-    return load_data(data_name)
 
 
 # Embedding model options for Streamlit UI

@@ -20,8 +20,8 @@ def get_most_representative_docs(
     Return most representative documents for a given topic.
 
     - If df_split is not None :
-        Groups splited docs by title to count how many paragraphs of the initial document belong to the topic.
-        Returns docs having the most occurences.
+        Groups split docs by title to count how many paragraphs of the initial document belong to the topic.
+        Returns docs having the most occurrences.
 
     - If df_split is None:
         Uses mode to determine the method used. Currently, support :
