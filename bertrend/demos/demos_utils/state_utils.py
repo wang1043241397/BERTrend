@@ -21,6 +21,11 @@ def register_widget(key):
         st.session_state[STATE_KEYS].append(key)
 
 
+def register_multiple_widget(*keys):
+    for key in keys:
+        register_widget(key)
+
+
 def save_widget_state():
     if STATE_KEYS in st.session_state.keys():
         st.session_state[WIDGET_STATE] = {

@@ -36,7 +36,7 @@ from bertrend.demos.demos_utils.parameters_component import (
     display_bertopic_hyperparameters,
 )
 from bertrend.demos.demos_utils.session_state_manager import SessionStateManager
-from bertrend.demos.topic_analysis.data_utils import data_overview
+from bertrend.demos.topic_analysis.data_utils import data_distribution
 from bertrend.metrics.topic_metrics import compute_cluster_metrics
 from bertrend.parameters import BERTOPIC_SERIALIZATION
 from bertrend.topic_model import TopicModel
@@ -172,7 +172,7 @@ def main():
     # Data overview
     if "time_filtered_df" not in st.session_state:
         st.stop()
-    data_overview(st.session_state["time_filtered_df"])
+    data_distribution(st.session_state["time_filtered_df"])
     SessionStateManager.set("split_type", st.session_state["split_by_paragraph"])
 
     # Embed documents

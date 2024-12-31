@@ -17,9 +17,11 @@ from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_
 from bertrend.utils.data_loading import TEXT_COLUMN, TIMESTAMP_COLUMN
 
 
-def data_overview(df: pd.DataFrame):
-    with st.container(border=True):
-        col1, col2 = st.columns([0.4, 0.6])
+def data_distribution(df: pd.DataFrame):
+    with st.expander(
+        label="Data distribution",
+        expanded=False,
+    ):
         freq = st.select_slider(
             "Time aggregation",
             options=(
@@ -34,16 +36,8 @@ def data_overview(df: pd.DataFrame):
             ),
             value="1M",
         )
-        with col1:
-            fig = plot_docs_repartition_over_time(df, freq)
-            st.plotly_chart(
-                fig, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True
-            )
-        with col2:
-            st.dataframe(
-                st.session_state["time_filtered_df"][[TEXT_COLUMN, TIMESTAMP_COLUMN]],
-                use_container_width=True,
-            )
+        fig = plot_docs_repartition_over_time(df, freq)
+        st.plotly_chart(fig, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True)
 
 
 def choose_data(base_dir: Path, filters: List[str]):

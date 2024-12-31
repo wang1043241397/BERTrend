@@ -104,9 +104,9 @@ def display_topic_info():
     ]["Representation"]
 
     st.write(
-        f"# Topic {st.session_state['selected_topic_number']} : {topic_docs_number} documents"
+        f"## Topic {st.session_state['selected_topic_number']} : {topic_docs_number} documents"
     )
-    st.markdown(f"## #{' #'.join(topic_words)}")
+    st.markdown(f"### #{' #'.join(topic_words)}")
 
 
 def plot_topic_over_time():
@@ -232,7 +232,6 @@ def display_representative_documents(filtered_df):
                 st.link_button(content, doc.url)
             else:
                 st.markdown(content)
-            st.divider()
 
 
 def display_new_documents():
@@ -283,57 +282,76 @@ def create_topic_documents(
     return folder_name, documents
 
 
+def _display_topic_description(filtered_df):
+    # GPT description button
+    if st.button(
+        "Generate a short description of the topic",
+        type="primary",
+        use_container_width=True,
+    ):
+        with st.spinner("Génération de la description en cours..."):
+            language_code = (
+                "fr" if SessionStateManager.get("language") == "French" else "en"
+            )
+            gpt_description = generate_topic_description(
+                st.session_state["topic_model"],
+                st.session_state["selected_topic_number"],
+                filtered_df,
+                language_code=language_code,
+            )
+        with st.container(border=True):
+            st.markdown(gpt_description)
+
+
 def main():
     """Main function to run the Streamlit topic_analysis."""
     check_model_and_prepare_topics()
+
+    st.title("Topics exploration")
+
     display_sidebar()
 
     if "selected_topic_number" not in st.session_state:
         st.stop()
 
-    display_topic_info()
-    plot_topic_over_time()
+    col1, col2 = st.columns([0.3, 0.7])
+    with col1:
+        display_topic_info()
+    with col2:
+        plot_topic_over_time()
 
-    st.divider()
+    col1, col2 = st.columns(2)
+    with col1:
+        # Number of articles to display
+        top_n_docs = st.number_input(
+            "Number of articles to display",
+            min_value=1,
+            max_value=st.session_state["topics_info"].iloc[
+                st.session_state["selected_topic_number"]
+            ]["Count"],
+            value=st.session_state["topics_info"].iloc[
+                st.session_state["selected_topic_number"]
+            ]["Count"],
+            step=1,
+        )
+    with col2:
+        representative_df = get_representative_documents(top_n_docs)
+        representative_df = representative_df.sort_values(
+            by="timestamp", ascending=False
+        )
 
-    # Number of articles to display
-    top_n_docs = st.number_input(
-        "Number of articles to display",
-        min_value=1,
-        max_value=st.session_state["topics_info"].iloc[
-            st.session_state["selected_topic_number"]
-        ]["Count"],
-        value=st.session_state["topics_info"].iloc[
-            st.session_state["selected_topic_number"]
-        ]["Count"],
-        step=1,
-    )
+        # Get unique sources
+        sources = representative_df[URL_COLUMN].apply(get_website_name).unique()
 
-    representative_df = get_representative_documents(top_n_docs)
-    representative_df = representative_df.sort_values(by="timestamp", ascending=False)
-
-    # Get unique sources
-    sources = representative_df[URL_COLUMN].apply(get_website_name).unique()
-
-    # Multi-select for sources
-    selected_sources = st.multiselect(
-        "Select the sources to display",
-        options=["All"] + list(sources),
-        default=["All"],
-    )
-
-    """
-    # Filter the dataframe based on selected sources
-    if "All" not in selected_sources:
-        filtered_df = representative_df[
-            representative_df[URL_COLUMN].apply(get_website_name).isin(selected_sources)
-        ]
-    else:
-        filtered_df = representative_df
-    """
+        # Multi-select for sources
+        selected_sources = st.multiselect(
+            "Select the sources to display",
+            options=["All"] + list(sources),
+            default=["All"],
+        )
 
     # Create two columns
-    col1, col2 = st.columns([0.5, 0.5])
+    col1, col2 = st.columns([0.3, 0.7])
 
     with col1:
         # Pass the full representative_df to display_source_distribution
@@ -353,26 +371,8 @@ def main():
 
     display_new_documents()
 
-    st.divider()
-
-    # GPT description button
-    if st.button(
-        "Generate a short description of the topic",
-        type="primary",
-        use_container_width=True,
-    ):
-        with st.spinner("Génération de la description en cours..."):
-            language_code = (
-                "fr" if SessionStateManager.get("language") == "French" else "en"
-            )
-            gpt_description = generate_topic_description(
-                st.session_state["topic_model"],
-                st.session_state["selected_topic_number"],
-                filtered_df,
-                language_code=language_code,
-            )
-        with st.container(border=True):
-            st.markdown(gpt_description)
+    # GPT generated topic description
+    _display_topic_description(filtered_df)
 
     st.divider()
 

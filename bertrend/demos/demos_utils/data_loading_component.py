@@ -173,34 +173,38 @@ def display_data_loading_component():
         # Deduplicate using all columns
         df = df.drop_duplicates()
 
-        # Select timeframe
-        min_date, max_date = df["timestamp"].dt.date.agg(["min", "max"])
-        register_widget("timeframe_slider")
-        start_date, end_date = st.slider(
-            "Select Timeframe",
-            min_value=min_date,
-            max_value=max_date,
-            value=(min_date, max_date),
-            key="timeframe_slider",
-            on_change=save_widget_state,
-        )
+        col1, col2 = st.columns([0.8, 0.2])
+        with col1:
+            # Select timeframe
+            min_date, max_date = df["timestamp"].dt.date.agg(["min", "max"])
+            register_widget("timeframe_slider")
+            start_date, end_date = st.slider(
+                "Select Timeframe",
+                min_value=min_date,
+                max_value=max_date,
+                value=(min_date, max_date),
+                key="timeframe_slider",
+                on_change=save_widget_state,
+            )
 
-        # Filter and sample the DataFrame
-        df_filtered = df[
-            (df["timestamp"].dt.date >= start_date)
-            & (df["timestamp"].dt.date <= end_date)
-        ]
-        df_filtered = df_filtered.sort_values(by="timestamp").reset_index(drop=True)
+            # Filter and sample the DataFrame
+            df_filtered = df[
+                (df["timestamp"].dt.date >= start_date)
+                & (df["timestamp"].dt.date <= end_date)
+            ]
+            df_filtered = df_filtered.sort_values(by="timestamp").reset_index(drop=True)
 
-        register_widget("sample_size")
-        sample_size = st.number_input(
-            "Sample Size",
-            value=SAMPLE_SIZE_DEFAULT or len(df_filtered),
-            min_value=1,
-            max_value=len(df_filtered),
-            key="sample_size",
-            on_change=save_widget_state,
-        )
+        with col2:
+            register_widget("sample_size")
+            sample_size = st.number_input(
+                "Sample Size",
+                value=SAMPLE_SIZE_DEFAULT or len(df_filtered),
+                min_value=1,
+                max_value=len(df_filtered),
+                key="sample_size",
+                on_change=save_widget_state,
+            )
+
         if sample_size < len(df_filtered):
             df_filtered = df_filtered.sample(n=sample_size, random_state=42)
 

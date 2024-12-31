@@ -23,6 +23,7 @@ from bertrend.demos.demos_utils.state_utils import (
     register_widget,
     save_widget_state,
     restore_widget_state,
+    register_multiple_widget,
 )
 from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_CONFIG
 from bertrend.utils.data_loading import TIMESTAMP_COLUMN, TEXT_COLUMN
@@ -411,30 +412,48 @@ def format_timedelta(td):
 
 def select_time_granularity(max_granularity):
     """Allow user to select custom time granularity within limits."""
-    st.write("Select custom time granularity:")
+    st.write("Select custom time granularity")
     col1, col2, col3, col4 = st.columns(4)
 
     max_days = max_granularity.days
-
+    register_multiple_widget(
+        "granularity_days", "granularity_hours", "granularity_minutes"
+    )
     with col1:
-        days = st.number_input(
+        days = st.slider(
             "Days",
             min_value=0,
             max_value=max_days,
             value=min(1, max_days),
             key="granularity_days",
+            on_change=save_widget_state,
         )
     with col2:
-        hours = st.number_input(
-            "Hours", min_value=0, max_value=23, value=0, key="granularity_hours"
+        hours = st.slider(
+            "Hours",
+            min_value=0,
+            max_value=23,
+            value=0,
+            key="granularity_hours",
+            on_change=save_widget_state,
         )
     with col3:
-        minutes = st.number_input(
-            "Minutes", min_value=0, max_value=59, value=0, key="granularity_minutes"
+        minutes = st.slider(
+            "Minutes",
+            min_value=0,
+            max_value=59,
+            value=0,
+            key="granularity_minutes",
+            on_change=save_widget_state,
         )
     with col4:
-        seconds = st.number_input(
-            "Seconds", min_value=0, max_value=59, value=0, key="granularity_seconds"
+        seconds = st.slider(
+            "Seconds",
+            min_value=0,
+            max_value=59,
+            value=0,
+            key="granularity_seconds",
+            on_change=save_widget_state,
         )
 
     selected_granularity = timedelta(
@@ -742,6 +761,8 @@ def main():
     """Main function to run the Streamlit topic_analysis."""
     # Check if model is trained
     check_model_trained()
+
+    st.title("Temporal visualizations of topics")
 
     # Display sidebar
     display_sidebar()
