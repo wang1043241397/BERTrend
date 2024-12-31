@@ -11,12 +11,11 @@ import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
 from datetime import timedelta
-from pathlib import Path
 from urllib.parse import urlparse
 
-from loguru import logger
+from docs.conf import language
 
-from bertrend import LLM_CONFIG, OUTPUT_PATH
+from bertrend import OUTPUT_PATH
 from bertrend.demos.demos_utils.icons import ERROR_ICON, WARNING_ICON
 from bertrend.demos.demos_utils.session_state_manager import SessionStateManager
 from bertrend.demos.demos_utils.state_utils import restore_widget_state
@@ -24,9 +23,8 @@ from bertrend.demos.topic_analysis.messages import (
     NO_DOCUMENT_FOR_TOPIC,
     TRAIN_MODEL_FIRST_ERROR,
 )
-from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_CONFIG
-from bertrend.llm_utils.prompts import TOPIC_DESCRIPTION_PROMPT
+from bertrend.topic_analysis.topic_description import generate_topic_description
 from bertrend.utils.data_loading import TIMESTAMP_COLUMN, TEXT_COLUMN, URL_COLUMN
 from bertrend.topic_analysis.representative_docs import get_most_representative_docs
 from bertrend.demos.topic_analysis.app_utils import (
@@ -38,42 +36,6 @@ from bertrend.topic_analysis.visualizations import plot_topics_over_time
 # Constants
 EXPORT_BASE_FOLDER = OUTPUT_PATH / "exported_topics"
 EXPORT_BASE_FOLDER.mkdir(parents=True, exist_ok=True)
-
-
-def generate_topic_description(topic_model, topic_number, filtered_docs):
-    # Get topic representation
-    topic_words = topic_model.get_topic(topic_number)
-    topic_representation = ", ".join(
-        [word for word, _ in topic_words[:10]]
-    )  # Get top 10 words
-
-    # Prepare the documents text
-    docs_text = "\n\n".join(
-        [
-            f"Document {i + 1}: {doc.text}..."
-            for i, doc in filtered_docs.head(3).iterrows()
-        ]
-    )
-
-    # Prepare the prompt
-    prompt = TOPIC_DESCRIPTION_PROMPT[SessionStateManager.get("language", "fr")]
-
-    # logger.debug(f"Prompt for GPT:\n{prompt}")
-    try:
-        client = OpenAI_Client(
-            api_key=LLM_CONFIG["api_key"],
-            endpoint=LLM_CONFIG["endpoint"],
-            model=LLM_CONFIG["model"],
-        )
-        return client.generate(
-            user_prompt=prompt.format(
-                topic_representation=topic_representation,
-                docs_text=docs_text,
-            )
-        )
-    except Exception as e:
-        logger.error(f"Error calling OpenAI API: {e}")
-        return f"Error generating description: {str(e)}"
 
 
 def check_model_and_prepare_topics():
@@ -400,10 +362,14 @@ def main():
         use_container_width=True,
     ):
         with st.spinner("Génération de la description en cours..."):
+            language_code = (
+                "fr" if SessionStateManager.get("language") == "French" else "en"
+            )
             gpt_description = generate_topic_description(
                 st.session_state["topic_model"],
                 st.session_state["selected_topic_number"],
                 filtered_df,
+                language_code=language_code,
             )
         with st.container(border=True):
             st.markdown(gpt_description)
