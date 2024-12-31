@@ -19,7 +19,9 @@ def display_embed_documents_component() -> bool:
             embedding_model_name = SessionStateManager.get("embedding_model_name")
             if SessionStateManager.get("embedding_service_type", "local") == "local":
                 embedding_service = EmbeddingService(
-                    local=True, embedding_model_name=embedding_model_name
+                    local=True,
+                    model_name=embedding_model_name,
+                    embedding_dtype=embedding_dtype,
                 )
             else:
                 embedding_service = EmbeddingService(
@@ -32,14 +34,17 @@ def display_embed_documents_component() -> bool:
                 TEXT_COLUMN
             ].tolist()
 
-            embedding_model, embeddings = embedding_service.embed_documents(
-                texts=texts,
-                embedding_model_name=embedding_model_name,
-                embedding_dtype=embedding_dtype,
+            embedding_model, embeddings, token_strings, token_embeddings = (
+                embedding_service.embed(
+                    texts=texts,
+                )
             )
 
             SessionStateManager.set("embedding_model", embedding_model)
             SessionStateManager.set("embeddings", embeddings)
+            SessionStateManager.set("token_strings", token_strings)
+            SessionStateManager.set("token_embeddings", token_embeddings)
+
             SessionStateManager.set("data_embedded", True)
 
             st.success(EMBEDDINGS_CALCULATED_MESSAGE, icon=SUCCESS_ICON)

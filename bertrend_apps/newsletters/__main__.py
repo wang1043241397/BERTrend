@@ -24,6 +24,7 @@ from umap import UMAP
 
 from bertrend import FEED_BASE_PATH, BEST_CUDA_DEVICE, OUTPUT_PATH
 from bertrend.parameters import BERTOPIC_SERIALIZATION
+from bertrend.services.embedding_service import EmbeddingService
 from bertrend.utils.config_utils import load_toml_config
 from bertrend.utils.data_loading import (
     enhanced_split_df_by_paragraphs,
@@ -35,7 +36,7 @@ from bertrend.llm_utils.newsletter_features import (
     generate_newsletter,
     export_md_string,
 )
-from bertrend.train import EmbeddingModel, train_BERTopic
+from bertrend.train import train_BERTopic
 from bertrend_apps.common.mail_utils import get_credentials, send_email
 from bertrend_apps.common.crontab_utils import schedule_newsletter
 
@@ -122,7 +123,7 @@ if __name__ == "__main__":
             topic_model = _load_topic_model(model_path)
             logger.info(f"Topic model loaded from {model_path}")
             logger.info("Computation of embeddings for new data...")
-            embeddings = EmbeddingModel(
+            embeddings = EmbeddingService(
                 config.get("topic_model.embedding", "model_name")
             ).embed(dataset[TEXT_COLUMN])
             topics, probs = topic_model.transform(dataset[TEXT_COLUMN], embeddings)

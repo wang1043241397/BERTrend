@@ -25,6 +25,7 @@ from umap import UMAP
 from bertrend import BASE_CACHE_PATH, LLM_CONFIG
 from bertrend.parameters import STOPWORDS
 from bertrend.llm_utils.openai_client import OpenAI_Client
+from bertrend.services.embedding_service import convert_to_numpy, group_tokens
 from bertrend.utils.data_loading import TEXT_COLUMN
 from bertrend.llm_utils.prompts import BERTOPIC_FRENCH_TOPIC_REPRESENTATION_PROMPT
 
@@ -107,89 +108,6 @@ class EmbeddingModel(BaseEmbedder):
 
         logger.success(f"Embedded {num_documents} documents in {num_batches} batches")
         return all_embeddings
-
-
-def convert_to_numpy(obj, type=None):
-    """
-    Convert a torch.Tensor or list of torch.Tensors to numpy arrays.
-    Args:
-        obj: The object to convert (torch.Tensor or list).
-        type: The type of conversion (optional, used for token ids).
-    Returns:
-        np.ndarray or list of np.ndarray.
-    """
-    if isinstance(obj, torch.Tensor):
-        return (
-            obj.numpy().astype(np.int64)
-            if type == "token_id"
-            else obj.numpy().astype(np.float32)
-        )
-    elif isinstance(obj, list):
-        return [convert_to_numpy(item) for item in obj]
-    else:
-        raise TypeError("Object must be a list or torch.Tensor")
-
-
-def group_tokens(tokenizer, token_ids, token_embeddings, language="french"):
-    """
-    Group split tokens into whole words and average their embeddings.
-    Args:
-        tokenizer: The tokenizer to use for converting ids to tokens.
-        token_ids: List of token ids.
-        token_embeddings: List of token embeddings.
-        language: The language of the tokens (default is "french").
-    Returns:
-        List of grouped tokens and their corresponding embeddings.
-    """
-    grouped_token_lists = []
-    grouped_embedding_lists = []
-
-    special_tokens = {
-        "english": ["[CLS]", "[SEP]", "[PAD]"],
-        "french": ["<s>", "</s>", "<pad>"],
-    }
-    subword_prefix = {"english": "##", "french": "▁"}
-
-    for token_id, token_embedding in tqdm(
-        zip(token_ids, token_embeddings), desc="Grouping split tokens into whole words"
-    ):
-        tokens = tokenizer.convert_ids_to_tokens(token_id)
-
-        grouped_tokens = []
-        grouped_embeddings = []
-        current_word = ""
-        current_embedding = []
-
-        for token, embedding in zip(tokens, token_embedding):
-            if token in special_tokens[language]:
-                continue
-
-            if language == "french" and token.startswith(subword_prefix[language]):
-                if current_word:
-                    grouped_tokens.append(current_word)
-                    grouped_embeddings.append(np.mean(current_embedding, axis=0))
-                current_word = token[1:]
-                current_embedding = [embedding]
-            elif language == "english" and not token.startswith(
-                subword_prefix[language]
-            ):
-                if current_word:
-                    grouped_tokens.append(current_word)
-                    grouped_embeddings.append(np.mean(current_embedding, axis=0))
-                current_word = token
-                current_embedding = [embedding]
-            else:
-                current_word += token.lstrip(subword_prefix[language])
-                current_embedding.append(embedding)
-
-        if current_word:
-            grouped_tokens.append(current_word)
-            grouped_embeddings.append(np.mean(current_embedding, axis=0))
-
-        grouped_token_lists.append(grouped_tokens)
-        grouped_embedding_lists.append(np.array(grouped_embeddings))
-
-    return grouped_token_lists, grouped_embedding_lists
 
 
 def remove_special_tokens(tokenizer, token_id, token_embedding, special_tokens):
