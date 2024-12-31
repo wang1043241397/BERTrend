@@ -5,12 +5,8 @@
 
 from datetime import timedelta
 
-import numpy as np
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
 import streamlit as st
-import umap
 
 from bertrend.demos.demos_utils.icons import ERROR_ICON, INFO_ICON
 from bertrend.demos.topic_analysis.messages import TRAIN_MODEL_FIRST_ERROR
@@ -18,7 +14,12 @@ from bertrend.metrics.temporal_metrics_embedding import TempTopic
 from bertrend.demos.topic_analysis.app_utils import (
     compute_topics_over_time,
 )
-from bertrend.topic_analysis.visualizations import plot_topics_over_time
+from bertrend.topic_analysis.visualizations import (
+    plot_topics_over_time,
+    plot_topic_evolution,
+    plot_temporal_stability_metrics,
+    plot_overall_topic_stability,
+)
 from bertrend.demos.demos_utils.state_utils import (
     register_widget,
     save_widget_state,
@@ -26,237 +27,11 @@ from bertrend.demos.demos_utils.state_utils import (
     register_multiple_widget,
 )
 from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_CONFIG
-from bertrend.utils.data_loading import TIMESTAMP_COLUMN, TEXT_COLUMN
-
-
-# TempTopic output visualization functions
-def plot_topic_evolution(
-    temptopic,
-    granularity,
-    topics_to_show=None,
-    n_neighbors=15,
-    min_dist=0.1,
-    metric="cosine",
-    color_palette="Plotly",
-):
-    topic_counts = temptopic.final_df.groupby("Topic")["Timestamp"].nunique()
-    valid_topics = set(topic_counts[topic_counts > 1].index.tolist())
-    all_topics = sorted(set(temptopic.final_df["Topic"].unique()) & set(valid_topics))
-    topics_to_include = sorted(set(topics_to_show or all_topics) & set(valid_topics))
-
-    topic_data = {}
-    for topic_id in topics_to_include:
-        topic_df = temptopic.final_df[temptopic.final_df["Topic"] == topic_id]
-
-        if len(topic_df["Timestamp"].unique()) > 1:
-            timestamps = pd.to_datetime(
-                topic_df["Timestamp"], format="%Y-%m-%d %H:%M:%S"
-            )
-            topic_data[topic_id] = {
-                "embeddings": topic_df["Embedding"].tolist(),
-                "timestamps": timestamps,
-                "words": topic_df["Words"].tolist(),
-            }
-
-    if not topic_data:
-        fig = go.Figure()
-        fig.add_annotation(
-            text="No topics to display",
-            xref="paper",
-            yref="paper",
-            x=0.5,
-            y=0.5,
-            showarrow=False,
-        )
-        return fig
-
-    all_embeddings = np.vstack([data["embeddings"] for data in topic_data.values()])
-    reducer = umap.UMAP(
-        n_neighbors=n_neighbors,
-        n_components=2,
-        min_dist=min_dist,
-        metric=metric,
-        random_state=42,
-    )
-    all_embeddings_umap = reducer.fit_transform(all_embeddings)
-
-    start_idx = 0
-    for topic_id, data in topic_data.items():
-        end_idx = start_idx + len(data["embeddings"])
-        data["embeddings_umap"] = all_embeddings_umap[start_idx:end_idx]
-        start_idx = end_idx
-
-    fig = go.Figure()
-
-    for topic_id, data in topic_data.items():
-        topic_words = ", ".join(
-            data["words"][0].split(", ")[:3]
-        )  # Get first 3 words of the topic
-        fig.add_trace(
-            go.Scatter3d(
-                x=data["embeddings_umap"][:, 0],
-                y=data["embeddings_umap"][:, 1],
-                z=data["timestamps"],
-                mode="lines+markers",
-                name=f"Topic {topic_id}: {topic_words}",
-                text=[
-                    f"Topic: {topic_id}<br>Timestamp: {t}<br>Words: {w}"
-                    for t, w in zip(data["timestamps"], data["words"])
-                ],
-                hoverinfo="text",
-                visible="legendonly",
-            )
-        )
-
-    fig.update_layout(
-        scene=dict(xaxis_title="UMAP 1", yaxis_title="UMAP 2", zaxis_title="Timestamp"),
-        width=1000,
-        height=1000,
-    )
-
-    return fig
-
-
-def plot_temporal_stability_metrics(
-    temptopic, metric, darkmode=True, topics_to_show=None
-):
-    if darkmode:
-        fig = go.Figure(layout=go.Layout(template="plotly_dark"))
-    else:
-        fig = go.Figure()
-
-    topic_counts = temptopic.final_df.groupby("Topic")["Timestamp"].nunique()
-    valid_topics = set(topic_counts[topic_counts > 1].index.tolist())
-    all_topics = sorted(set(temptopic.final_df["Topic"].unique()) & valid_topics)
-    topics_to_include = sorted(set(topics_to_show or all_topics) & valid_topics)
-
-    if metric == "topic_stability":
-        df = temptopic.topic_stability_scores_df
-        score_column = "Topic Stability Score"
-        title = "Temporal Topic Stability"
-    elif metric == "representation_stability":
-        df = temptopic.representation_stability_scores_df
-        score_column = "Representation Stability Score"
-        title = "Temporal Representation Stability"
-    else:
-        raise ValueError(
-            "Invalid metric. Choose 'topic_stability' or 'representation_stability'."
-        )
-
-    for topic_id in topics_to_include:
-        topic_data = df[df["Topic ID"] == topic_id].sort_values(by="Start Timestamp")
-
-        if topic_data.empty:
-            continue
-
-        topic_words = temptopic.final_df[temptopic.final_df["Topic"] == topic_id][
-            "Words"
-        ].iloc[0]
-        topic_words = "_".join(topic_words.split(", ")[:3])
-
-        x = topic_data["Start Timestamp"]
-        y = topic_data[score_column]
-
-        hover_text = []
-        for _, row in topic_data.iterrows():
-            if metric == "topic_stability":
-                hover_text.append(
-                    f"Topic: {topic_id}<br>Timestamp: {row['Start Timestamp']}<br>Score: {row[score_column]:.4f}"
-                )
-            else:
-                hover_text.append(
-                    f"Topic: {topic_id}<br>Timestamp: {row['Start Timestamp']}<br>Score: {row[score_column]:.4f}<br>Representation: {row['Start Representation']}"
-                )
-
-        fig.add_trace(
-            go.Scatter(
-                x=x,
-                y=y,
-                mode="lines+markers",
-                name=f"{topic_id}_{topic_words}",
-                text=hover_text,
-                hoverinfo="text",
-                line=dict(shape="spline", smoothing=0.9),
-                visible="legendonly",
-            )
-        )
-
-    if not fig.data:
-        fig.add_annotation(
-            text="No topics to display",
-            xref="paper",
-            yref="paper",
-            x=0.5,
-            y=0.5,
-            showarrow=False,
-        )
-
-    fig.data = sorted(fig.data, key=lambda trace: int(trace.name.split("_")[0]))
-    fig.update_layout(
-        title=title,
-        xaxis_title="Timestamp",
-        yaxis_title=f'{metric.replace("_", " ").capitalize()} Score',
-        legend_title="Topic",
-        hovermode="closest",
-    )
-
-    return fig
-
-
-def plot_overall_topic_stability(
-    temptopic, darkmode=True, normalize=False, topics_to_show=None
-):
-    if temptopic.overall_stability_df is None:
-        temptopic.calculate_overall_topic_stability()
-
-    df = temptopic.overall_stability_df
-
-    if topics_to_show is not None and len(topics_to_show) > 0:
-        df = df[df["Topic ID"].isin(topics_to_show)]
-
-    df = df.sort_values(by="Topic ID")
-
-    metric_column = (
-        "Normalized Stability Score" if normalize else "Overall Stability Score"
-    )
-    df["ScoreNormalized"] = df[metric_column]
-    df["Color"] = df["ScoreNormalized"].apply(
-        lambda x: px.colors.diverging.RdYlGn[
-            int(x * (len(px.colors.diverging.RdYlGn) - 1))
-        ]
-    )
-
-    fig = go.Figure(layout=go.Layout(template="plotly_dark" if darkmode else "plotly"))
-
-    for _, row in df.iterrows():
-        topic_id = row["Topic ID"]
-        metric_value = row[metric_column]
-        words = temptopic.final_df[temptopic.final_df["Topic"] == topic_id][
-            "Words"
-        ].iloc[0]
-        num_timestamps = row["Number of Timestamps"]
-
-        fig.add_trace(
-            go.Bar(
-                x=[topic_id],
-                y=[metric_value],
-                marker_color=row["Color"],
-                name=f"Topic {topic_id}",
-                hovertext=f"Topic {topic_id}<br>Words: {words}<br>Score: {metric_value:.4f}<br>Timestamps: {num_timestamps}",
-                hoverinfo="text",
-                text=[num_timestamps],
-                textposition="outside",
-            )
-        )
-
-    fig.update_layout(
-        title="Overall Topic Stability Scores",
-        yaxis=dict(range=[0, 1]),
-        yaxis_title="Overall Topic Stability Score",
-        showlegend=False,
-    )
-
-    return fig
+from bertrend.utils.data_loading import (
+    TIMESTAMP_COLUMN,
+    TEXT_COLUMN,
+    DOCUMENT_ID_COLUMN,
+)
 
 
 def check_model_trained():
@@ -269,7 +44,7 @@ def check_model_trained():
         st.stop()
 
 
-def parameters_changed():
+def _parameters_changed():
     """Check if any of the parameters have changed."""
     params_to_check = [
         "window_size",
@@ -368,7 +143,7 @@ def display_sidebar():
         )
 
 
-def get_available_granularities(min_date, max_date):
+def _get_available_granularities(min_date, max_date):
     """Determine available time granularities based on the date range."""
     time_diff = max_date - min_date
     available_granularities = ["Day"]
@@ -381,17 +156,7 @@ def get_available_granularities(min_date, max_date):
     return available_granularities
 
 
-# def select_time_granularity(available_granularities):
-#     """Allow user to select time granularity."""
-#     register_widget("granularity")
-#     time_granularity = st.selectbox("Select time granularity", [""] + available_granularities, key="granularity", on_change=save_widget_state)
-#     if time_granularity == "":
-#         st.info("Please select a time granularity to view the temporal visualizations.", icon=INFO_ICON)
-#         st.stop()
-#     return time_granularity
-
-
-def format_timedelta(td):
+def _format_timedelta(td):
     """Format a timedelta object into a string with days, hours, minutes, and seconds."""
     days = td.days
     hours, remainder = divmod(td.seconds, 3600)
@@ -459,7 +224,7 @@ def select_time_granularity(max_granularity):
     selected_granularity = timedelta(
         days=days, hours=hours, minutes=minutes, seconds=seconds
     )
-    formatted_max = format_timedelta(max_granularity)
+    formatted_max = _format_timedelta(max_granularity)
 
     st.info(
         f"Granularity must be greater than zero and less than or equal to {formatted_max}.",
@@ -475,7 +240,7 @@ def select_time_granularity(max_granularity):
     return pd.Timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
 
 
-def calculate_max_granularity(df):
+def _calculate_max_granularity(df):
     """Calculate the maximum allowed granularity based on the timestamp range."""
     max_timestamp, min_timestamp = (
         df[TIMESTAMP_COLUMN].max(),
@@ -486,7 +251,7 @@ def calculate_max_granularity(df):
     return max_granularity
 
 
-def group_timestamps(timestamps, granularity):
+def _group_timestamps(timestamps, granularity):
     """
     Group timestamps based on a custom granularity.
 
@@ -510,27 +275,27 @@ def group_timestamps(timestamps, granularity):
 def process_data_and_fit_temptopic(time_granularity):
     """Process data and fit TempTopic with custom time granularity."""
     df = st.session_state["time_filtered_df"].copy()
-    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    df[TIMESTAMP_COLUMN] = pd.to_datetime(df[TIMESTAMP_COLUMN])
 
     # Convert time_granularity to timedelta if it's not already
     if not isinstance(time_granularity, timedelta):
         time_granularity = pd.Timedelta(time_granularity)
 
     # Group timestamps using the custom function
-    df["grouped_timestamp"] = group_timestamps(df["timestamp"], time_granularity)
+    df["grouped_timestamp"] = _group_timestamps(df[TIMESTAMP_COLUMN], time_granularity)
 
     aggregated_df = (
         df.groupby("grouped_timestamp")
-        .agg({TEXT_COLUMN: list, "index": list})
+        .agg({TEXT_COLUMN: list, DOCUMENT_ID_COLUMN: list})
         .reset_index()
     )
-    indices = st.session_state["time_filtered_df"]["index"]
+    indices = st.session_state["time_filtered_df"][DOCUMENT_ID_COLUMN]
     docs = [st.session_state["split_df"][TEXT_COLUMN][i] for i in indices]
 
     index_to_timestamp = {
         idx: timestamp
         for timestamp, idx_sublist in zip(
-            aggregated_df["grouped_timestamp"], aggregated_df["index"]
+            aggregated_df["grouped_timestamp"], aggregated_df[DOCUMENT_ID_COLUMN]
         )
         for idx in idx_sublist
     }
@@ -768,7 +533,7 @@ def main():
     display_sidebar()
 
     # Calculate max granularity
-    max_granularity = calculate_max_granularity(st.session_state["time_filtered_df"])
+    max_granularity = _calculate_max_granularity(st.session_state["time_filtered_df"])
 
     # Select time granularity
     time_granularity = select_time_granularity(max_granularity)
@@ -798,6 +563,7 @@ def main():
 
 # Restore widget state
 restore_widget_state()
+
 main()
 
 # FIXME: Popularity of topics over time visualization is based on the number of paragraphs instead of original articles, since it's the default BERTopic method
