@@ -6,7 +6,6 @@ import pandas as pd
 from bertopic import BERTopic
 
 
-# FIXME: improve doc!
 def get_most_representative_docs(
     topic_model: BERTopic,
     df: pd.DataFrame,

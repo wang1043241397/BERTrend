@@ -13,8 +13,6 @@ import plotly.graph_objects as go
 from datetime import timedelta
 from urllib.parse import urlparse
 
-from docs.conf import language
-
 from bertrend import OUTPUT_PATH
 from bertrend.demos.demos_utils.icons import ERROR_ICON, WARNING_ICON
 from bertrend.demos.demos_utils.session_state_manager import SessionStateManager

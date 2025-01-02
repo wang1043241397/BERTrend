@@ -2,8 +2,8 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
-
-from typing import Tuple, List
+from pathlib import Path
+from typing import Tuple, List, Literal
 
 import numpy as np
 from bertopic import BERTopic
@@ -15,6 +15,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import CountVectorizer
 from umap import UMAP
 
+from bertrend import load_toml_config
 from bertrend.parameters import (
     DEFAULT_UMAP_N_COMPONENTS,
     DEFAULT_UMAP_N_NEIGHBORS,
@@ -66,6 +67,7 @@ class TopicModel:
     Args:
         umap_n_components (int): Number of components for UMAP.
         umap_n_neighbors (int): Number of neighbors for UMAP.
+        umap_min_dist (float): Minimum distance between neighbors for UMAP.
         hdbscan_min_cluster_size (int): Minimum cluster size for HDBSCAN.
         hdbscan_min_samples (int): Minimum samples for HDBSCAN.
         hdbscan_cluster_selection_method (str): Cluster selection method for HDBSCAN.
@@ -81,6 +83,7 @@ class TopicModel:
         self,
         umap_n_components: int = DEFAULT_UMAP_N_COMPONENTS,
         umap_n_neighbors: int = DEFAULT_UMAP_N_NEIGHBORS,
+        umap_min_dist: float = DEFAULT_UMAP_MIN_DIST,
         hdbscan_min_cluster_size: int = DEFAULT_HDBSCAN_MIN_CLUSTER_SIZE,
         hdbscan_min_samples: int = DEFAULT_HDBSCAN_MIN_SAMPLES,
         hdbscan_cluster_selection_method: str = HDBSCAN_CLUSTER_SELECTION_METHODS[0],
@@ -88,9 +91,14 @@ class TopicModel:
         min_df: int = DEFAULT_MIN_DF,
         top_n_words: int = DEFAULT_TOP_N_WORDS,
         language: str = LANGUAGES[0],
+        outlier_reduction_strategy: Literal[
+            "c-tf-idf", "embeddings"
+        ] = OUTLIER_REDUCTION_STRATEGY,
+        mmr_diversity: float = DEFAULT_MMR_DIVERSITY,
     ):
         self.umap_n_components = umap_n_components
         self.umap_n_neighbors = umap_n_neighbors
+        self.umap_min_dist = umap_min_dist
         self.hdbscan_min_cluster_size = hdbscan_min_cluster_size
         self.hdbscan_min_samples = hdbscan_min_samples
         self.hdbscan_cluster_selection_method = hdbscan_cluster_selection_method
@@ -98,17 +106,17 @@ class TopicModel:
         self.min_df = min_df
         self.top_n_words = top_n_words
         self.language = language
+        self.outlier_reduction_strategy = outlier_reduction_strategy
+        self.mmr_diversity = mmr_diversity
 
         # Initialize models based on those parameters
         self._initialize_models()
-
-        # TODO : set self.topic_model?
 
     def _initialize_models(self):
         self.umap_model = UMAP(
             n_components=self.umap_n_components,
             n_neighbors=self.umap_n_neighbors,
-            min_dist=DEFAULT_UMAP_MIN_DIST,
+            min_dist=self.umap_min_dist,
             random_state=42,
             metric="cosine",
         )
@@ -129,9 +137,42 @@ class TopicModel:
             min_df=self.min_df,
             ngram_range=self.vectorizer_ngram_range,
         )
-        self.mmr_model = MaximalMarginalRelevance(diversity=DEFAULT_MMR_DIVERSITY)
+        self.mmr_model = MaximalMarginalRelevance(diversity=self.mmr_diversity)
         self.ctfidf_model = ClassTfidfTransformer(
             reduce_frequent_words=True, bm25_weighting=False
+        )
+
+    @classmethod
+    def from_config(cls, config: Path) -> "TopicModel":
+        """Creates a topic model from a toml configuration file."""
+        parameters = load_toml_config(config)["bertopic_parameters"]
+        return cls(
+            umap_n_components=parameters.get(
+                "umap_n_components", DEFAULT_UMAP_N_COMPONENTS
+            ),
+            umap_n_neighbors=parameters.get(
+                "umap_n_neighbors", DEFAULT_UMAP_N_NEIGHBORS
+            ),
+            umap_min_dist=parameters.get("umap_min_dist", DEFAULT_UMAP_MIN_DIST),
+            hdbscan_min_cluster_size=parameters.get(
+                "hdbscan_min_cluster_size", DEFAULT_HDBSCAN_MIN_CLUSTER_SIZE
+            ),
+            hdbscan_min_samples=parameters.get(
+                "hdbscan_min_samples", DEFAULT_HDBSCAN_MIN_SAMPLES
+            ),
+            hdbscan_cluster_selection_method=parameters.get(
+                "hdbscan_cluster_selection_method", HDBSCAN_CLUSTER_SELECTION_METHODS[0]
+            ),
+            vectorizer_ngram_range=parameters.get(
+                "vectorizer_ngram_range", VECTORIZER_NGRAM_RANGES[0]
+            ),
+            min_df=parameters.get("min_df", DEFAULT_MIN_DF),
+            top_n_words=parameters.get("top_n_words", DEFAULT_TOP_N_WORDS),
+            language=parameters.get("language", LANGUAGES[0]),
+            outlier_reduction_strategy=parameters.get(
+                "outlier_reduction_strategy", OUTLIER_REDUCTION_STRATEGY
+            ),
+            mmr_diversity=parameters.get("mmr_diversity", DEFAULT_MMR_DIVERSITY),
         )
 
     def fit(

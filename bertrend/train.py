@@ -6,50 +6,34 @@
 import os
 from typing import List, Tuple, Union
 
-import numpy as np
 import pandas as pd
 import torch
 from bertopic import BERTopic
-from bertopic.backend import BaseEmbedder
 from bertopic.representation import KeyBERTInspired, MaximalMarginalRelevance, OpenAI
 from bertopic.vectorizers import ClassTfidfTransformer
 from hdbscan import HDBSCAN
 from loguru import logger
 from nltk.corpus import stopwords
 from numpy import ndarray
-from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import CountVectorizer
-from tqdm import tqdm
 from umap import UMAP
 
 from bertrend import BASE_CACHE_PATH, LLM_CONFIG
 from bertrend.parameters import STOPWORDS
 from bertrend.llm_utils.openai_client import OpenAI_Client
-from bertrend.services.embedding_service import convert_to_numpy, group_tokens
+from bertrend.services.embedding_service import (
+    convert_to_numpy,
+    group_tokens,
+    EmbeddingService,
+)
 from bertrend.utils.data_loading import TEXT_COLUMN
 from bertrend.llm_utils.prompts import BERTOPIC_FRENCH_TOPIC_REPRESENTATION_PROMPT
 
 from bertrend.utils.cache_utils import load_embeddings, save_embeddings, get_hash
 
 # Parameters:
-DEFAULT_EMBEDDING_MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
 DEFAULT_NR_TOPICS = 10
-DEFAULT_NGRAM_RANGE = (1, 1)
-DEFAULT_MIN_DF = 2
 
-DEFAULT_UMAP_MODEL = UMAP(n_neighbors=15, n_components=5, min_dist=0.0, metric="cosine")
-DEFAULT_HDBSCAN_MODEL = HDBSCAN(
-    min_cluster_size=15,
-    metric="euclidean",
-    cluster_selection_method="eom",
-    prediction_data=True,
-)
-
-DEFAULT_VECTORIZER_MODEL = CountVectorizer(
-    stop_words=STOPWORDS,
-    ngram_range=DEFAULT_NGRAM_RANGE,
-    min_df=DEFAULT_MIN_DF,
-)
 
 DEFAULT_CTFIDF_MODEL = ClassTfidfTransformer(reduce_frequent_words=True)
 
@@ -59,78 +43,6 @@ DEFAULT_REPRESENTATION_MODEL: List[RepresentationModelType] = [
 ]
 
 # TODO - a lot of duplicate code with weak_signals - to be unified
-
-
-class EmbeddingModel(BaseEmbedder):
-    """
-    Custom class for the embedding model. Currently, supports SentenceBert models (model_name should refer to a SentenceBert model).
-    Implements batch processing for efficient memory usage and handles different input types.
-    """
-
-    def __init__(self, model_name, batch_size=5000):
-        super().__init__()
-
-        logger.info(f"Loading embedding model: {model_name}...")
-        self.embedding_model = SentenceTransformer(model_name)
-
-        # Handle the particular scenario of when max seq length in original model is abnormal (not a power of 2)
-        if self.embedding_model.max_seq_length == 514:
-            self.embedding_model.max_seq_length = 512
-
-        self.name = model_name
-        self.batch_size = batch_size
-        logger.debug("Embedding model loaded")
-
-    def embed(self, documents: Union[List[str], pd.Series], verbose=True) -> np.ndarray:
-        # Convert to list if input is a pandas Series
-        if isinstance(documents, pd.Series):
-            documents = documents.tolist()
-
-        num_documents = len(documents)
-        num_batches = (num_documents + self.batch_size - 1) // self.batch_size
-        embeddings = []
-
-        # Embed by batches instead of everything at once to not quickly saturate GPU
-        for i in tqdm(
-            range(num_batches), desc="Embedding batches", disable=not verbose
-        ):
-            start_idx = i * self.batch_size
-            end_idx = min(start_idx + self.batch_size, num_documents)
-            batch_documents = documents[start_idx:end_idx]
-
-            batch_embeddings = self.embedding_model.encode(
-                batch_documents, show_progress_bar=False, output_value=None
-            )
-            embeddings.append(batch_embeddings)
-
-        # Concatenate all batch embeddings
-        all_embeddings = np.concatenate(embeddings, axis=0)
-
-        logger.success(f"Embedded {num_documents} documents in {num_batches} batches")
-        return all_embeddings
-
-
-def remove_special_tokens(tokenizer, token_id, token_embedding, special_tokens):
-    """
-    Remove special tokens from the token ids and embeddings.
-    Args:
-        tokenizer: The tokenizer to use for converting ids to tokens.
-        token_id: List of token ids.
-        token_embedding: List of token embeddings.
-        special_tokens: List of special tokens to remove.
-    Returns:
-        List of filtered tokens and their corresponding embeddings.
-    """
-    tokens = tokenizer.convert_ids_to_tokens(token_id)
-
-    filtered_tokens = []
-    filtered_embeddings = []
-    for token, embedding in zip(tokens, token_embedding):
-        if token not in special_tokens:
-            filtered_tokens.append(token)
-            filtered_embeddings.append(embedding)
-
-    return filtered_tokens, filtered_embeddings
 
 
 def train_BERTopic(
@@ -286,7 +198,7 @@ def train_BERTopic(
     cache_path.parent.mkdir(parents=True, exist_ok=True)
 
     logger.debug(f"Using cache: {use_cache}")
-    embedding_model = EmbeddingModel(embedding_model_name)
+    embedding_model = EmbeddingService(embedding_model_name)
 
     if indices is not None:
         filtered_dataset = full_dataset[full_dataset.index.isin(indices)].reset_index(

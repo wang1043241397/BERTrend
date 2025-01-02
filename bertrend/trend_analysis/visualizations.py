@@ -211,7 +211,6 @@ def compute_popularity_values_and_thresholds(
     return window_start, window_end, all_popularity_values, q1, q3
 
 
-# FIXME update description
 def plot_topic_size_evolution(
     fig,
     current_date,

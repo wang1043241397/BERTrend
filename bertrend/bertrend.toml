@@ -4,26 +4,29 @@
 #  This file is part of BERTrend.
 
 # Configuration for BERTrend
-[parameters]
+
+[bertopic_parameters]
 # BERTopic Hyperparameters
-default_umap_n_components = 5
-default_umap_n_neighbors = 5
-default_hdbscan_min_cluster_size = 5
-default_hdbscan_min_samples = 5
-default_top_n_words = 10
-default_min_df = 1
-default_granularity = 2
-default_min_similarity = 0.7
-default_zeroshot_min_similarity = 0.5
+umap_n_components = 5
+umap_n_neighbors = 5
+umap_min_dist = 0.0
+hdbscan_min_cluster_size = 5
+hdbscan_min_samples = 5
+top_n_words = 10
+min_df = 1
+granularity = 2
+min_similarity = 0.7
+zeroshot_min_similarity = 0.5
 bertopic_serialization = "safetensors"  # or pickle
-default_mmr_diversity = 0.3
-default_umap_min_dist = 0.0
+mmr_diversity = 0.3
 outlier_reduction_strategy = "c-tf-idf"  # or "embeddings"
+# other constants
+zeroshot_topics = ""  # empty string or a default list of topics
+
+[bertrend_parameters]
 # signal classification settings
 signal_classif_lower_bound = 10
 signal_classif_upper_bound = 75
-# other constants
-default_zeroshot_topics = ""  # empty string or a default list of topics
 
 
 [embedding_service]

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import torch
 
-from bertrend import PARAMETERS_CONFIG
+from bertrend import BERTOPIC_PARAMETERS, BERTREND_PARAMETERS
 
 stopwords_en_file = Path(__file__).parent / "resources" / "stopwords-en.json"
 stopwords_fr_file = Path(__file__).parent / "resources" / "stopwords-fr.json"
@@ -55,26 +55,26 @@ FRENCH_EMBEDDING_MODELS = [
 ]
 
 # BERTopic Hyperparameters
-DEFAULT_UMAP_N_COMPONENTS = PARAMETERS_CONFIG["default_umap_n_components"]
-DEFAULT_UMAP_N_NEIGHBORS = PARAMETERS_CONFIG["default_umap_n_neighbors"]
-DEFAULT_HDBSCAN_MIN_CLUSTER_SIZE = PARAMETERS_CONFIG["default_hdbscan_min_cluster_size"]
-DEFAULT_HDBSCAN_MIN_SAMPLES = PARAMETERS_CONFIG["default_hdbscan_min_samples"]
-DEFAULT_TOP_N_WORDS = PARAMETERS_CONFIG["default_top_n_words"]
-DEFAULT_MIN_DF = PARAMETERS_CONFIG["default_min_df"]
-DEFAULT_GRANULARITY = PARAMETERS_CONFIG["default_granularity"]
-DEFAULT_MIN_SIMILARITY = PARAMETERS_CONFIG["default_min_similarity"]
-DEFAULT_ZEROSHOT_MIN_SIMILARITY = PARAMETERS_CONFIG["default_zeroshot_min_similarity"]
-BERTOPIC_SERIALIZATION = PARAMETERS_CONFIG["bertopic_serialization"]
-DEFAULT_MMR_DIVERSITY = PARAMETERS_CONFIG["default_mmr_diversity"]
-DEFAULT_UMAP_MIN_DIST = PARAMETERS_CONFIG["default_umap_min_dist"]
-OUTLIER_REDUCTION_STRATEGY = PARAMETERS_CONFIG["outlier_reduction_strategy"]
-
-# Signal classification Settings
-SIGNAL_CLASSIF_LOWER_BOUND = PARAMETERS_CONFIG["signal_classif_lower_bound"]
-SIGNAL_CLASSIF_UPPER_BOUND = PARAMETERS_CONFIG["signal_classif_upper_bound"]
-
+DEFAULT_UMAP_N_COMPONENTS = BERTOPIC_PARAMETERS["umap_n_components"]
+DEFAULT_UMAP_N_NEIGHBORS = BERTOPIC_PARAMETERS["umap_n_neighbors"]
+DEFAULT_HDBSCAN_MIN_CLUSTER_SIZE = BERTOPIC_PARAMETERS["hdbscan_min_cluster_size"]
+DEFAULT_HDBSCAN_MIN_SAMPLES = BERTOPIC_PARAMETERS["hdbscan_min_samples"]
+DEFAULT_TOP_N_WORDS = BERTOPIC_PARAMETERS["top_n_words"]
+DEFAULT_MIN_DF = BERTOPIC_PARAMETERS["min_df"]
+DEFAULT_GRANULARITY = BERTOPIC_PARAMETERS["granularity"]
+DEFAULT_MIN_SIMILARITY = BERTOPIC_PARAMETERS["min_similarity"]
+DEFAULT_ZEROSHOT_MIN_SIMILARITY = BERTOPIC_PARAMETERS["zeroshot_min_similarity"]
+BERTOPIC_SERIALIZATION = BERTOPIC_PARAMETERS["bertopic_serialization"]
+DEFAULT_MMR_DIVERSITY = BERTOPIC_PARAMETERS["mmr_diversity"]
+DEFAULT_UMAP_MIN_DIST = BERTOPIC_PARAMETERS["umap_min_dist"]
+OUTLIER_REDUCTION_STRATEGY = BERTOPIC_PARAMETERS["outlier_reduction_strategy"]
 # Other Constants
-DEFAULT_ZEROSHOT_TOPICS = PARAMETERS_CONFIG["default_zeroshot_topics"]
+DEFAULT_ZEROSHOT_TOPICS = BERTOPIC_PARAMETERS["zeroshot_topics"]
+
+# BERTrend parameters
+# Signal classification Settings
+SIGNAL_CLASSIF_LOWER_BOUND = BERTREND_PARAMETERS["signal_classif_lower_bound"]
+SIGNAL_CLASSIF_UPPER_BOUND = BERTREND_PARAMETERS["signal_classif_upper_bound"]
 
 
 # Embedding Settings

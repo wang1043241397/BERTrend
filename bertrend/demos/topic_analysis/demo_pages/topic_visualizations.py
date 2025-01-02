@@ -3,8 +3,6 @@
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
 
-from pathlib import Path
-
 import datamapplot
 import numpy as np
 import pandas as pd
@@ -18,12 +16,19 @@ from umap import UMAP
 from bertrend import OUTPUT_PATH
 from bertrend.demos.demos_utils.icons import ERROR_ICON, WARNING_ICON
 from bertrend.demos.demos_utils.state_utils import restore_widget_state
-from bertrend.demos.topic_analysis.app_utils import (
-    plot_2d_topics,
-)
 from bertrend.demos.topic_analysis.messages import TRAIN_MODEL_FIRST_ERROR
 from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_CONFIG
 from bertrend.utils.data_loading import TEXT_COLUMN
+
+
+@st.cache_data
+def plot_topics_hierarchy(_topic_model, width=700):
+    return _topic_model.visualize_hierarchy(width=width)
+
+
+@st.cache_data
+def plot_2d_topics(_topic_model, width=700):
+    return _topic_model.visualize_topics(width=width)
 
 
 @st.cache_data

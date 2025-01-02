@@ -177,13 +177,14 @@ def _format_timedelta(td):
 
 def select_time_granularity(max_granularity):
     """Allow user to select custom time granularity within limits."""
-    st.write("Select custom time granularity")
-    col1, col2, col3, col4 = st.columns(4)
+    col0, col1, col2, col3, col4 = st.columns(5)
 
     max_days = max_granularity.days
     register_multiple_widget(
         "granularity_days", "granularity_hours", "granularity_minutes"
     )
+    with col0:
+        st.write("Select custom time granularity")
     with col1:
         days = st.slider(
             "Days",
@@ -538,8 +539,19 @@ def main():
     # Select time granularity
     time_granularity = select_time_granularity(max_granularity)
 
-    # Add Apply button
-    apply_button = st.button("Apply Granularity and Parameters")
+    col1, col2 = st.columns(2)
+    with col1:
+        # Add Apply button
+        apply_button = st.button("Apply Granularity and Parameters", type="primary")
+    with col2:
+        register_widget("temptopic_visualizations")
+        st.segmented_control(
+            "Show table results",
+            selection_mode="multi",
+            key="temptopic_visualizations",
+            on_change=save_widget_state,
+            options=["Topic evolution", "Topic info", "Documents per date"],
+        )
 
     if apply_button:
         if time_granularity is not None:
@@ -550,9 +562,12 @@ def main():
 
     # Display visualizations only if TempTopic has been fitted
     if "temptopic" in st.session_state:
-        display_topic_evolution_dataframe()
-        display_topic_info_dataframe()
-        display_documents_per_date_dataframe()
+        if "Topic evolution" in st.session_state["temptopic_visualizations"]:
+            display_topic_evolution_dataframe()
+        if "Topic info" in st.session_state["temptopic_visualizations"]:
+            display_topic_info_dataframe()
+        if "Documents per date" in st.session_state["temptopic_visualizations"]:
+            display_documents_per_date_dataframe()
         display_temptopic_visualizations()
     else:
         st.info(
@@ -563,7 +578,6 @@ def main():
 
 # Restore widget state
 restore_widget_state()
-
 main()
 
 # FIXME: Popularity of topics over time visualization is based on the number of paragraphs instead of original articles, since it's the default BERTopic method

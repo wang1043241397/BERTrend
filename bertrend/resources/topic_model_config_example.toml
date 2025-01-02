@@ -1,0 +1,17 @@
+# Example of configuration file to be used for topic modelling
+
+[bertopic_parameters]
+# BERTopic Hyperparameters
+umap_n_components = 5
+umap_n_neighbors = 5
+umap_min_dist = 0.0
+hdbscan_min_cluster_size = 5
+hdbscan_min_samples = 5
+top_n_words = 10
+min_df = 1
+granularity = 2
+min_similarity = 0.7
+zeroshot_min_similarity = 0.5
+bertopic_serialization = "safetensors"  # or pickle
+mmr_diversity = 0.3
+outlier_reduction_strategy = "c-tf-idf"  # or "embeddings"

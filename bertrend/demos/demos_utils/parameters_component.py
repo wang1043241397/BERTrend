@@ -5,7 +5,6 @@
 import streamlit as st
 
 from bertrend import EMBEDDING_CONFIG
-from bertrend.demos.demos_utils.session_state_manager import SessionStateManager
 from bertrend.demos.demos_utils.state_utils import register_widget, save_widget_state
 from bertrend.parameters import (
     DEFAULT_UMAP_N_COMPONENTS,

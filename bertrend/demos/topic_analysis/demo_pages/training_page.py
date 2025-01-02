@@ -5,6 +5,7 @@
 
 import datetime
 
+import pandas as pd
 import streamlit as st
 from loguru import logger
 
@@ -36,9 +37,10 @@ from bertrend.demos.demos_utils.parameters_component import (
     display_bertopic_hyperparameters,
 )
 from bertrend.demos.demos_utils.session_state_manager import SessionStateManager
-from bertrend.demos.topic_analysis.data_utils import data_distribution
+from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_CONFIG
 from bertrend.metrics.topic_metrics import compute_cluster_metrics
 from bertrend.parameters import BERTOPIC_SERIALIZATION
+from bertrend.topic_analysis.visualizations import plot_docs_repartition_over_time
 from bertrend.topic_model import TopicModel
 from bertrend.utils.data_loading import (
     TEXT_COLUMN,
@@ -53,6 +55,29 @@ def generate_model_name(base_name="topic_model"):
     current_datetime = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     model_name = f"{base_name}_{current_datetime}"
     return model_name
+
+
+def data_distribution(df: pd.DataFrame):
+    with st.expander(
+        label="Data distribution",
+        expanded=False,
+    ):
+        freq = st.select_slider(
+            "Time aggregation",
+            options=(
+                "1D",
+                "2D",
+                "1W",
+                "2W",
+                "1M",
+                "2M",
+                "1Y",
+                "2Y",
+            ),
+            value="1M",
+        )
+        fig = plot_docs_repartition_over_time(df, freq)
+        st.plotly_chart(fig, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True)
 
 
 def save_model_interface():

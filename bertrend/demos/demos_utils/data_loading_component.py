@@ -5,7 +5,7 @@
 
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import List, Literal
+from typing import List
 
 import pandas as pd
 import streamlit as st
@@ -78,8 +78,6 @@ def _load_files(
 
 
 # TODO: if loaded data column names do not match our default values, show a popup for column data mapping
-
-
 def display_data_loading_component():
     """
     Component for a streamlit app about topic modelling. It allows to choose data to load and preprocess data.

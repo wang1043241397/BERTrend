@@ -199,8 +199,6 @@ class BERTrend:
             embedding_model (SentenceTransformer): Sentence transformer model for embeddings.
             embeddings (np.ndarray): Precomputed document embeddings.
         """
-        # TODO from topic_modelling = train_topic_models (modulo data transformation)
-        # TODO rename to fit?
         topic_models = {}
         doc_groups = {}
         emb_groups = {}
@@ -328,7 +326,6 @@ class BERTrend:
 
         self._are_models_merged = True
 
-    # TODO: avoid parameter passing, use internal vars instead
     def calculate_signal_popularity(
         self,
         granularity: int = DEFAULT_GRANULARITY,
@@ -354,7 +351,6 @@ class BERTrend:
         self.granularity = granularity
 
         if not self._are_models_merged:
-            # FIXME: RuntimeError
             raise RuntimeWarning(
                 "You must merge topic models first before computing signal popularity."
             )
@@ -574,7 +570,6 @@ def _merge_models(
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     merged_df = df1.copy()
     merge_history = []
-    new_topics = []
 
     embeddings1 = np.stack(df1["Embedding"].values)
     embeddings2 = np.stack(df2["Embedding"].values)

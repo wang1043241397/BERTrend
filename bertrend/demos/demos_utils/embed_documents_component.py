@@ -11,7 +11,7 @@ from bertrend.services.embedding_service import EmbeddingService
 from bertrend.utils.data_loading import TEXT_COLUMN
 
 
-def display_embed_documents_component() -> bool:
+def display_embed_documents_component():
     # Embed documents
     if st.button("Embed Documents"):
         with st.spinner("Embedding documents..."):

@@ -3,13 +3,11 @@
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
 
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import streamlit as st
 
-from bertrend.demos.demos_utils.state_utils import register_widget
 from bertrend.utils.data_loading import (
     TIMESTAMP_COLUMN,
     GROUPED_TIMESTAMP_COLUMN,
@@ -50,38 +48,6 @@ DEFAULT_PARAMETERS = {
 }
 
 
-# Initialize default parameters in Streamlit session state
-def initialize_default_parameters_keys():
-    for k, v in DEFAULT_PARAMETERS.items():
-        if k not in st.session_state:
-            st.session_state[k] = v
-        register_widget(k)
-
-
-# Embedding model options for Streamlit UI
-def embedding_model_options():
-    return {
-        "embedding_model_name": st.selectbox(
-            "Name",
-            [
-                "OrdalieTech/Solon-embeddings-base-0.1",
-                "OrdalieTech/Solon-embeddings-large-0.1",
-                "dangvantuan/sentence-camembert-large",
-                "paraphrase-multilingual-MiniLM-L12-v2",
-                "BAAI/bge-base-en-v1.5",
-                "sentence-transformers/all-mpnet-base-v2",
-                "antoinelouis/biencoder-camembert-base-mmarcoFR",
-                "all-MiniLM-L12-v2",
-                "all-mpnet-base-v2",
-            ],
-            key="embedding_model_name",
-        ),
-        "use_cached_embeddings": st.checkbox(
-            "Put embeddings in cache", key="use_cached_embeddings"
-        ),
-    }
-
-
 # BERTopic options for Streamlit UI
 def bertopic_options():
     return {
@@ -96,93 +62,6 @@ def bertopic_options():
             min_value=1,
             value=DEFAULT_PARAMETERS["bertopic_top_n_words"],
             key="bertopic_top_n_words",
-        ),
-    }
-
-
-# UMAP options for Streamlit UI
-def umap_options():
-    return {
-        "umap_n_neighbors": st.number_input(
-            "n_neighbors",
-            min_value=1,
-            value=DEFAULT_PARAMETERS["umap_n_neighbors"],
-            key="umap_n_neighbors",
-        ),
-        "umap_n_components": st.number_input(
-            "n_components",
-            min_value=1,
-            value=DEFAULT_PARAMETERS["umap_n_components"],
-            key="umap_n_components",
-        ),
-        "umap_min_dist": st.number_input(
-            "min_dist",
-            min_value=0.0,
-            value=DEFAULT_PARAMETERS["umap_min_dist"],
-            max_value=1.0,
-            key="umap_min_dist",
-        ),
-        "umap_metric": st.selectbox("metric", ["cosine"], key="umap_metric"),
-    }
-
-
-# HDBSCAN options for Streamlit UI
-def hdbscan_options():
-    return {
-        "hdbscan_min_cluster_size": st.number_input(
-            "min_cluster_size",
-            min_value=2,
-            value=DEFAULT_PARAMETERS["hdbscan_min_cluster_size"],
-            key="hdbscan_min_cluster_size",
-        ),
-        "hdbscan_min_samples": st.number_input(
-            "min_samples",
-            min_value=1,
-            value=DEFAULT_PARAMETERS["hdbscan_min_samples"],
-            key="hdbscan_min_samples",
-        ),
-        "hdbscan_metric": st.selectbox("metric", ["euclidean"], key="hdbscan_metric"),
-        "hdbscan_cluster_selection_method": st.selectbox(
-            "cluster_selection_method",
-            ["eom", "leaf"],
-            key="hdbscan_cluster_selection_method",
-        ),
-        "hdbscan_cluster_selection_epsilon": st.number_input(
-            "cluster_selection_epsilon",
-            min_value=0.0,
-            value=DEFAULT_PARAMETERS["hdbscan_cluster_selection_epsilon"],
-            format="%.2f",
-            step=0.01,
-            key="hdbscan_cluster_selection_epsilon",
-        ),
-        "hdbscan_max_cluster_size": st.number_input(
-            "max_cluster_size",
-            min_value=0,
-            value=DEFAULT_PARAMETERS["hdbscan_max_cluster_size"],
-            key="hdbscan_max_cluster_size",
-        ),
-        "hdbscan_allow_single_cluster": st.checkbox(
-            "allow_single_cluster",
-            value=DEFAULT_PARAMETERS["hdbscan_allow_single_cluster"],
-            key="hdbscan_allow_single_cluster",
-        ),
-    }
-
-
-# CountVectorizer options for Streamlit UI
-def countvectorizer_options():
-    return {
-        "countvectorizer_stop_words": st.selectbox(
-            "stop_words", ["french", "english", None], key="countvectorizer_stop_words"
-        ),
-        "countvectorizer_ngram_range": st.selectbox(
-            "ngram_range",
-            [(1, 1), (1, 2), (1, 3), (2, 2), (2, 3), (3, 3)],
-            index=1,
-            key="countvectorizer_ngram_range",
-        ),
-        "countvectorizer_min_df": st.number_input(
-            "min_df", min_value=1, value=2, key="countvectorizer_min_df"
         ),
     }
 
@@ -278,18 +157,7 @@ def representation_model_options():
     return options
 
 
-@st.cache_data
-def plot_2d_topics(_topic_model, width=700):
-    return _topic_model.visualize_topics(width=width)
-
-
-# FIXME: not used?
-@st.cache_data
-def plot_topics_hierarchy(_topic_model, width=700):
-    return _topic_model.visualize_hierarchy(width=width)
-
-
-def make_dynamic_topics_split(df, nr_bins):
+def _make_dynamic_topics_split(df, nr_bins):
     """
     Split docs into nr_bins and generate a llm_utils timestamp label into a new column
     """
@@ -300,28 +168,18 @@ def make_dynamic_topics_split(df, nr_bins):
     return pd.concat(split_df)
 
 
-# TODO: simplify function - last 3 params not used!
 @st.cache_data
 def compute_topics_over_time(
     _topic_model,
     df,
     nr_bins,
-    new_df=None,
-    new_nr_bins=None,
-    new_topics=None,
 ):
-    df = make_dynamic_topics_split(df, nr_bins)
-    if new_nr_bins:
-        new_df = make_dynamic_topics_split(new_df, new_nr_bins)
-        df = pd.concat([df, new_df])
-        _topic_model.topics_ += new_topics
+    df = _make_dynamic_topics_split(df, nr_bins)
     res = _topic_model.topics_over_time(
         df[TEXT_COLUMN],
         df[GROUPED_TIMESTAMP_COLUMN],
         global_tuning=False,
     )
-    if new_nr_bins:
-        _topic_model.topics_ = _topic_model.topics_[: -len(new_topics)]
     return res
 
 
@@ -343,22 +201,6 @@ def print_docs_for_specific_topic(df, topics, topic_number):
     df = df.loc[pd.Series(topics) == topic_number][columns_list]
     for _, doc in df.iterrows():
         st.write(f"[{doc.title}]({doc.url})")
-
-
-@st.cache_data
-def transform_new_data(_topic_model, df, embeddings):
-    """
-    Transform new data using the existing topic model and embeddings.
-
-    Args:
-    _topic_model: The trained BERTopic model
-    df: DataFrame containing the new data
-    embeddings: Pre-computed embeddings for the new data
-
-    Returns:
-    Tuple of (topics, probabilities)
-    """
-    return _topic_model.transform(df[TEXT_COLUMN], embeddings=embeddings)
 
 
 # TODO: Remove "put embeddings in cache" option since it's unadvised due to the large size of embeddings returned by embedding model (sentence and token embeddings)

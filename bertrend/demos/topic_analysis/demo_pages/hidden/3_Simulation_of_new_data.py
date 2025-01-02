@@ -10,7 +10,6 @@ import streamlit as st
 
 from bertrend.demos.demos_utils.icons import WARNING_ICON, ERROR_ICON
 from bertrend.demos.topic_analysis.app_utils import (
-    transform_new_data,
     compute_topics_over_time,
 )
 from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_CONFIG
@@ -24,13 +23,29 @@ from bertrend.demos.demos_utils.state_utils import (
     save_widget_state,
 )
 from bertrend.metrics.metrics import TIME_WEIGHT, TopicMetrics, TEM_x, TEM_y
-from bertrend.utils.data_loading import TIMESTAMP_COLUMN
+from bertrend.utils.data_loading import TIMESTAMP_COLUMN, TEXT_COLUMN
 
 # Restore widget state
 restore_widget_state()
 
 if "tw" not in st.session_state.keys():
     st.session_state["tw"] = TIME_WEIGHT
+
+
+@st.cache_data
+def transform_new_data(_topic_model, df, embeddings):
+    """
+    Transform new data using the existing topic model and embeddings.
+
+    Args:
+    _topic_model: The trained BERTopic model
+    df: DataFrame containing the new data
+    embeddings: Pre-computed embeddings for the new data
+
+    Returns:
+    Tuple of (topics, probabilities)
+    """
+    return _topic_model.transform(df[TEXT_COLUMN], embeddings=embeddings)
 
 
 def main():
