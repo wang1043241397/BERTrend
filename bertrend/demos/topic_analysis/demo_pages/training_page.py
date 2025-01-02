@@ -141,6 +141,7 @@ def train_model():
             min_df=SessionStateManager.get("min_df"),
             top_n_words=SessionStateManager.get("top_n_words"),
             language=SessionStateManager.get("language"),
+            representation_models=SessionStateManager.get("representation_models"),
         )
         embeddings = st.session_state["embeddings"]
         embedding_model_name = st.session_state["embedding_model_name"]

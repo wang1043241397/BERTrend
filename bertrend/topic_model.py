@@ -7,7 +7,12 @@ from typing import Tuple, List, Literal
 
 import numpy as np
 from bertopic import BERTopic
-from bertopic.representation import MaximalMarginalRelevance
+from bertopic.representation import (
+    MaximalMarginalRelevance,
+    OpenAI,
+    KeyBERTInspired,
+    BaseRepresentation,
+)
 from bertopic.vectorizers import ClassTfidfTransformer
 from hdbscan import HDBSCAN
 from loguru import logger
@@ -15,7 +20,9 @@ from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import CountVectorizer
 from umap import UMAP
 
-from bertrend import load_toml_config
+from bertrend import load_toml_config, LLM_CONFIG
+from bertrend.llm_utils.openai_client import OpenAI_Client
+from bertrend.llm_utils.prompts import BERTOPIC_FRENCH_TOPIC_REPRESENTATION_PROMPT
 from bertrend.parameters import (
     DEFAULT_UMAP_N_COMPONENTS,
     DEFAULT_UMAP_N_NEIGHBORS,
@@ -32,6 +39,13 @@ from bertrend.parameters import (
     OUTLIER_REDUCTION_STRATEGY,
     ENGLISH_STOPWORDS,
     DEFAULT_ZEROSHOT_TOPICS,
+    KEYBERT_TOP_N_WORDS,
+    KEYBERT_NR_REPR_DOCS,
+    KEYBERT_NR_CANDIDATE_WORDS,
+    OPENAI_NR_DOCS,
+    MMR_REPRESENTATION_MODEL,
+    OPENAI_REPRESENTATION_MODEL,
+    KEYBERTINSPIRED_REPRESENTATION_MODEL,
 )
 
 
@@ -97,6 +111,7 @@ class TopicModel:
         ] = OUTLIER_REDUCTION_STRATEGY,
         mmr_diversity: float = DEFAULT_MMR_DIVERSITY,
         zeroshot_topic_list: List[str] = DEFAULT_ZEROSHOT_TOPICS,
+        representation_models=None,
     ):
         self.umap_n_components = umap_n_components
         self.umap_n_neighbors = umap_n_neighbors
@@ -111,39 +126,14 @@ class TopicModel:
         self.outlier_reduction_strategy = outlier_reduction_strategy
         self.mmr_diversity = mmr_diversity
         self.zeroshot_topic_list = zeroshot_topic_list
+        self.representation_models = (
+            representation_models
+            if representation_models is not None
+            else [MMR_REPRESENTATION_MODEL]
+        )
 
         # Initialize models based on those parameters
         self._initialize_models()
-
-    def _initialize_models(self):
-        self.umap_model = UMAP(
-            n_components=self.umap_n_components,
-            n_neighbors=self.umap_n_neighbors,
-            min_dist=self.umap_min_dist,
-            random_state=42,
-            metric="cosine",
-        )
-
-        self.hdbscan_model = HDBSCAN(
-            min_cluster_size=self.hdbscan_min_cluster_size,
-            min_samples=self.hdbscan_min_samples,
-            metric="euclidean",
-            cluster_selection_method=self.hdbscan_cluster_selection_method,
-            prediction_data=True,
-        )
-
-        self.stopword_set = (
-            STOPWORDS if self.language == "French" else ENGLISH_STOPWORDS
-        )
-        self.vectorizer_model = CountVectorizer(
-            stop_words=self.stopword_set,
-            min_df=self.min_df,
-            ngram_range=self.vectorizer_ngram_range,
-        )
-        self.mmr_model = MaximalMarginalRelevance(diversity=self.mmr_diversity)
-        self.ctfidf_model = ClassTfidfTransformer(
-            reduce_frequent_words=True, bm25_weighting=False
-        )
 
     @classmethod
     def from_config(cls, config: Path) -> "TopicModel":
@@ -179,7 +169,80 @@ class TopicModel:
             zeroshot_topic_list=parameters.get(
                 "zeroshot_topic_list", DEFAULT_ZEROSHOT_TOPICS
             ),
+            representation_models=parameters.get(
+                "representation_models", [MMR_REPRESENTATION_MODEL]
+            ),
         )
+
+    def _initialize_models(self):
+        self.umap_model = UMAP(
+            n_components=self.umap_n_components,
+            n_neighbors=self.umap_n_neighbors,
+            min_dist=self.umap_min_dist,
+            random_state=42,
+            metric="cosine",
+        )
+
+        self.hdbscan_model = HDBSCAN(
+            min_cluster_size=self.hdbscan_min_cluster_size,
+            min_samples=self.hdbscan_min_samples,
+            metric="euclidean",
+            cluster_selection_method=self.hdbscan_cluster_selection_method,
+            prediction_data=True,
+        )
+
+        self.stopword_set = (
+            STOPWORDS if self.language == "French" else ENGLISH_STOPWORDS
+        )
+        self.vectorizer_model = CountVectorizer(
+            stop_words=self.stopword_set,
+            min_df=self.min_df,
+            ngram_range=self.vectorizer_ngram_range,
+        )
+        self.mmr_model = MaximalMarginalRelevance(diversity=self.mmr_diversity)
+        self.ctfidf_model = ClassTfidfTransformer(
+            reduce_frequent_words=True, bm25_weighting=False
+        )
+
+    def _initialize_openai_representation(self):
+        return OpenAI(
+            client=OpenAI_Client(
+                api_key=LLM_CONFIG["api_key"],
+                endpoint=LLM_CONFIG["endpoint"],
+                model=LLM_CONFIG["model"],
+            ).llm_client,
+            model=LLM_CONFIG["model"],
+            nr_docs=OPENAI_NR_DOCS,
+            prompt=(
+                BERTOPIC_FRENCH_TOPIC_REPRESENTATION_PROMPT
+                if self.language == "French"
+                else None
+            ),
+            chat=True,
+        )
+
+    @classmethod
+    def _initialize_keybert_representation(cls):
+        return KeyBERTInspired(
+            top_n_words=KEYBERT_TOP_N_WORDS,
+            nr_repr_docs=KEYBERT_NR_REPR_DOCS,
+            nr_candidate_words=KEYBERT_NR_CANDIDATE_WORDS,
+        )
+
+    def _get_representation_models(
+        self,
+    ) -> BaseRepresentation | List[BaseRepresentation]:
+        # NB. If OpenAI representation model is present, it will be used in separate step
+        model_map = {
+            MMR_REPRESENTATION_MODEL: self.mmr_model,
+            KEYBERTINSPIRED_REPRESENTATION_MODEL: self._initialize_keybert_representation(),
+        }
+        models = [
+            model_map[rep]
+            for rep in self.representation_models
+            if rep != OPENAI_REPRESENTATION_MODEL and rep in model_map
+        ]
+        return models[0] if len(models) == 1 else models
 
     def fit(
         self,
@@ -227,7 +290,7 @@ class TopicModel:
                 hdbscan_model=self.hdbscan_model,
                 vectorizer_model=self.vectorizer_model,
                 ctfidf_model=self.ctfidf_model,
-                representation_model=self.mmr_model,
+                representation_model=self._get_representation_models(),
                 zeroshot_topic_list=zeroshot_topic_list,
                 zeroshot_min_similarity=zeroshot_min_similarity,
             )
@@ -252,8 +315,19 @@ class TopicModel:
                 topics=new_topics,
                 vectorizer_model=self.vectorizer_model,
                 ctfidf_model=self.ctfidf_model,
-                representation_model=self.mmr_model,
+                representation_model=self._get_representation_models(),
             )
+
+            # If OpenAI model is present, apply it after reducing outliers
+            if OPENAI_REPRESENTATION_MODEL in self.representation_models:
+                logger.info("Applying OpenAI representation model...")
+                backup_representation_model = topic_model.representation_model
+                topic_model.update_topics(
+                    docs=docs,
+                    topics=new_topics,
+                    representation_model=self._initialize_openai_representation(),
+                )
+                topic_model.representation_model = backup_representation_model
 
             logger.success("\tBERTopic model fitted successfully")
             output = TopicModelOutput(topic_model)

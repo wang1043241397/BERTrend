@@ -1,7 +1,7 @@
 # Example of configuration file to be used for topic modelling
 
-[bertopic_parameters]
 # BERTopic Hyperparameters
+[bertopic_parameters]
 umap_n_components = 5
 umap_n_neighbors = 5
 umap_min_dist = 0.0
@@ -17,3 +17,4 @@ mmr_diversity = 0.3
 outlier_reduction_strategy = "c-tf-idf"  # or "embeddings"
 zeroshot_topics = []  # default list of topics
 language="English" # or French
+representation_models=["MaximalMarginalRelevance"] # and / or "KeyBERTInspired", "OpenAI"

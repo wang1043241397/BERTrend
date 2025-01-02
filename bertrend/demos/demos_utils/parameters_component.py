@@ -21,6 +21,8 @@ from bertrend.parameters import (
     LANGUAGES,
     ENGLISH_EMBEDDING_MODELS,
     FRENCH_EMBEDDING_MODELS,
+    REPRESENTATION_MODELS,
+    MMR_REPRESENTATION_MODEL,
 )
 
 
@@ -164,6 +166,8 @@ def display_bertopic_hyperparameters():
                     on_change=save_widget_state,
                 )
 
+    display_representation_model_options()
+
 
 def display_bertrend_hyperparameters():
     with st.expander("Merging Hyperparameters", expanded=False):
@@ -187,5 +191,18 @@ def display_bertrend_hyperparameters():
             DEFAULT_ZEROSHOT_MIN_SIMILARITY,
             0.01,
             key="zeroshot_min_similarity",
+            on_change=save_widget_state,
+        )
+
+
+def display_representation_model_options():
+    """Representation model options for Streamlit UI"""
+    with st.expander("Representation model selection", expanded=False):
+        register_widget("representation_models")
+        selected_models = st.multiselect(
+            label="Select representation models",
+            options=REPRESENTATION_MODELS,
+            default=MMR_REPRESENTATION_MODEL,
+            key="representation_models",
             on_change=save_widget_state,
         )

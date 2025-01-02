@@ -3,10 +3,8 @@
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
 
-# Configuration for BERTrend
-
-[bertopic_parameters]
 # BERTopic Hyperparameters
+[bertopic_parameters]
 umap_n_components = 5
 umap_n_neighbors = 5
 umap_min_dist = 0.0
@@ -23,13 +21,15 @@ outlier_reduction_strategy = "c-tf-idf"  # or "embeddings"
 # other constants
 zeroshot_topics = []  # default list of topics
 language="French" # or "English"
+representation_models=["MaximalMarginalRelevance"] # and / or "KeyBERTInspired", "OpenAI"
 
+# BERTrend Hyperparameters
 [bertrend_parameters]
 # signal classification settings
 signal_classif_lower_bound = 10
 signal_classif_upper_bound = 75
 
-
+# Embedding service parameters
 [embedding_service]
 # Indicates if BERTrend shall use local embedding service (run by BERTrend) or if the embedding service
 # is delegated to an external service. If set to false, the other properties shall be set properly.
@@ -39,6 +39,7 @@ model_name = "OrdalieTech/Solon-embeddings-large-0.1"
 host = "10.132.6.110"
 port = 6464
 
+# LLM service parameters
 [llm_service]
 # Specifies here the information about the LLM to be used to benefit from some LLM features such as
 # improved topic description and topic analysis over time

@@ -54,6 +54,11 @@ FRENCH_EMBEDDING_MODELS = [
     "antoinelouis/biencoder-distilcamembert-mmarcoFR",
 ]
 
+# MODEL REPRESENTATIONS
+MMR_REPRESENTATION_MODEL = "MaximalMarginalRelevance"
+KEYBERTINSPIRED_REPRESENTATION_MODEL = "KeyBERTInspired"
+OPENAI_REPRESENTATION_MODEL = "OpenAI"
+
 # BERTopic Hyperparameters
 DEFAULT_UMAP_N_COMPONENTS = BERTOPIC_PARAMETERS["umap_n_components"]
 DEFAULT_UMAP_N_NEIGHBORS = BERTOPIC_PARAMETERS["umap_n_neighbors"]
@@ -68,14 +73,20 @@ BERTOPIC_SERIALIZATION = BERTOPIC_PARAMETERS["bertopic_serialization"]
 DEFAULT_MMR_DIVERSITY = BERTOPIC_PARAMETERS["mmr_diversity"]
 DEFAULT_UMAP_MIN_DIST = BERTOPIC_PARAMETERS["umap_min_dist"]
 OUTLIER_REDUCTION_STRATEGY = BERTOPIC_PARAMETERS["outlier_reduction_strategy"]
-# Other Constants
 DEFAULT_ZEROSHOT_TOPICS = BERTOPIC_PARAMETERS["zeroshot_topics"]
+LANGUAGES = ["French", "English"]
+HDBSCAN_CLUSTER_SELECTION_METHODS = ["eom", "leaf"]
+VECTORIZER_NGRAM_RANGES = [(1, 2), (1, 1), (2, 2)]
+REPRESENTATION_MODELS = [
+    MMR_REPRESENTATION_MODEL,
+    KEYBERTINSPIRED_REPRESENTATION_MODEL,
+    OPENAI_REPRESENTATION_MODEL,
+]
 
 # BERTrend parameters
 # Signal classification Settings
 SIGNAL_CLASSIF_LOWER_BOUND = BERTREND_PARAMETERS["signal_classif_lower_bound"]
 SIGNAL_CLASSIF_UPPER_BOUND = BERTREND_PARAMETERS["signal_classif_upper_bound"]
-
 
 # Embedding Settings
 EMBEDDING_DTYPES = ["float32", "float16", "bfloat16"]
@@ -83,11 +94,11 @@ EMBEDDING_BATCH_SIZE = 5000
 EMBEDDING_MAX_SEQ_LENGTH = 512
 EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-# Other constants
-LANGUAGES = ["French", "English"]
-HDBSCAN_CLUSTER_SELECTION_METHODS = ["eom", "leaf"]
-VECTORIZER_NGRAM_RANGES = [(1, 2), (1, 1), (2, 2)]
-
+# Representation models parameters
+KEYBERT_NR_REPR_DOCS = (5,)
+KEYBERT_NR_CANDIDATE_WORDS = (40,)
+KEYBERT_TOP_N_WORDS = 20
+OPENAI_NR_DOCS = 5
 
 # Data Processing
 MIN_CHARS_DEFAULT = 100
