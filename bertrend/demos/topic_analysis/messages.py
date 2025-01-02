@@ -8,3 +8,6 @@ SAVE_MODEL_REMINDER = "Don't forget to save your model!"
 NO_MODEL_AVAILABLE_ERROR = "No model available to save. Please train a model first."
 NO_DOCUMENT_FOR_TOPIC = "No documents found for the selected topic."
 TRAIN_MODEL_FIRST_ERROR = "Please train a model first."
+REMOTE_EMBEDDING_SEVICE_TYPE_NOT_SUPPORTED_ERROR = (
+    "These visualizations are only available if a local embedding service is used."
+)

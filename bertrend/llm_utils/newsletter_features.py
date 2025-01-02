@@ -71,10 +71,12 @@ def generate_newsletter(
         str: Newsletter in Markdown format
     """
     logger.debug("Generating newsletters...")
+    if not openai_model_name:
+        openai_model_name = LLM_CONFIG["model"]
     openai_api = OpenAI_Client(
         api_key=LLM_CONFIG["api_key"],
         endpoint=LLM_CONFIG["endpoint"],
-        model=LLM_CONFIG["model"],
+        model=openai_model_name,
     )
 
     # Adapt language for date

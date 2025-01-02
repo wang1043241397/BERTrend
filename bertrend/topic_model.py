@@ -31,6 +31,7 @@ from bertrend.parameters import (
     DEFAULT_MMR_DIVERSITY,
     OUTLIER_REDUCTION_STRATEGY,
     ENGLISH_STOPWORDS,
+    DEFAULT_ZEROSHOT_TOPICS,
 )
 
 
@@ -95,6 +96,7 @@ class TopicModel:
             "c-tf-idf", "embeddings"
         ] = OUTLIER_REDUCTION_STRATEGY,
         mmr_diversity: float = DEFAULT_MMR_DIVERSITY,
+        zeroshot_topic_list: List[str] = DEFAULT_ZEROSHOT_TOPICS,
     ):
         self.umap_n_components = umap_n_components
         self.umap_n_neighbors = umap_n_neighbors
@@ -108,6 +110,7 @@ class TopicModel:
         self.language = language
         self.outlier_reduction_strategy = outlier_reduction_strategy
         self.mmr_diversity = mmr_diversity
+        self.zeroshot_topic_list = zeroshot_topic_list
 
         # Initialize models based on those parameters
         self._initialize_models()
@@ -173,12 +176,15 @@ class TopicModel:
                 "outlier_reduction_strategy", OUTLIER_REDUCTION_STRATEGY
             ),
             mmr_diversity=parameters.get("mmr_diversity", DEFAULT_MMR_DIVERSITY),
+            zeroshot_topic_list=parameters.get(
+                "zeroshot_topic_list", DEFAULT_ZEROSHOT_TOPICS
+            ),
         )
 
     def fit(
         self,
         docs: List[str],
-        embedding_model: SentenceTransformer,
+        embedding_model: SentenceTransformer | str,
         embeddings: np.ndarray,
         zeroshot_topic_list=None,
         zeroshot_min_similarity: float = 0,
@@ -188,7 +194,7 @@ class TopicModel:
 
         Args:
             docs (List[str]): List of documents.
-            embedding_model (SentenceTransformer): Sentence transformer model for embeddings.
+            embedding_model (SentenceTransformer | str): Sentence transformer (or associated model name) model for embeddings.
             embeddings (np.ndarray): Precomputed document embeddings.
             umap_model (UMAP): UMAP model for dimensionality reduction.
             hdbscan_model (HDBSCAN): HDBSCAN model for clustering.
@@ -202,9 +208,8 @@ class TopicModel:
             BERTopic: A fitted BERTopic model.
         """
         if zeroshot_topic_list is None:
-            zeroshot_topic_list = list()
-        if zeroshot_topic_list is None:
-            zeroshot_topic_list = []
+            # use value assigned at creation time
+            zeroshot_topic_list = self.zeroshot_topic_list
         logger.debug(
             f"\tCreating topic model with zeroshot_topic_list: {zeroshot_topic_list}"
         )

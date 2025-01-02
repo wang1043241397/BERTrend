@@ -3,7 +3,7 @@
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
 import json
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Literal
 
 import numpy as np
 import pandas as pd
@@ -25,9 +25,11 @@ from bertrend.parameters import (
 class EmbeddingService(BaseEmbedder):
     def __init__(
         self,
-        local: bool = True,
-        model_name: str = None,
-        embedding_dtype: str = None,
+        local: bool = EMBEDDING_CONFIG.get("use_local", True),
+        model_name: str = EMBEDDING_CONFIG.get("model_name", None),
+        embedding_dtype: Literal[
+            "float32", "float16", "bfloat16"
+        ] = EMBEDDING_CONFIG.get("embedding_dtype", "float32"),
         host: str = EMBEDDING_CONFIG["host"],
         port: str = EMBEDDING_CONFIG["port"],
     ):
@@ -41,7 +43,6 @@ class EmbeddingService(BaseEmbedder):
         self.embedding_dtype = embedding_dtype
 
     def embed(self, texts: Union[List[str], pd.Series], verbose: bool = False) -> Tuple[
-        str | SentenceTransformer,
         np.ndarray,
         List[List[str]] | None,
         List[np.ndarray] | None,
@@ -56,7 +57,7 @@ class EmbeddingService(BaseEmbedder):
         Args:
             texts (Union[List[str], pd.Series]): A list of text documents to be embedded.
             embedding_model_name (str): The name of the Sentence Transformer model to use.
-            embedding_dtype (str): The data type to use for the embeddings ('float32', 'float16', or 'bfloat16').
+            embedding_dtype (Literal): The data type to use for the embeddings ('float32', 'float16', or 'bfloat16').
             embedding_device (str, optional): The device to use for embedding ('cuda' or 'cpu').
                                               Defaults to 'cuda' if available, else 'cpu'.
             batch_size (i   nt, optional): The number of texts to process in each batch. Defaults to 32.
@@ -86,7 +87,7 @@ class EmbeddingService(BaseEmbedder):
         embedding_device: str = EMBEDDING_DEVICE,
         batch_size: int = EMBEDDING_BATCH_SIZE,
         max_seq_length: int = EMBEDDING_MAX_SEQ_LENGTH,
-    ) -> Tuple[SentenceTransformer, np.ndarray, List[List[str]], List[np.ndarray]]:
+    ) -> Tuple[np.ndarray, List[List[str]], List[np.ndarray]]:
         """
         Embed a list of documents using a Sentence Transformer model.
 
@@ -177,11 +178,11 @@ class EmbeddingService(BaseEmbedder):
             tokenizer, token_ids, token_embeddings, language="french"
         )
 
-        return self.embedding_model, embeddings, token_strings, token_embeddings
+        return embeddings, token_strings, token_embeddings
 
     def _remote_embed_documents(
         self, texts: List[str], show_progress_bar: bool = True
-    ) -> Tuple[str, np.ndarray, None, None]:
+    ) -> Tuple[np.ndarray, None, None]:
         """
         Embed a list of documents using a Sentence Transformer model.
 
@@ -214,7 +215,8 @@ class EmbeddingService(BaseEmbedder):
         if response.status_code == 200:
             embeddings = np.array(response.json()["embeddings"])
             logger.debug(f"Computing embeddings done for batch")
-            return self._get_remote_model_name(), embeddings, None, None
+            self.embedding_model = self._get_remote_model_name()
+            return embeddings, None, None
         else:
             logger.error(f"Error: {response.status_code}")
             raise Exception(f"Error: {response.status_code}")

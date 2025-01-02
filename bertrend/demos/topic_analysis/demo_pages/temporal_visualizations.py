@@ -9,7 +9,11 @@ import pandas as pd
 import streamlit as st
 
 from bertrend.demos.demos_utils.icons import ERROR_ICON, INFO_ICON
-from bertrend.demos.topic_analysis.messages import TRAIN_MODEL_FIRST_ERROR
+from bertrend.demos.demos_utils.session_state_manager import SessionStateManager
+from bertrend.demos.topic_analysis.messages import (
+    TRAIN_MODEL_FIRST_ERROR,
+    REMOTE_EMBEDDING_SEVICE_TYPE_NOT_SUPPORTED_ERROR,
+)
 from bertrend.metrics.temporal_metrics_embedding import TempTopic
 from bertrend.demos.topic_analysis.app_utils import (
     compute_topics_over_time,
@@ -39,6 +43,16 @@ def check_model_trained():
     if "topic_model" not in st.session_state:
         st.error(
             TRAIN_MODEL_FIRST_ERROR,
+            icon=ERROR_ICON,
+        )
+        st.stop()
+
+
+def check_embedding_type():
+    """Check the embedding service type. Remote embedding service currently not support these visualizations."""
+    if SessionStateManager.get("embedding_service_type", "local") != "local":
+        st.error(
+            REMOTE_EMBEDDING_SEVICE_TYPE_NOT_SUPPORTED_ERROR,
             icon=ERROR_ICON,
         )
         st.stop()
@@ -527,6 +541,7 @@ def main():
     """Main function to run the Streamlit topic_analysis."""
     # Check if model is trained
     check_model_trained()
+    check_embedding_type()
 
     st.title("Temporal visualizations of topics")
 

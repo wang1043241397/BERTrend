@@ -13,6 +13,7 @@ from sentence_transformers import SentenceTransformer
 from transformers import AutoTokenizer
 
 from bertrend import DATA_PATH
+from bertrend.parameters import MIN_CHARS_DEFAULT
 
 # Define column names
 TEXT_COLUMN = "text"
@@ -75,8 +76,8 @@ def load_data(
 
 def split_data(
     df: pd.DataFrame,
-    min_chars: int,
-    split_by_paragraph: Literal["no", "yes", "enhanced"],
+    min_chars: int = MIN_CHARS_DEFAULT,
+    split_by_paragraph: Literal["no", "yes", "enhanced"] = "yes",
     embedding_model_name: str = None,
 ) -> pd.DataFrame | None:
     """

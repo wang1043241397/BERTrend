@@ -34,13 +34,13 @@ def display_embed_documents_component():
                 TEXT_COLUMN
             ].tolist()
 
-            embedding_model, embeddings, token_strings, token_embeddings = (
-                embedding_service.embed(
-                    texts=texts,
-                )
+            embeddings, token_strings, token_embeddings = embedding_service.embed(
+                texts=texts,
             )
 
-            SessionStateManager.set("embedding_model", embedding_model)
+            SessionStateManager.set(
+                "embedding_model", embedding_service.embedding_model
+            )
             SessionStateManager.set("embeddings", embeddings)
             SessionStateManager.set("token_strings", token_strings)
             SessionStateManager.set("token_embeddings", token_embeddings)

@@ -5,7 +5,6 @@
 import os
 from pathlib import Path
 
-from bertrend.parameters import BERTOPIC_SERIALIZATION
 from bertrend.utils.config_utils import load_toml_config
 
 BERTREND_DEFAULT_CONFIG_PATH = Path(__file__).parent / "bertrend.toml"

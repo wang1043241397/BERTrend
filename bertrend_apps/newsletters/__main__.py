@@ -2,46 +2,43 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
-
+import ast
 import glob
 import os
 from pydoc import locate
+from typing import List, Tuple
 
 import pandas as pd
 import typer
 from datetime import datetime
 
 from bertopic import BERTopic
-from bertopic.vectorizers import ClassTfidfTransformer
 from google.auth.exceptions import RefreshError
-from hdbscan import HDBSCAN
 from loguru import logger
 from pathlib import Path
 
-from nltk.corpus import stopwords
-from sklearn.feature_extraction.text import CountVectorizer
-from umap import UMAP
+from numpy import ndarray
 
 from bertrend import FEED_BASE_PATH, BEST_CUDA_DEVICE, OUTPUT_PATH
 from bertrend.parameters import BERTOPIC_SERIALIZATION
 from bertrend.services.embedding_service import EmbeddingService
+from bertrend.topic_model import TopicModel
 from bertrend.utils.config_utils import load_toml_config
 from bertrend.utils.data_loading import (
-    enhanced_split_df_by_paragraphs,
     TIMESTAMP_COLUMN,
     TEXT_COLUMN,
     load_data,
+    split_data,
 )
 from bertrend.llm_utils.newsletter_features import (
     generate_newsletter,
     export_md_string,
 )
-from bertrend.train import train_BERTopic
 from bertrend_apps.common.mail_utils import get_credentials, send_email
 from bertrend_apps.common.crontab_utils import schedule_newsletter
 
 # Config sections
-BERTOPIC_CONFIG_SECTION = "bertopic_config"
+BERTOPIC_CONFIG_SECTION = "bertopic_parameters"
 LEARNING_STRATEGY_SECTION = "learning_strategy"
 NEWSLETTER_SECTION = "newsletter"
 
@@ -68,7 +65,7 @@ if __name__ == "__main__":
         ),
     ):
         """
-        Creates a newsletters associated to a data feed.
+        Creates a newsletter associated to a data feed.
         """
         logger.info(f"Reading newsletters configuration file: {newsletter_toml_path}")
 
@@ -83,8 +80,8 @@ if __name__ == "__main__":
         logger.info(f"Loading dataset...")
         learning_type = learning_strategy.get("learning_strategy", INFERENCE_ONLY)
         model_path = learning_strategy.get("bertopic_model_path", None)
-        split_data_by_paragraphs = learning_strategy.getboolean(
-            "split_data_by_paragraphs", False
+        split_data_by_paragraphs = learning_strategy.get(
+            "split_data_by_paragraphs", "no"
         )
         if model_path:
             model_path = OUTPUT_PATH / model_path
@@ -103,91 +100,95 @@ if __name__ == "__main__":
 
         # split data by paragraphs if required
         dataset = (
-            (
-                enhanced_split_df_by_paragraphs(original_dataset)
-                .drop("index", axis=1)
-                .sort_values(
-                    by=TIMESTAMP_COLUMN,
-                    ascending=False,
-                )
-                .reset_index(drop=True)
-                .reset_index()
+            split_data(original_dataset)
+            .drop("index", axis=1)
+            .sort_values(
+                by=TIMESTAMP_COLUMN,
+                ascending=False,
             )
-            if split_data_by_paragraphs
-            else original_dataset
+            .reset_index(drop=True)
+            .reset_index()
+        )
+        # Deduplicate using all columns
+        dataset = dataset.drop_duplicates()
+        logger.info(f"Dataset size: {len(dataset)}")
+
+        # Embed dataset
+        logger.info("Computation of embeddings for new data...")
+        embedding_model_name = config["embedding_service"].get("model_name")
+        embeddings, _, _ = EmbeddingService(model_name=embedding_model_name).embed(
+            dataset[TEXT_COLUMN]
         )
 
-        logger.info(f"Dataset size: {len(dataset.index)}")
         if learning_type == INFERENCE_ONLY:
             # predict only
             topic_model = _load_topic_model(model_path)
             logger.info(f"Topic model loaded from {model_path}")
-            logger.info("Computation of embeddings for new data...")
-            embeddings = EmbeddingService(
-                config.get("topic_model.embedding", "model_name")
-            ).embed(dataset[TEXT_COLUMN])
-            topics, probs = topic_model.transform(dataset[TEXT_COLUMN], embeddings)
+            topics, _ = topic_model.transform(dataset[TEXT_COLUMN], embeddings)
 
         else:
-            # learn and predict
-            topics, topic_model = _train_topic_model(config, dataset)
             # train topic model with the dataset
+            topics, topic_model = _train_topic_model(
+                config_file=newsletter_toml_path,
+                dataset=dataset,
+                embedding_model=embedding_model_name,
+                embeddings=embeddings,
+            )
+            # save model
             if model_path:
                 logger.info(f"Saving topic model to: {model_path}")
                 _save_topic_model(
                     topic_model,
-                    config.get("topic_model.embedding", "model_name"),
+                    config["embedding_service"].get("model_name"),
                     model_path,
                 )
 
-        logger.debug(f"Number of topics: {len(topic_model.get_topic_info()[1:])}")
+            logger.debug(f"Number of topics: {len(topic_model.get_topic_info()[1:])}")
 
         summarizer_class = locate(newsletter_params.get("summarizer_class"))
 
         # If no model_name is given, set default model name to env variable $DEFAULT_MODEL_NAME
-        openai_model_name = newsletter_params.get("openai_model_name", "")
-        if not openai_model_name:
-            openai_model_name = os.getenv("DEFAULT_MODEL_NAME")
+        openai_model_name = newsletter_params.get("openai_model_name", None)
 
         # generate newsletters
-        logger.info(f"Generating newsletters...")
+        logger.info(f"Generating newsletter...")
         title = newsletter_params.get("title")
         newsletter_md, date_from, date_to = generate_newsletter(
             topic_model=topic_model,
             df=original_dataset,
             topics=topics,
             df_split=dataset if split_data_by_paragraphs else None,
-            top_n_topics=newsletter_params.getliteral("top_n_topics"),
-            top_n_docs=newsletter_params.getliteral("top_n_docs"),
+            top_n_topics=newsletter_params.get("top_n_topics"),
+            top_n_docs=newsletter_params.get("top_n_docs"),
             newsletter_title=title,
             summarizer_class=summarizer_class,
             summary_mode=newsletter_params.get("summary_mode"),
             prompt_language=newsletter_params.get("prompt_language", "fr"),
-            improve_topic_description=newsletter_params.getboolean(
+            improve_topic_description=newsletter_params.get(
                 "improve_topic_description", False
             ),
             openai_model_name=openai_model_name,
         )
 
-        if newsletter_params.getboolean("debug", True):
-            conf_dict = {
-                section: dict(config[section]) for section in config.sections()
-            }
+        if newsletter_params.get("debug", True):
+            conf_dict = {section: dict(config[section]) for section in config.keys()}
             newsletter_md += f"\n\n## Debug: config\n\n{conf_dict} \n\n"
 
+        # Save newsletter
         output_dir = OUTPUT_PATH / newsletter_params.get("output_directory")
         output_format = newsletter_params.get("output_format")
         output_path = (
             output_dir
             / f"{datetime.today().strftime('%Y-%m-%d')}_{newsletter_params.get('id')}"
-            f"_{data_feed_cfg.get('data-feed','id')}.{output_format}"
+            f"_{data_feed_cfg['data-feed'].get('id')}.{output_format}"
         )
         export_md_string(newsletter_md, output_path, format=output_format)
         logger.info(f"Newsletter exported in {output_format} format: {output_path}")
 
-        # send newsletters by email
+        # Send newsletter by email
         mail_title = title + f" ({date_from}/{date_to})"
-        recipients = newsletter_params.getliteral("recipients", [])
+        # string to list conversion for recipients
+        recipients = ast.literal_eval(newsletter_params.get("recipients", "[]"))
         try:
             if recipients:
                 credentials = get_credentials()
@@ -199,47 +200,26 @@ if __name__ == "__main__":
         except RefreshError as re:
             logger.error(f"Problem with token for email, please regenerate it: {re}")
 
-    def _train_topic_model(config: dict, dataset: pd.DataFrame):
-        # Step 1 - Embedding model
-        embedding_model_name = config["topic_model"]["embedding"].get("model_name")
-        # Step 2 - Dimensionality reduction algorithm
-        umap_model = UMAP(**config["topic_model"]["umap"])
-        # Step 3 - Clustering algorithm
-        hdbscan_model = HDBSCAN(**config["topic_model"]["hdbscan"])
-        # Step 4 - Count vectorizer
-        vectorizer_model = CountVectorizer(
-            stop_words=stopwords.words(
-                config["topic_model"]["count_vectorizer"].get("stop_words")
-            ),
-            ngram_range=config["topic_model.count_vectorizer"]["ngram_range"],
-            min_df=config["topic_model.count_vectorizer"]["min_df"],
+    def _train_topic_model(
+        config_file: Path,
+        dataset: pd.DataFrame,
+        embedding_model: str,
+        embeddings: ndarray,
+    ) -> Tuple[List, BERTopic]:
+        topic_model = TopicModel.from_config(config_file)
+        output = topic_model.fit(
+            docs=dataset[TEXT_COLUMN],
+            embedding_model=embedding_model,
+            embeddings=embeddings,
         )
-        # Step 5 - c-TF-IDF model
-        ctfidf_model = ClassTfidfTransformer(**config["topic_model.c_tf_idf"])
-        # Step 6 - nb topic params
-        topic_params = config["topic_model.topics"]
-        if topic_params.get("nr_topics") == 0:
-            topic_params["nr_topics"] = None
-
-        topic_model, topics, _, _, _, _ = train_BERTopic(
-            **topic_params,
-            full_dataset=dataset,
-            embedding_model_name=embedding_model_name,
-            umap_model=umap_model,
-            hdbscan_model=hdbscan_model,
-            vectorizer_model=vectorizer_model,
-            ctfidf_model=ctfidf_model,
-            use_cache=False,
-        )
-
-        return topics, topic_model
+        return output.topics, output.topic_model
 
     def _load_feed_data(data_feed_cfg: dict, learning_strategy: str) -> pd.DataFrame:
-        data_dir = data_feed_cfg.get("data-feed", "feed_dir_path")
+        data_dir = data_feed_cfg["data-feed"].get("feed_dir_path")
         logger.info(f"Loading data from feed dir: {FEED_BASE_PATH / data_dir}")
         # filter files according to extension and pattern
         list_all_files = glob.glob(
-            f"{FEED_BASE_PATH}/{data_dir}/*{data_feed_cfg.get('data-feed', 'id')}*.jsonl*"
+            f"{FEED_BASE_PATH}/{data_dir}/*{data_feed_cfg['data-feed'].get('id')}*.jsonl*"
         )
         latest_file = max(list_all_files, key=os.path.getctime)
 
@@ -289,3 +269,6 @@ if __name__ == "__main__":
         schedule_newsletter(
             newsletter_toml_cfg_path, data_feed_toml_cfg_path, cuda_devices
         )
+
+    # Main app
+    app()

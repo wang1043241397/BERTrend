@@ -21,7 +21,8 @@ bertopic_serialization = "safetensors"  # or pickle
 mmr_diversity = 0.3
 outlier_reduction_strategy = "c-tf-idf"  # or "embeddings"
 # other constants
-zeroshot_topics = ""  # empty string or a default list of topics
+zeroshot_topics = []  # default list of topics
+language="French" # or "English"
 
 [bertrend_parameters]
 # signal classification settings
@@ -33,8 +34,8 @@ signal_classif_upper_bound = 75
 # Indicates if BERTrend shall use local embedding service (run by BERTrend) or if the embedding service
 # is delegated to an external service. If set to false, the other properties shall be set properly.
 # It is generally more efficient to use a dedicated service for embeddings.
-use_local = false
-local_embedding_name = "OrdalieTech/Solon-embeddings-large-0.1"
+use_local = true
+model_name = "OrdalieTech/Solon-embeddings-large-0.1"
 host = "10.132.6.110"
 port = 6464
 
