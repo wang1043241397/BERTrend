@@ -148,10 +148,9 @@ def train_model():
             representation_models=SessionStateManager.get("representation_models"),
         )
         embeddings = st.session_state["embeddings"]
-        embedding_model_name = st.session_state["embedding_model_name"]
         topic_model_output = topic_model.fit(
             docs=dataset,
-            embedding_model=embedding_model_name,
+            embedding_model=st.session_state["embedding_model_name"],
             embeddings=embeddings,
         )
         bertopic = topic_model_output.topic_model

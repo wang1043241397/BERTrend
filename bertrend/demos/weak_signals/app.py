@@ -32,6 +32,9 @@ from bertrend.demos.demos_utils.icons import (
     TOPIC_ICON,
     TREND_ICON,
     ERROR_ICON,
+    ANALYSIS_ICON,
+    MODEL_TRAINING_ICON,
+    DATA_LOADING_ICON,
 )
 from bertrend.demos.demos_utils.messages import (
     NO_EMBEDDINGS_WARNING_MESSAGE,
@@ -174,7 +177,7 @@ def load_data_page():
 def training_page():
     st.header("Model Training")
 
-    if not SessionStateManager.get("data_embedded", False):
+    if not SessionStateManager.get("data_embedded"):
         st.warning(NO_EMBEDDINGS_WARNING_MESSAGE, icon=WARNING_ICON)
         st.stop()
 
@@ -306,7 +309,7 @@ def training_page():
 def analysis_page():
     st.header("Results Analysis")
 
-    if not SessionStateManager.get("data_embedded", False):
+    if not SessionStateManager.get("data_embedded"):
         st.warning(
             EMBED_TRAIN_WARNING,
             icon=WARNING_ICON,
@@ -520,7 +523,13 @@ def main():
         display_bertrend_hyperparameters()
 
     # Main content
-    tab1, tab2, tab3 = st.tabs(["Data Loading", "Model Training", "Results Analysis"])
+    tab1, tab2, tab3 = st.tabs(
+        [
+            DATA_LOADING_ICON + " Data Loading",
+            MODEL_TRAINING_ICON + " Model Training",
+            ANALYSIS_ICON + " Results Analysis",
+        ]
+    )
 
     with tab1:
         load_data_page()

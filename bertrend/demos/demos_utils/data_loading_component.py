@@ -18,6 +18,8 @@ from bertrend.demos.demos_utils.icons import (
     CSV_ICON,
     PARQUET_ICON,
     XLSX_ICON,
+    CLIENT_STORAGE_ICON,
+    SERVER_STORAGE_ICON,
 )
 from bertrend.demos.demos_utils.messages import NO_DATA_AFTER_PREPROCESSING_MESSAGE
 from bertrend.demos.demos_utils.state_utils import (
@@ -99,7 +101,12 @@ def display_data_loading_component():
     state variable "time_filtered_df".
     """
     # Find files in the current directory and subdirectories
-    tab1, tab2 = st.tabs(["Data from local storage", "Data from server data"])
+    tab1, tab2 = st.tabs(
+        [
+            CLIENT_STORAGE_ICON + " Data from local storage",
+            SERVER_STORAGE_ICON + " Data from server data",
+        ]
+    )
     compatible_extensions = FORMAT_ICONS.keys()
 
     with tab1:
