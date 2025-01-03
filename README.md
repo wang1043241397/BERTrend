@@ -11,7 +11,6 @@
 
 ## Work in progress
 
-- make an independant `BERTrend` Class to simplify usage and integration
 - make BERTrend available as a python package in PyPI
 
 ## Paper
@@ -30,11 +29,11 @@ BERTrend classifies topics as noise, weak signals, or strong signals based on th
 
 The BERTrend repository provides a set of metrics, methods, and visualization tools to support the analysis of dynamic topic modeling in large text corpora. The tools are designed to help users detect, analyze, and visualize emerging topics and trends over time.
 
-The code base is divided into two main demonstrators:
+The code base is illustrated via two main demos:
 
 ### Dynamic Topic Modeling Analysis
 
-- [bertrend/topic_analysis](bertrend/demos/topic_analysis): Focuses on dynamic topic modeling analysis using:
+- [bertrend/demos/topic_analysis](bertrend/demos/topic_analysis): Focuses on dynamic topic modeling analysis using:
   - Dedicated metrics, called TEMPTopic:
     - Stability Evaluation: Measures the stability of topics over time, evaluating how consistent and coherent topics remain.
     - Volatility Assessment: Analyzes the volatility of topics, identifying how much topics change over different time periods.
@@ -57,7 +56,7 @@ https://github.com/user-attachments/assets/f600f666-a6da-40be-8b07-5041b3bde1dc
 
 ### Weak Signal Analysis
 
-- [bertrend/weak_signals](bertrend/demos/weak_signals): Identifies and analyzes emerging trends and signals
+- [bertrend/demos/weak_signals](bertrend/demos/weak_signals): Identifies and analyzes emerging trends and signals
 
 #### Weak Signal Analysis Demonstrator Video
 https://github.com/user-attachments/assets/d79368d9-d4e0-4324-8a98-a888f0ab3b65
@@ -89,13 +88,17 @@ BERTrend requires the following environment variables to be set:
 
 ### Package Installation
 
-Install using pip or poetry in the BERTrend home directory:
+- (Recommended): create a new python environment using `venv` or `conda`: 
 
-```bash
-pip install .  # or poetry install
-```
+  `python -m venv <path>/bertrend`
 
-(Use `pip install -e .` for a local installation)
+- Install using pip or poetry in the BERTrend home directory:
+
+  `pip install .  # or poetry install`
+
+- (Use `pip install -e .` for a local installation)
+
+NB. Due to the number of dependencies, the installation may take some time on an empty environement.
 
 ### Datasets
 
@@ -111,7 +114,10 @@ Recommended public datasets:
 
 For custom dataset creation, please refer to the documentation page about [data providers](./docs/data_provider.md).
 
-Datasets must be stored in `$BERTREND_BASE_DIR/data/bertrend/`
+
+In order to use the provided demos, datasets :
+- can be stored on the server in: `$BERTREND_BASE_DIR/data/bertrend/`
+- or can be uploaded from the client device on which is displayed the Streamlit apps.
 
 #### Dataset Format
 Required columns:
@@ -120,6 +126,7 @@ Required columns:
 
 Supported formats:
 - csv
+- xlsx
 - parquet
 - json/jsonl
 
@@ -135,12 +142,15 @@ CUDA_VISIBLE_DEVICES=<gpu_number> streamlit run app.py
 
 #### Description of Main Pages
 - `Parameters`: Include all BERTopic parameters. Choose the embedding model carefully based on your data language.
+The embedding model can run locally (a GPU is recommended); it is also possible to use a remote embedding service.
 
 ![parameters](docs/images/parameters.png)
 
 Please refer to the [BERTopic documentation](https://maartengr.github.io/BERTopic/algorithm/algorithm.html) for parameter details.
 
-- `Main Page`: Allows to 
+The application is split into several pages:
+
+- `Data loading & model training`: Allows to 
   - Select a dataset
   - Select the range of timestamps
   - Split paragraphs if needed
@@ -148,31 +158,32 @@ Please refer to the [BERTopic documentation](https://maartengr.github.io/BERTopi
 
 ![data_selection](docs/images/data_selection.png)
 
-- `Explore Topics`
+- `Topic exploration`
   - Computes topics over time
   ![exploration_over_time](./docs/images/explore1.png)
   
   - Allow to select sources and generate short descriptions for each theme
   ![topic_exploration](./docs/images/explore2.png)
 
-- `Generate Newsletters`
-  - Example application combining topic analysis and LLMs
-  - Generates newsletters based on prominent topics
-  - Uses LLMs to generate topic descriptions and summarize representative documents
-   
-- `Visualizations`: Several visualization types available:
+- `Topic visualization`: Several visualization types available:
   - `Overall Results`: Standard information such as inter-topic distance map
   - `Topics Treemap`: Block view of topics and their relative importance
   - `Data Map`: Easy topic and data search interface
 
   ![data_map](./docs/images/data_map.png)  
 
-- `Temporal Visualizations`: Focus on dynamic topic modeling:
+- `Temporal Visualization`: Focus on dynamic topic modeling:
   - 3D visualization of temporal topic evolution
   - Metrics to assess topic stability over time
   - Overall topic stability, temporal topic stability, and temporal representation stability
 
   ![temptopic_metrics](./docs/images/temptopic_metrics.png)  
+
+- `Generate Newsletters`
+  - This is an example of application combining topic analysis and LLMs
+  - Generates newsletters based on prominent topics
+  - Uses LLMs to generate topic descriptions and summarize representative documents
+   
 
 ### 2. Weak Signal Analysis
 **Weak signals** refer to early, small indicators of larger, important trends (like disruptive technologies or public health issues).
