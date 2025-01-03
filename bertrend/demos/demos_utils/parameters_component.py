@@ -27,6 +27,7 @@ from bertrend.parameters import (
 
 
 def display_local_embeddings():
+    """UI settings for local embedding service"""
     register_widget("language")
     register_widget("embedding_dtype")
     register_widget("embedding_model_name")
@@ -55,6 +56,7 @@ def display_local_embeddings():
 
 
 def display_remote_embeddings():
+    """UI settings for remote embedding service"""
     register_widget("embedding_service_hostname")
     register_widget("embedding_service_port")
     if "embedding_service_hostname" not in st.session_state:
@@ -74,6 +76,7 @@ def display_remote_embeddings():
 
 
 def display_bertopic_hyperparameters():
+    """UI settings for Bertopic hyperparameters"""
     with st.expander("Embedding Model Settings", expanded=False):
         register_widget("embedding_service_type")
         if "embedding_service_type" not in st.session_state:
@@ -170,6 +173,7 @@ def display_bertopic_hyperparameters():
 
 
 def display_bertrend_hyperparameters():
+    """UI settings for Bertrend hyperparameters"""
     with st.expander("Merging Hyperparameters", expanded=False):
         register_widget("min_similarity")
         st.slider(
@@ -196,7 +200,7 @@ def display_bertrend_hyperparameters():
 
 
 def display_representation_model_options():
-    """Representation model options for Streamlit UI"""
+    """UI settings for representation model options"""
     with st.expander("Representation model selection", expanded=False):
         register_widget("representation_models")
         selected_models = st.multiselect(

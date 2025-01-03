@@ -9,7 +9,6 @@ import pandas as pd
 import streamlit as st
 
 from bertrend.demos.demos_utils.icons import ERROR_ICON, INFO_ICON
-from bertrend.demos.demos_utils.session_state_manager import SessionStateManager
 from bertrend.demos.topic_analysis.messages import (
     TRAIN_MODEL_FIRST_ERROR,
     REMOTE_EMBEDDING_SEVICE_TYPE_NOT_SUPPORTED_ERROR,
@@ -29,6 +28,7 @@ from bertrend.demos.demos_utils.state_utils import (
     save_widget_state,
     restore_widget_state,
     register_multiple_widget,
+    SessionStateManager,
 )
 from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_CONFIG
 from bertrend.utils.data_loading import (
@@ -80,97 +80,78 @@ def _parameters_changed():
 def display_sidebar():
     """Display the sidebar with TEMPTopic parameters."""
     with st.sidebar:
-        st.header("TEMPTopic Parameters")
-
-        register_widget("window_size")
-        st.number_input(
-            "Window Size",
-            min_value=2,
-            value=2,
-            step=1,
-            key="window_size",
-            on_change=save_widget_state,
+        register_multiple_widget(
+            "window_size",
+            "k",
+            "alpha",
+            "double_agg",
+            "doc_agg",
+            "global_agg",
+            "evolution_tuning",
+            "global_tuning",
         )
-
-        register_widget("k")
-        st.number_input(
-            "Number of Nearest Embeddings (k)",
-            min_value=1,
-            value=1,
-            step=1,
-            key="k",
-            on_change=save_widget_state,
-            help="The k-th nearest neighbor used for Topic Representation Stability calculation.",
-        )
-
-        register_widget("alpha")
-        st.number_input(
-            "Alpha (Topic vs Representation Stability Weight)",
-            min_value=0.0,
-            max_value=1.0,
-            value=0.8,
-            step=0.01,
-            key="alpha",
-            help="Closer to 1 gives more weight given to Topic Embedding Stability, Closer to 0 gives more weight to topic representation stability.",
-            on_change=save_widget_state,
-        )
-
-        register_widget("double_agg")
-        st.checkbox(
-            "Use Double Aggregation",
-            value=True,
-            key="double_agg",
-            on_change=save_widget_state,
-            help="If unchecked, only Document Aggregation Method will be globally used.",
-        )
-
-        register_widget("doc_agg")
-        st.selectbox(
-            "Document Aggregation Method",
-            ["mean", "max"],
-            key="doc_agg",
-            on_change=save_widget_state,
-        )
-
-        register_widget("global_agg")
-        st.selectbox(
-            "Global Aggregation Method",
-            ["max", "mean"],
-            key="global_agg",
-            on_change=save_widget_state,
-        )
-
-        register_widget("evolution_tuning")
-        st.checkbox(
-            "Use Evolution Tuning",
-            value=True,
-            key="evolution_tuning",
-            on_change=save_widget_state,
-        )
-
-        register_widget("global_tuning")
-        st.checkbox(
-            "Use Global Tuning",
-            value=False,
-            key="global_tuning",
-            on_change=save_widget_state,
-        )
+        with st.expander("TEMPTopic Parameters", expanded=False):
+            st.number_input(
+                "Window Size",
+                min_value=2,
+                value=2,
+                step=1,
+                key="window_size",
+                on_change=save_widget_state,
+            )
+            st.number_input(
+                "Number of Nearest Embeddings (k)",
+                min_value=1,
+                value=1,
+                step=1,
+                key="k",
+                on_change=save_widget_state,
+                help="The k-th nearest neighbor used for Topic Representation Stability calculation.",
+            )
+            st.number_input(
+                "Alpha (Topic vs Representation Stability Weight)",
+                min_value=0.0,
+                max_value=1.0,
+                value=0.8,
+                step=0.01,
+                key="alpha",
+                help="Closer to 1 gives more weight given to Topic Embedding Stability, Closer to 0 gives more weight to topic representation stability.",
+                on_change=save_widget_state,
+            )
+            st.checkbox(
+                "Use Double Aggregation",
+                value=True,
+                key="double_agg",
+                on_change=save_widget_state,
+                help="If unchecked, only Document Aggregation Method will be globally used.",
+            )
+            st.selectbox(
+                "Document Aggregation Method",
+                ["mean", "max"],
+                key="doc_agg",
+                on_change=save_widget_state,
+            )
+            st.selectbox(
+                "Global Aggregation Method",
+                ["max", "mean"],
+                key="global_agg",
+                on_change=save_widget_state,
+            )
+            st.checkbox(
+                "Use Evolution Tuning",
+                value=True,
+                key="evolution_tuning",
+                on_change=save_widget_state,
+            )
+            st.checkbox(
+                "Use Global Tuning",
+                value=False,
+                key="global_tuning",
+                on_change=save_widget_state,
+            )
 
 
-def _get_available_granularities(min_date, max_date):
-    """Determine available time granularities based on the date range."""
-    time_diff = max_date - min_date
-    available_granularities = ["Day"]
-    if time_diff >= pd.Timedelta(weeks=1):
-        available_granularities.append("Week")
-    if time_diff >= pd.Timedelta(days=30):
-        available_granularities.append("Month")
-    if time_diff >= pd.Timedelta(days=365):
-        available_granularities.append("Year")
-    return available_granularities
-
-
-def _format_timedelta(td):
+def _format_timedelta(td: timedelta) -> str:
     """Format a timedelta object into a string with days, hours, minutes, and seconds."""
     days = td.days
     hours, remainder = divmod(td.seconds, 3600)
@@ -189,7 +170,7 @@ def _format_timedelta(td):
     return " ".join(parts)
 
 
-def select_time_granularity(max_granularity):
+def select_time_granularity(max_granularity: timedelta) -> timedelta:
     """Allow user to select custom time granularity within limits."""
     col0, col1, col2, col3, col4 = st.columns(5)
 
@@ -255,7 +236,7 @@ def select_time_granularity(max_granularity):
     return pd.Timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
 
 
-def _calculate_max_granularity(df):
+def _calculate_max_granularity(df: pd.DataFrame) -> timedelta:
     """Calculate the maximum allowed granularity based on the timestamp range."""
     max_timestamp, min_timestamp = (
         df[TIMESTAMP_COLUMN].max(),
@@ -266,14 +247,8 @@ def _calculate_max_granularity(df):
     return max_granularity
 
 
-def _group_timestamps(timestamps, granularity):
-    """
-    Group timestamps based on a custom granularity.
-
-    :param timestamps: Series of timestamps to group
-    :param granularity: Timedelta object representing the granularity
-    :return: Series of grouped timestamps
-    """
+def _group_timestamps(timestamps: pd.DataFrame, granularity: timedelta):
+    """Group timestamps based on a custom granularity."""
     # Find the minimum timestamp
     min_timestamp = timestamps.min()
 
@@ -287,7 +262,7 @@ def _group_timestamps(timestamps, granularity):
     return min_timestamp + groups * granularity
 
 
-def process_data_and_fit_temptopic(time_granularity):
+def process_data_and_fit_temptopic(time_granularity: timedelta):
     """Process data and fit TempTopic with custom time granularity."""
     df = st.session_state["time_filtered_df"].copy()
     df[TIMESTAMP_COLUMN] = pd.to_datetime(df[TIMESTAMP_COLUMN])

@@ -333,7 +333,7 @@ class BERTrend:
         decay_power: float = 2,
     ):
         """
-        Calculate the popularity of signals (topics) over time, accounting for merges and applying decay.
+        Compute the popularity of signals (topics) over time, accounting for merges and applying decay.
         Updates:
            - topic_sizes (Dict[int, Dict[str, Any]]): Dictionary storing topic sizes and related information over time.
            - topic_last_popularity (Dict[int, float]): Dictionary storing the last known popularity of each topic.

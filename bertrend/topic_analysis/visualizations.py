@@ -39,7 +39,7 @@ def plot_topics_over_time(
         return fig
 
 
-def plot_docs_repartition_over_time(df, freq):
+def plot_docs_repartition_over_time(df: pd.DataFrame, freq: str):
     """
     Plot document distribution over time
     """
@@ -50,7 +50,9 @@ def plot_docs_repartition_over_time(df, freq):
     return fig
 
 
-def plot_remaining_docs_repartition_over_time(df_base, df_remaining, freq):
+def plot_remaining_docs_repartition_over_time(
+    df_base: pd.DataFrame, df_remaining: pd.DataFrame, freq: str
+):
     """
     Plot remaining document distribution over time
     """

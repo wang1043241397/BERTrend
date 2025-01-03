@@ -16,6 +16,7 @@ from loguru import logger
 
 from bertrend import LLM_CONFIG
 from bertrend.llm_utils.openai_client import OpenAI_Client
+from bertrend.services.summary.chatgpt_summarizer import GPTSummarizer
 from bertrend.topic_analysis.representative_docs import get_most_representative_docs
 from bertrend.llm_utils.prompts import (
     USER_SUMMARY_MULTIPLE_DOCS,
@@ -29,23 +30,28 @@ from tqdm import tqdm
 # Ensures to write with +rw for both user and groups
 os.umask(0o002)
 
+DEFAULT_TOP_N_TOPICS = 5
+DEFAULT_TOP_N_DOCS = 3
+DEFAULT_TOP_N_DOCS_MODE = "cluster_probability"
+DEFAULT_SUMMARY_MODE = "document"
+
 
 def generate_newsletter(
     topic_model: BERTopic,
     df: pd.DataFrame,
     topics: List[int],
     df_split: pd.DataFrame = None,
-    top_n_topics: int = 5,
-    top_n_docs: int = 3,
-    top_n_docs_mode: str = "cluster_probability",
+    top_n_topics: int = DEFAULT_TOP_N_TOPICS,
+    top_n_docs: int = DEFAULT_TOP_N_DOCS,
+    top_n_docs_mode: str = DEFAULT_TOP_N_DOCS_MODE,
     newsletter_title: str = "Newsletter",
-    summarizer_class: Summarizer = AbstractiveSummarizer,
-    summary_mode: str = "document",
+    summarizer_class: Summarizer = GPTSummarizer,
+    summary_mode: str = DEFAULT_SUMMARY_MODE,
     prompt_language: str = "fr",
     improve_topic_description: bool = False,
     openai_model_name: str = None,
     nb_sentences: int = 3,
-) -> Tuple[str, Any, Any]:
+) -> Tuple[str, str, str]:
     """Generates a newsletters based on a trained BERTopic model.
 
     Args:
@@ -207,14 +213,15 @@ def generate_newsletter(
     return md_content, date_min, date_max
 
 
-def export_md_string(newsletter_md: str, path: Path, format="md"):
+def export_md_string(newsletter_md: str, path: Path, output_format="md"):
+    """Save a markdown string to a file."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    if format == "md":
+    if output_format == "md":
         with open(path, "w") as f:
             f.write(newsletter_md)
-    # elif format == "pdf":
+    # elif output_format == "pdf":
     #    md2pdf(path, md_content=newsletter_md)
-    elif format == "html":
+    elif output_format == "html":
         css_style = Path(inspect.getfile(generate_newsletter)).parent / "newsletter.css"
         result = md2html(newsletter_md, css_style)
         with open(path, "w") as f:
@@ -222,6 +229,7 @@ def export_md_string(newsletter_md: str, path: Path, format="md"):
 
 
 def md2html(md: str, css_style: Path = None) -> str:
+    """Convert a markdown string to HTML."""
     html_result = markdown.markdown(md)
     if not css_style:
         return html_result

@@ -2,6 +2,8 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
+import pandas as pd
+from bertopic import BERTopic
 from loguru import logger
 
 from bertrend import LLM_CONFIG
@@ -10,9 +12,12 @@ from bertrend.topic_analysis.prompts import TOPIC_DESCRIPTION_PROMPT
 
 
 def generate_topic_description(
-    topic_model, topic_number, filtered_docs, language_code="fr"
-):
-    # Get topic representation
+    topic_model: BERTopic,
+    topic_number: int,
+    filtered_docs: pd.DataFrame,
+    language_code: str = "fr",
+) -> str:
+    """Generates a LLM-based human-readable description of a topic"""
     topic_words = topic_model.get_topic(topic_number)
     topic_representation = ", ".join(
         [word for word, _ in topic_words[:10]]

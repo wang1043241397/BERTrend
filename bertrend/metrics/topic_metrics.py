@@ -160,7 +160,7 @@ def compute_cluster_metrics(bertopic: BERTopic, topics: list[int], dataset: list
         )
 
 
-def proportion_unique_words(topics: List[List[str]], topk: int) -> float:
+def proportion_unique_words(topics: List[List[str]], top_k: int) -> float:
     """
     Compute the proportion of unique words.
 
@@ -173,12 +173,12 @@ def proportion_unique_words(topics: List[List[str]], topk: int) -> float:
     """
     unique_words = set()
     for topic in topics:
-        unique_words = unique_words.union(set(topic[:topk]))
-    puw = len(unique_words) / (topk * len(topics))
+        unique_words = unique_words.union(set(topic[:top_k]))
+    puw = len(unique_words) / (top_k * len(topics))
     return puw
 
 
-def pairwise_jaccard_diversity(topics: List[List[str]], topk: int) -> float:
+def pairwise_jaccard_diversity(topics: List[List[str]], top_k: int) -> float:
     """
     Compute the average pairwise Jaccard distance between the topics.
 
@@ -192,8 +192,8 @@ def pairwise_jaccard_diversity(topics: List[List[str]], topk: int) -> float:
     dist = 0
     count = 0
     for list1, list2 in combinations(topics, 2):
-        js = 1 - len(set(list1[:topk]).intersection(set(list2[:topk]))) / len(
-            set(list1[:topk]).union(set(list2[:topk]))
+        js = 1 - len(set(list1[:top_k]).intersection(set(list2[:top_k]))) / len(
+            set(list1[:top_k]).union(set(list2[:top_k]))
         )
         dist += js
         count += 1

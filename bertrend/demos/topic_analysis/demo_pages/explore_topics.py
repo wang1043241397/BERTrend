@@ -6,6 +6,7 @@
 import io
 import re
 import zipfile
+from typing import List
 
 import pandas as pd
 import streamlit as st
@@ -13,10 +14,14 @@ import plotly.graph_objects as go
 from datetime import timedelta
 from urllib.parse import urlparse
 
+from bertopic import BERTopic
+
 from bertrend import OUTPUT_PATH
 from bertrend.demos.demos_utils.icons import ERROR_ICON, WARNING_ICON
-from bertrend.demos.demos_utils.session_state_manager import SessionStateManager
-from bertrend.demos.demos_utils.state_utils import restore_widget_state
+from bertrend.demos.demos_utils.state_utils import (
+    restore_widget_state,
+    SessionStateManager,
+)
 from bertrend.demos.topic_analysis.messages import (
     NO_DOCUMENT_FOR_TOPIC,
     TRAIN_MODEL_FIRST_ERROR,
@@ -55,7 +60,7 @@ def check_model_and_prepare_topics():
         )
 
 
-def set_topic_selection(selected_topic_number):
+def set_topic_selection(selected_topic_number: int):
     """Set the selected topic number in the session state."""
     st.session_state["selected_topic_number"] = selected_topic_number
 
@@ -135,7 +140,7 @@ def plot_topic_over_time():
             )
 
 
-def get_representative_documents(top_n_docs):
+def get_representative_documents(top_n_docs: int):
     """Get representative documents for the selected topic."""
     if st.session_state["split_type"] in ["yes", "enhanced"]:
         return get_most_representative_docs(
@@ -168,7 +173,9 @@ def get_representative_documents(top_n_docs):
         ).drop_duplicates()
 
 
-def display_source_distribution(representative_df, selected_sources):
+def display_source_distribution(
+    representative_df: pd.DataFrame, selected_sources: List[str]
+):
     """Display the distribution of sources in a pie chart."""
 
     source_counts = representative_df[URL_COLUMN].apply(get_website_name).value_counts()
@@ -216,7 +223,7 @@ def get_website_name(url):
         return "Unknown Source"
 
 
-def display_representative_documents(filtered_df):
+def display_representative_documents(filtered_df: pd.DataFrame):
     """Display representative documents for the selected topic."""
     with st.container(border=False, height=600):
         for _, doc in filtered_df.iterrows():
@@ -244,7 +251,7 @@ def display_new_documents():
 
 
 def create_topic_documents(
-    filtered_df, topic_model, granularity_days, TIMESTAMP_COLUMN, TEXT_COLUMN
+    filtered_df: pd.DataFrame, topic_model: BERTopic, granularity_days: int
 ):
     """Create topic documents grouped by a given time granularity."""
     topic_docs = filtered_df.sort_values(by=TIMESTAMP_COLUMN)
@@ -280,8 +287,8 @@ def create_topic_documents(
     return folder_name, documents
 
 
-def _display_topic_description(filtered_df):
-    # GPT description button
+def _display_topic_description(filtered_df: pd.DataFrame):
+    """Display a human-readable description of the selected topic using a LLM."""
     if st.button(
         "Generate a short description of the topic",
         type="primary",
@@ -393,8 +400,6 @@ def main():
             filtered_df,
             st.session_state["topic_model"],
             granularity_days,
-            TIMESTAMP_COLUMN,
-            TEXT_COLUMN,
         )
 
         if documents:
@@ -422,8 +427,6 @@ def main():
                 filtered_df,
                 st.session_state["topic_model"],
                 granularity_days,
-                TIMESTAMP_COLUMN,
-                TEXT_COLUMN,
             )
 
             if documents:

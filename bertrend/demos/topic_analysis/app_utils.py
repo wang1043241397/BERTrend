@@ -2,11 +2,12 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
-
+from typing import List
 
 import numpy as np
 import pandas as pd
 import streamlit as st
+from bertopic import BERTopic
 
 from bertrend.utils.data_loading import (
     TIMESTAMP_COLUMN,
@@ -18,7 +19,7 @@ from bertrend.utils.data_loading import (
 )
 
 
-def _make_dynamic_topics_split(df, nr_bins):
+def _make_dynamic_topics_split(df: pd.DataFrame, nr_bins: int):
     """
     Split docs into nr_bins and generate a llm_utils timestamp label into a new column
     """
@@ -31,10 +32,11 @@ def _make_dynamic_topics_split(df, nr_bins):
 
 @st.cache_data
 def compute_topics_over_time(
-    _topic_model,
-    df,
-    nr_bins,
+    _topic_model: BERTopic,
+    df: pd.DataFrame,
+    nr_bins: int,
 ):
+    """Computes topics over time."""
     df = _make_dynamic_topics_split(df, nr_bins)
     res = _topic_model.topics_over_time(
         df[TEXT_COLUMN],
@@ -44,7 +46,9 @@ def compute_topics_over_time(
     return res
 
 
-def print_docs_for_specific_topic(df, topics, topic_number):
+def print_docs_for_specific_topic(
+    df: pd.DataFrame, topics: List[int], topic_number: int
+):
     """
     Print documents for a specific topic
     """

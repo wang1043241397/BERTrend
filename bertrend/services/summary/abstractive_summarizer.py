@@ -6,12 +6,11 @@
 import re
 from typing import List
 
-import torch
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
+from bertrend.parameters import EMBEDDING_DEVICE
 from bertrend.services.summarizer import Summarizer
 
-device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 # DEFAULT_ABSTRACTIVE_MODEL = "mrm8488/camembert2camembert_shared-finetuned-french-summarization"
 # DEFAULT_ABSTRACTIVE_MODEL = "csebuetnlp/mT5_multilingual_XLSum"
@@ -28,7 +27,7 @@ class AbstractiveSummarizer(Summarizer):
         )
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
-        self.model = self.model.to(device)
+        self.model = self.model.to(EMBEDDING_DEVICE)
 
     def generate_summary(self, article_text, **kwargs) -> str:
         return self.summarize_batch([article_text])[0]
@@ -42,9 +41,9 @@ class AbstractiveSummarizer(Summarizer):
             max_length=512,
         )
 
-        input_ids = inputs.input_ids.to(device)
+        input_ids = inputs.input_ids.to(EMBEDDING_DEVICE)
 
-        attention_mask = inputs.attention_mask.to(device)
+        attention_mask = inputs.attention_mask.to(EMBEDDING_DEVICE)
 
         max_length = 512
 

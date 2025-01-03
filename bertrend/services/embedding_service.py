@@ -23,6 +23,8 @@ from bertrend.parameters import (
 
 
 class EmbeddingService(BaseEmbedder):
+    """Class implementing embedding service."""
+
     def __init__(
         self,
         local: bool = EMBEDDING_CONFIG.get("use_local", True),
@@ -33,6 +35,14 @@ class EmbeddingService(BaseEmbedder):
         host: str = EMBEDDING_CONFIG["host"],
         port: str = EMBEDDING_CONFIG["port"],
     ):
+        """
+        Class implementing embedding service.
+        :param local (bool): indicates whether to use local or remote embeddings service.
+        :param model_name (str): The name of the Sentence Transformer model to use.
+        :param embedding_dtype: (Literal): The data type to use for the embeddings ('float32', 'float16', or 'bfloat16').
+        :param host (str): The host address of the remote embedding service to use.
+        :param port (str): The port of the remote embedding service to use.
+        """
         super().__init__()
         self.local = local
         if not self.local:
@@ -56,22 +66,13 @@ class EmbeddingService(BaseEmbedder):
 
         Args:
             texts (Union[List[str], pd.Series]): A list of text documents to be embedded.
-            embedding_model_name (str): The name of the Sentence Transformer model to use.
-            embedding_dtype (Literal): The data type to use for the embeddings ('float32', 'float16', or 'bfloat16').
-            embedding_device (str, optional): The device to use for embedding ('cuda' or 'cpu').
-                                              Defaults to 'cuda' if available, else 'cpu'.
-            batch_size (i   nt, optional): The number of texts to process in each batch. Defaults to 32.
-            max_seq_length (int, optional): The maximum sequence length for the model. Defaults to 512.
+            verbose (bool): Level of output details. Defaults to False.
 
         Returns:
             Tuple[SentenceTransformer, np.ndarray]: A tuple containing:
-                - The loaded and configured Sentence Transformer model.
                 - A numpy array of embeddings, where each row corresponds to a text in the input list.
-                - List[List[str]] | None,
-                - List[np.ndarray] | None
-
-        Raises:
-            ValueError: If an invalid embedding_dtype is provided.
+                - A list of grouped token strings
+                - A list of grouped token embeddings
         """
         # Convert to list if input is a pandas Series
         if isinstance(texts, pd.Series):
@@ -97,8 +98,6 @@ class EmbeddingService(BaseEmbedder):
 
         Args:
             texts (List[str]): A list of text documents to be embedded.
-            embedding_model_name (str): The name of the Sentence Transformer model to use.
-            embedding_dtype (str): The data type to use for the embeddings ('float32', 'float16', or 'bfloat16').
             embedding_device (str, optional): The device to use for embedding ('cuda' or 'cpu').
                                               Defaults to 'cuda' if available, else 'cpu'.
             batch_size (int, optional): The number of texts to process in each batch. Defaults to 32.
@@ -106,8 +105,9 @@ class EmbeddingService(BaseEmbedder):
 
         Returns:
             Tuple[SentenceTransformer, np.ndarray]: A tuple containing:
-                - The loaded and configured Sentence Transformer model.
                 - A numpy array of embeddings, where each row corresponds to a text in the input list.
+                - A list of grouped token strings
+                - A list of grouped token embeddings
 
         Raises:
             ValueError: If an invalid embedding_dtype is provided.
@@ -169,12 +169,12 @@ class EmbeddingService(BaseEmbedder):
         ]
         token_ids = [item["input_ids"].detach().cpu() for item in all_embeddings]
 
-        token_embeddings = convert_to_numpy(token_embeddings)
-        token_ids = convert_to_numpy(token_ids, type="token_id")
+        token_embeddings = _convert_to_numpy(token_embeddings)
+        token_ids = _convert_to_numpy(token_ids, type="token_id")
 
         tokenizer = self.embedding_model._first_module().tokenizer
 
-        token_strings, token_embeddings = group_tokens(
+        token_strings, token_embeddings = _group_tokens(
             tokenizer, token_ids, token_embeddings, language="french"
         )
 
@@ -192,20 +192,13 @@ class EmbeddingService(BaseEmbedder):
 
         Args:
             texts (List[str]): A list of text documents to be embedded.
-            embedding_model_name (str): The name of the Sentence Transformer model to use.
-            embedding_dtype (str): The data type to use for the embeddings ('float32', 'float16', or 'bfloat16').
-            embedding_device (str, optional): The device to use for embedding ('cuda' or 'cpu').
-                                              Defaults to 'cuda' if available, else 'cpu'.
-            batch_size (int, optional): The number of texts to process in each batch. Defaults to 32.
-            max_seq_length (int, optional): The maximum sequence length for the model. Defaults to 512.
+            show_progress_bar (bool): Progress bar display on service side. Defaults to True.
 
         Returns:
             Tuple[SentenceTransformer, np.ndarray]: A tuple containing:
-                - The loaded and configured Sentence Transformer model.
                 - A numpy array of embeddings, where each row corresponds to a text in the input list.
-
-        Raises:
-            ValueError: If an invalid embedding_dtype is provided.
+                - A list of grouped token strings
+                - A list of grouped token embeddings
         """
         logger.debug(f"Computing embeddings...")
         response = requests.post(
@@ -237,7 +230,7 @@ class EmbeddingService(BaseEmbedder):
             raise Exception(f"Error: {response.status_code}")
 
 
-def convert_to_numpy(obj, type=None):
+def _convert_to_numpy(obj, type=None):
     """
     Convert a torch.Tensor or list of torch.Tensors to numpy arrays.
     Args:
@@ -253,12 +246,12 @@ def convert_to_numpy(obj, type=None):
             else obj.numpy().astype(np.float32)
         )
     elif isinstance(obj, list):
-        return [convert_to_numpy(item) for item in obj]
+        return [_convert_to_numpy(item) for item in obj]
     else:
         raise TypeError("Object must be a list or torch.Tensor")
 
 
-def group_tokens(tokenizer, token_ids, token_embeddings, language="french"):
+def _group_tokens(tokenizer, token_ids, token_embeddings, language="french"):
     """
     Group split tokens into whole words and average their embeddings.
     Args:

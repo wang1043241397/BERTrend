@@ -11,10 +11,10 @@ def get_most_representative_docs(
     df: pd.DataFrame,
     topics,
     mode="cluster_probability",
-    df_split: pd.DataFrame = "no",
+    df_split: pd.DataFrame = None,
     topic_number: int = 0,
     top_n_docs: int = 3,
-):
+) -> pd.DataFrame:
     """
     Return most representative documents for a given topic.
 

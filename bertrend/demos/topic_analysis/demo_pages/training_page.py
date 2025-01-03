@@ -27,7 +27,10 @@ from bertrend.demos.demos_utils.messages import (
     NO_EMBEDDINGS_WARNING_MESSAGE,
     MODEL_TRAINING_COMPLETE_MESSAGE,
 )
-from bertrend.demos.demos_utils.state_utils import restore_widget_state
+from bertrend.demos.demos_utils.state_utils import (
+    restore_widget_state,
+    SessionStateManager,
+)
 from bertrend.demos.topic_analysis.messages import (
     EMBEDDINGS_CACHE_INFO,
     SAVE_MODEL_REMINDER,
@@ -36,7 +39,6 @@ from bertrend.demos.topic_analysis.messages import (
 from bertrend.demos.demos_utils.parameters_component import (
     display_bertopic_hyperparameters,
 )
-from bertrend.demos.demos_utils.session_state_manager import SessionStateManager
 from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_CONFIG
 from bertrend.metrics.topic_metrics import compute_cluster_metrics
 from bertrend.parameters import BERTOPIC_SERIALIZATION
@@ -58,6 +60,7 @@ def generate_model_name(base_name="topic_model"):
 
 
 def data_distribution(df: pd.DataFrame):
+    """Display the distribution of data over time."""
     with st.expander(
         label="Data distribution",
         expanded=False,
@@ -81,6 +84,7 @@ def data_distribution(df: pd.DataFrame):
 
 
 def save_model_interface():
+    """Save the generated topic model to disk."""
     st.write("## Save Model")
 
     # Optional text box for custom model name
@@ -155,8 +159,6 @@ def train_model():
         # Set session_state
         st.session_state["topic_model"] = bertopic
         st.session_state["topics"] = topic_model_output.topics
-
-        # TODO : representation model??
 
     st.success(MODEL_TRAINING_COMPLETE_MESSAGE, icon=SUCCESS_ICON)
     st.info(

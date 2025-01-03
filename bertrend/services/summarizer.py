@@ -12,12 +12,15 @@ DEFAULT_MAX_WORDS = 50
 
 
 class Summarizer(ABC):
+    """Abstract class common to all summarizer implementations."""
+
     @abstractmethod
     def generate_summary(
         self,
         article_text: str,
         **kwargs,
     ) -> str:
+        """Abstract method to generate summary from article text. To be implemented by subclasses."""
         pass
 
     def summarize_batch(
@@ -29,6 +32,7 @@ class Summarizer(ABC):
         prompt_language="fr",
         model_name=None,
     ) -> List[str]:
+        """Basic implementation of batch summarization. Can be overridden by subclasses."""
         return [
             self.generate_summary(
                 article_text=t,

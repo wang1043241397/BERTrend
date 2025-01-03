@@ -52,7 +52,7 @@ def define_pages():
 
     pg = st.navigation(
         {
-            "Topic Anaysis": [
+            "Topic Analysis": [
                 data_page,
                 topic_exploration_page,
                 topic_visualization_page,

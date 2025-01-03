@@ -26,7 +26,7 @@ SOURCE_COLUMN = "source"
 CITATION_COUNT_COL = "citation_count"
 
 
-def find_compatible_files(path, extensions) -> List[Path]:
+def find_compatible_files(path: Path, extensions: List[str]) -> List[Path]:
     return [f.relative_to(path) for f in path.rglob("*") if f.suffix[1:] in extensions]
 
 
@@ -182,7 +182,6 @@ def clean_dataset(dataset: pd.DataFrame, length_criteria: int) -> pd.DataFrame:
     return cleaned_dataset
 
 
-# TODO: to be simplified!
 def enhanced_split_df_by_paragraphs(
     dataset: pd.DataFrame, embedding_model_name: str = None
 ) -> pd.DataFrame:
@@ -192,8 +191,7 @@ def enhanced_split_df_by_paragraphs(
 
     Args:
         dataset (pd.DataFrame): The dataset to split.
-        enhanced (bool): Whether to use the enhanced splitting method.
-        model_name (str): The name of the embedding model to use (only required if enhanced is True)
+        embedding_model_name (str): The name of the embedding model to use (only required if enhanced is True)
 
     Returns:
         pd.DataFrame: The dataset with texts split into paragraphs.

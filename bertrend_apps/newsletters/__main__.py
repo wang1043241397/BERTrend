@@ -182,7 +182,7 @@ if __name__ == "__main__":
             / f"{datetime.today().strftime('%Y-%m-%d')}_{newsletter_params.get('id')}"
             f"_{data_feed_cfg['data-feed'].get('id')}.{output_format}"
         )
-        export_md_string(newsletter_md, output_path, format=output_format)
+        export_md_string(newsletter_md, output_path, output_format=output_format)
         logger.info(f"Newsletter exported in {output_format} format: {output_path}")
 
         # Send newsletter by email

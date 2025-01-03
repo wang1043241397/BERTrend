@@ -13,7 +13,7 @@ from plotly import graph_objects as go
 from bertrend import OUTPUT_PATH, SIGNAL_EVOLUTION_DATA_DIR
 from bertrend.demos.demos_utils.icons import WARNING_ICON, SUCCESS_ICON, INFO_ICON
 from bertrend.demos.weak_signals.messages import HTML_GENERATION_FAILED_WARNING
-from bertrend.demos.demos_utils.session_state_manager import SessionStateManager
+from bertrend.demos.demos_utils.state_utils import SessionStateManager
 from bertrend.parameters import (
     MAX_WINDOW_SIZE,
     DEFAULT_WINDOW_SIZE,
@@ -81,7 +81,8 @@ def display_signal_categories_df(
     weak_signal_topics_df: pd.DataFrame,
     strong_signal_topics_df: pd.DataFrame,
     window_end: Timestamp,
-) -> None:
+):
+    """Display the dataframes associated to each signal category: noise, weak signal, strong signal."""
     columns = [
         "Topic",
         "Sources",
@@ -133,6 +134,7 @@ def display_signal_categories_df(
 
 
 def display_popularity_evolution():
+    """Display the popularity evolution diagram."""
     window_size = st.number_input(
         "Retrospective Period (days)",
         min_value=1,
@@ -291,7 +293,10 @@ def display_topics_per_timestamp(topic_models: Dict[pd.Timestamp, BERTopic]) -> 
         st.dataframe(selected_model.topic_info_df, use_container_width=True)
 
 
-def display_signal_analysis(topic_number, output_file="signal_llm.html"):
+def display_signal_analysis(
+    topic_number: int, output_file_name: str = "signal_llm.html"
+):
+    """Display a LLM-based analyis of a specific topic."""
     language = SessionStateManager.get("language")
     bertrend = SessionStateManager.get("bertrend")
     all_merge_histories_df = bertrend.all_merge_histories_df
@@ -307,7 +312,7 @@ def display_signal_analysis(topic_number, output_file="signal_llm.html"):
             )
 
             # Check if the HTML file was created successfully
-            output_file_path = OUTPUT_PATH / output_file
+            output_file_path = OUTPUT_PATH / output_file_name
             if output_file_path.exists():
                 # Read the HTML file
                 with open(output_file_path, "r", encoding="utf-8") as file:

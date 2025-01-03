@@ -6,12 +6,15 @@ import streamlit as st
 
 from bertrend.demos.demos_utils.icons import SUCCESS_ICON
 from bertrend.demos.demos_utils.messages import EMBEDDINGS_CALCULATED_MESSAGE
-from bertrend.demos.demos_utils.session_state_manager import SessionStateManager
+from bertrend.demos.demos_utils.state_utils import SessionStateManager
 from bertrend.services.embedding_service import EmbeddingService
 from bertrend.utils.data_loading import TEXT_COLUMN
 
 
 def display_embed_documents_component():
+    """
+    Common Streamlit UI component for embedding documents.
+    """
     # Embed documents
     if st.button("Embed Documents"):
         with st.spinner("Embedding documents..."):

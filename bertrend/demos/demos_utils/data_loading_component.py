@@ -20,8 +20,11 @@ from bertrend.demos.demos_utils.icons import (
     XLSX_ICON,
 )
 from bertrend.demos.demos_utils.messages import NO_DATA_AFTER_PREPROCESSING_MESSAGE
-from bertrend.demos.demos_utils.session_state_manager import SessionStateManager
-from bertrend.demos.demos_utils.state_utils import save_widget_state, register_widget
+from bertrend.demos.demos_utils.state_utils import (
+    save_widget_state,
+    register_widget,
+    SessionStateManager,
+)
 from bertrend.parameters import MIN_CHARS_DEFAULT, SAMPLE_SIZE_DEFAULT
 from bertrend.utils.data_loading import (
     find_compatible_files,
@@ -46,7 +49,7 @@ FORMAT_ICONS = {
 def _process_uploaded_files(
     files: List[UploadedFile],
 ) -> List[pd.DataFrame]:
-    """Read a list of Excel files and return a single dataframe containing the data"""
+    """Read a list of uploaded files and return a list of dataframes containing the associated data"""
     dataframes = []
     with TemporaryDirectory() as tmpdir:
         for f in files:
@@ -65,6 +68,7 @@ def _process_uploaded_files(
 def _load_files(
     files: List[Path],
 ) -> List[pd.DataFrame]:
+    """Read a list of files from storage and return a list of dataframes containing the associated data"""
     dfs = []
     for selected_file in files:
         file_path = DATA_PATH / selected_file

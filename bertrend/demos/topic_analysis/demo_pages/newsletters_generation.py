@@ -3,7 +3,9 @@
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
 import inspect
+from typing import Tuple
 
+import pandas as pd
 import streamlit as st
 from pathlib import Path
 
@@ -12,6 +14,7 @@ from bertrend.demos.demos_utils.state_utils import (
     register_widget,
     save_widget_state,
     restore_widget_state,
+    register_multiple_widget,
 )
 from bertrend.demos.topic_analysis.messages import TRAIN_MODEL_FIRST_ERROR
 from bertrend.services.summary.abstractive_summarizer import AbstractiveSummarizer
@@ -32,8 +35,10 @@ SUMMARIZER_OPTIONS_MAPPER = {
 }
 
 
-def generate_newsletter_wrapper(df, df_split):
-    """Wrapper function to generate newsletters based on user settings."""
+def generate_newsletter_wrapper(
+    df: pd.DataFrame, df_split: pd.DataFrame
+) -> Tuple[str, str, str]:
+    """Wrapper function to generate newsletter based on user settings."""
     top_n_topics = (
         None
         if st.session_state["newsletter_all_topics"]
@@ -85,14 +90,15 @@ def main():
 
     # Newsletter parameters sidebar
     with st.sidebar:
-        register_widget("newsletter_all_topics")
-        register_widget("newsletter_all_docs")
-        register_widget("newsletter_nb_topics")
-        register_widget("newsletter_nb_docs")
-        register_widget("newsletter_improve_description")
-        register_widget("summarizer_classname")
-        register_widget("summary_mode")
-
+        register_multiple_widget(
+            "newsletter_all_topics",
+            "newsletter_all_docs",
+            "newsletter_nb_topics",
+            "newsletter_nb_docs",
+            "newsletter_improve_description",
+            "summarizer_classname",
+            "summary_mode",
+        )
         all_topics = st.checkbox(
             "Include all topics",
             on_change=save_widget_state,
@@ -141,7 +147,7 @@ def main():
         )
 
         generate_newsletter_clicked = st.button(
-            "Generate newsletters", type="primary", use_container_width=True
+            "Generate newsletter", type="primary", use_container_width=True
         )
 
     # Generate newsletters when button is clicked
@@ -171,5 +177,3 @@ def main():
 # Restore widget state
 restore_widget_state()
 main()
-
-# TODO: Properly handle the streamlit interface's session state to automatically gray out the number of topics/document sliders if all topics/all documents checkboxes are activated.

@@ -3,7 +3,7 @@
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
 
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 
 import numpy as np
 import pandas as pd
@@ -128,7 +128,7 @@ def plot_topics_for_model(selected_model: BERTopic) -> go.Figure:
     return fig
 
 
-def create_topic_size_evolution_figure(topic_sizes, topic_ids=None) -> go.Figure:
+def create_topic_size_evolution_figure(topic_sizes: Dict, topic_ids=None) -> go.Figure:
     fig = go.Figure()
 
     if topic_ids is None:
@@ -212,11 +212,11 @@ def compute_popularity_values_and_thresholds(
 
 
 def plot_topic_size_evolution(
-    fig,
+    fig: go.Figure,
     current_date,
     window_start: Timestamp,
     window_end: Timestamp,
-    all_popularity_values: list[float],
+    all_popularity_values: List[float],
     q1: float,
     q3: float,
 ):
@@ -225,9 +225,12 @@ def plot_topic_size_evolution(
 
     Args:
         fig (FigureWidgetResampler): The cached figure to plot.
-        window_size (int): The retrospective window size in days.
-        granularity (int): The granularity of the timestamps in days.
         current_date (datetime): The current date selected by the user.
+        window_start (Timestamp): The start of the retrospective window size in days.
+        window_end (Timestamp): The end of the retrospective window size in days.
+        all_popularity_values (List[float]): The list of popularity values.
+        q1 (float): the 10th percentile of popularity values,
+        q3 (float): the 90th percentile of popularity values,
     """
 
     # Add colored overlays for signal regions
