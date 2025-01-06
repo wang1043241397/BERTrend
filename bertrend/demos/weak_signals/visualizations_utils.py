@@ -178,8 +178,11 @@ def display_popularity_evolution():
     )
 
     # Display threshold values for noise and strong signals
-    st.write(f"### Noise Threshold : {'{:.3f}'.format(q1)}")
-    st.write(f"### Strong Signal Threshold : {'{:.3f}'.format(q3)}")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.write(f"### Noise Threshold : {'{:.3f}'.format(q1)}")
+    with col2:
+        st.write(f"### Strong Signal Threshold : {'{:.3f}'.format(q3)}")
 
     # Plot popularity evolution with thresholds
     fig = plot_topic_size_evolution(
@@ -301,32 +304,32 @@ def display_signal_analysis(
     bertrend = SessionStateManager.get("bertrend")
     all_merge_histories_df = bertrend.all_merge_histories_df
 
-    with st.expander("Signal Interpretation", expanded=True):
-        with st.spinner("Analyzing signal..."):
-            summary, analysis, formatted_html = analyze_signal(
-                topic_number,
-                SessionStateManager.get("current_date"),
-                all_merge_histories_df,
-                SessionStateManager.get("granularity_select"),
-                language,
-            )
+    st.subheader("Signal Interpretation")
+    with st.spinner("Analyzing signal..."):
+        summary, analysis, formatted_html = analyze_signal(
+            topic_number,
+            SessionStateManager.get("current_date"),
+            all_merge_histories_df,
+            SessionStateManager.get("granularity_select"),
+            language,
+        )
 
-            # Check if the HTML file was created successfully
-            output_file_path = OUTPUT_PATH / output_file_name
-            if output_file_path.exists():
-                # Read the HTML file
-                with open(output_file_path, "r", encoding="utf-8") as file:
-                    html_content = file.read()
-                # Display the HTML content
-                st.html(html_content)
-            else:
-                st.warning(HTML_GENERATION_FAILED_WARNING, icon=WARNING_ICON)
-                # Fallback to displaying markdown if HTML generation fails
-                col1, col2 = st.columns(spec=[0.5, 0.5], gap="medium")
-                with col1:
-                    st.markdown(summary)
-                with col2:
-                    st.markdown(analysis)
+        # Check if the HTML file was created successfully
+        output_file_path = OUTPUT_PATH / output_file_name
+        if output_file_path.exists():
+            # Read the HTML file
+            with open(output_file_path, "r", encoding="utf-8") as file:
+                html_content = file.read()
+            # Display the HTML content
+            st.html(html_content)
+        else:
+            st.warning(HTML_GENERATION_FAILED_WARNING, icon=WARNING_ICON)
+            # Fallback to displaying markdown if HTML generation fails
+            col1, col2 = st.columns(spec=[0.5, 0.5], gap="medium")
+            with col1:
+                st.markdown(summary)
+            with col2:
+                st.markdown(analysis)
 
 
 def retrieve_topic_counts(topic_models: Dict[pd.Timestamp, BERTopic]) -> None:
@@ -370,4 +373,8 @@ def retrieve_topic_counts(topic_models: Dict[pd.Timestamp, BERTopic]) -> None:
     # Save cumulative merged model topic counts
     (json_file_path / CUMULATIVE_MERGED_TOPIC_COUNTS_FILE).write_text(
         json_cumulative_merged
+    )
+    st.success(
+        f"Topic counts for individual and cumulative merged models saved to {json_file_path}",
+        icon=SUCCESS_ICON,
     )

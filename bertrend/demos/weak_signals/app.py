@@ -423,20 +423,20 @@ def analysis_page():
 
         else:
             # Display merged signal trend
-            st.subheader("Topic Size Evolution")
-            st.dataframe(
-                SessionStateManager.get("bertrend").all_merge_histories_df[
-                    [
-                        "Timestamp",
-                        "Topic1",
-                        "Topic2",
-                        "Representation1",
-                        "Representation2",
-                        "Document_Count1",
-                        "Document_Count2",
+            with st.expander("Topic Size Evolution", expanded=False):
+                st.dataframe(
+                    SessionStateManager.get("bertrend").all_merge_histories_df[
+                        [
+                            "Timestamp",
+                            "Topic1",
+                            "Topic2",
+                            "Representation1",
+                            "Representation2",
+                            "Document_Count1",
+                            "Document_Count2",
+                        ]
                     ]
-                ]
-            )
+                )
 
             # Display topic popularity evolution
             with st.expander("Topic Popularity Evolution", expanded=True):
@@ -445,18 +445,19 @@ def analysis_page():
                 save_signal_evolution()
 
             # Analyze signal
-            st.subheader("Signal Analysis")
-            topic_number = st.number_input(
-                "Enter a topic number to take a closer look:", min_value=0, step=1
-            )
-            if st.button("Analyze signal", type="primary"):
-                try:
-                    display_signal_analysis(topic_number)
-                except Exception as e:
-                    st.error(
-                        f"Error while trying to generate signal summary: {e}",
-                        icon=ERROR_ICON,
-                    )
+            with st.expander("Signal Analysis", expanded=True):
+                st.subheader("Signal Analysis")
+                topic_number = st.number_input(
+                    "Enter a topic number to take a closer look:", min_value=0, step=1
+                )
+                if st.button("Analyze signal", type="primary"):
+                    try:
+                        display_signal_analysis(topic_number)
+                    except Exception as e:
+                        st.error(
+                            f"Error while trying to generate signal summary: {e}",
+                            icon=ERROR_ICON,
+                        )
 
             # Create the Sankey Diagram
             st.subheader("Topic Evolution")
@@ -475,10 +476,6 @@ def analysis_page():
                 with st.spinner("Retrieving topic counts..."):
                     # Number of topics per individual topic model
                     retrieve_topic_counts(topic_models)
-                    st.success(
-                        f"Topic counts for individual and cumulative merged models saved to {json_file_path}",
-                        icon=SUCCESS_ICON,
-                    )
 
 
 def main():
