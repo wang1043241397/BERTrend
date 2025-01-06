@@ -218,6 +218,7 @@ class BERTrend:
 
         for i, (period, group) in enumerate(non_empty_groups):
             try:
+                logger.info(f"Training topic model {i+1}/{len(non_empty_groups)}...")
                 topic_models[period], doc_groups[period], emb_groups[period] = (
                     self._train_by_period(period, group, embedding_model, embeddings)
                 )  # TODO: parallelize?
@@ -226,7 +227,7 @@ class BERTrend:
             except Exception as e:
                 logger.error(f"Error processing period {period}: {str(e)}")
                 logger.exception("Traceback:")
-                continue
+                continue  # TODO: better error handling
 
             # Update progress bar
             """
@@ -245,13 +246,13 @@ class BERTrend:
         self.doc_groups = doc_groups
         # Update emb_groups: Dictionary of document embeddings for each timestamp.
         self.emb_groups = emb_groups
-        logger.debug("Finished training all topic models")
+        logger.success("Finished training all topic models")
 
-    def merge_models(
+    def merge_all_models(
         self,
         min_similarity: int = DEFAULT_MIN_SIMILARITY,
     ):
-        # TODO: add func description
+        """Merge together all topic models."""
         if not self._is_fitted:
             raise RuntimeError("You must fit the BERTrend model before merging models.")
 
@@ -267,7 +268,6 @@ class BERTrend:
         all_merge_histories = []
         all_new_topics = []
 
-        # progress_bar = st.progress(0)
         # TODO: tqdm
         merge_df_size_over_time = []
 
@@ -324,6 +324,7 @@ class BERTrend:
         self.all_merge_histories_df = all_merge_histories_df
         self.all_new_topics_df = all_new_topics_df
 
+        logger.success("All models merged successfully")
         self._are_models_merged = True
 
     def calculate_signal_popularity(

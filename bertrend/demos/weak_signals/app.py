@@ -293,7 +293,7 @@ def training_page():
             if st.button("Merge Models", type="primary"):
                 with st.spinner("Merging models..."):
                     bertrend = SessionStateManager.get("bertrend")
-                    bertrend.merge_models(
+                    bertrend.merge_all_models(
                         min_similarity=SessionStateManager.get("min_similarity"),
                     )
 
@@ -325,19 +325,19 @@ def analysis_page():
 
     else:
         topic_models = SessionStateManager.get("bertrend").topic_models
-        st.subheader("Topic Overview")
-        # Number of Topics Detected for each topic model
-        st.plotly_chart(
-            plot_num_topics(topic_models),
-            config=PLOTLY_BUTTON_SAVE_CONFIG,
-            use_container_width=True,
-        )
-        # Size of Outlier Topic for each topic model
-        st.plotly_chart(
-            plot_size_outliers(topic_models),
-            config=PLOTLY_BUTTON_SAVE_CONFIG,
-            use_container_width=True,
-        )
+        with st.expander("Topic Overview", expanded=False):
+            # Number of Topics Detected for each topic model
+            st.plotly_chart(
+                plot_num_topics(topic_models),
+                config=PLOTLY_BUTTON_SAVE_CONFIG,
+                use_container_width=True,
+            )
+            # Size of Outlier Topic for each topic model
+            st.plotly_chart(
+                plot_size_outliers(topic_models),
+                config=PLOTLY_BUTTON_SAVE_CONFIG,
+                use_container_width=True,
+            )
 
         display_topics_per_timestamp(topic_models)
 
