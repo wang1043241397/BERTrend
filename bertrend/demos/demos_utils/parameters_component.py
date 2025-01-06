@@ -5,7 +5,13 @@
 import streamlit as st
 
 from bertrend import EMBEDDING_CONFIG
-from bertrend.demos.demos_utils.state_utils import register_widget, save_widget_state
+from bertrend.demos.demos_utils.state_utils import (
+    register_widget,
+    save_widget_state,
+    SessionStateManager,
+    register_multiple_widget,
+    reset_widget_state,
+)
 from bertrend.parameters import (
     DEFAULT_UMAP_N_COMPONENTS,
     DEFAULT_UMAP_N_NEIGHBORS,
@@ -28,15 +34,13 @@ from bertrend.parameters import (
 
 def display_local_embeddings():
     """UI settings for local embedding service"""
-    register_widget("language")
-    register_widget("embedding_dtype")
-    register_widget("embedding_model_name")
+    register_multiple_widget("language", "embedding_dtype", "embedding_model_name")
 
     language = st.selectbox(
         "Select Language",
         LANGUAGES,
         key="language",
-        on_change=save_widget_state,
+        on_change=_on_language_change,
     )
     st.selectbox(
         "Embedding Dtype",
@@ -49,10 +53,17 @@ def display_local_embeddings():
     )
     st.selectbox(
         "Embedding Model",
-        embedding_models,
+        options=embedding_models,
         key="embedding_model_name",
         on_change=save_widget_state,
     )
+
+
+def _on_language_change():
+    save_widget_state()
+    # required to handle multi-page app and restore_state call:
+    reset_widget_state("embedding_model_name")
+    st.session_state.pop("embedding_model_name")
 
 
 def display_remote_embeddings():

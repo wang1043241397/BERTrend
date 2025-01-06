@@ -240,8 +240,6 @@ def training_page():
                     day_granularity=SessionStateManager.get("granularity_select"),
                 )
 
-                logger.debug(SessionStateManager.get("language"))
-
                 # Initialize topic model
                 topic_model = TopicModel(
                     umap_n_components=SessionStateManager.get("umap_n_components"),

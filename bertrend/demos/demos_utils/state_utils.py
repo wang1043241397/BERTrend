@@ -27,6 +27,12 @@ def register_widget(key: str):
         st.session_state[STATE_KEYS].append(key)
 
 
+def reset_widget_state(key: str):
+    """Removes the widget state from session state."""
+    if WIDGET_STATE in st.session_state.keys():
+        st.session_state[WIDGET_STATE].pop(key)
+
+
 def register_multiple_widget(*keys: str):
     """Keeps track of widget state in case of multi-pages Streamlit app. It shall be called with the key of
     the widget before the widget creation."""
