@@ -58,7 +58,7 @@ def load_data(
     df[DOCUMENT_ID_COLUMN] = df.index
 
     if URL_COLUMN in df.columns:
-        df["source"] = df[URL_COLUMN].apply(
+        df[SOURCE_COLUMN] = df[URL_COLUMN].apply(
             lambda x: x.split("/")[2] if pd.notna(x) else None
         )
     else:
@@ -70,6 +70,9 @@ def load_data(
 
     if TITLE_COLUMN in df.columns:
         df.drop_duplicates(subset=[TITLE_COLUMN], keep="first", inplace=True)
+    else:
+        # Title colupmn used in topic explorations
+        df[TITLE_COLUMN] = ""
 
     return df
 
