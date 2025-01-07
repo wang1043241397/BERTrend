@@ -19,7 +19,7 @@ ipython = "^8.28.0"
 
 # These packages are mandatory and form the core of this package’s distribution.
 #accelerate = "^0.34.2" # required?
-bertopic = "0.16.4"
+bertopic = "0.16.2"
 black = "^24.10.0"
 datamapplot = "0.3.0"
 dateparser = "^1.2.0"
