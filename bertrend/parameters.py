@@ -101,8 +101,8 @@ KEYBERT_TOP_N_WORDS = 20
 OPENAI_NR_DOCS = 5
 
 # Data Processing
-MIN_CHARS_DEFAULT = 100
-SAMPLE_SIZE_DEFAULT = None  # Or whatever default you want, None means all documents
+MIN_CHARS_DEFAULT = 1
+SAMPLE_SIZE_DEFAULT = 1.0  # Or whatever default you want, None means all documents
 
 # Time Settings
 DEFAULT_WINDOW_SIZE = 7  # days
