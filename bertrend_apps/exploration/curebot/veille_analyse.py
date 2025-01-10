@@ -12,16 +12,17 @@ import streamlit as st
 from loguru import logger
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 
-from bertrend.summary.chatgpt_summarizer import GPTSummarizer
+from bertrend.services.summary.chatgpt_summarizer import GPTSummarizer
 from bertrend.train import train_BERTopic
-from bertrend.utils import (
+from bertrend.utils.data_loading import (
     load_data,
     TIMESTAMP_COLUMN,
-    split_df_by_paragraphs,
+    enhanced_split_df_by_paragraphs,
     clean_dataset,
 )
+
 from bertrend_apps.data_provider.curebot_provider import CurebotProvider
-from bertrend_apps.newsletters.newsletter_features import generate_newsletter, md2html
+from bertrend.llm_utils.newsletter_features import generate_newsletter, md2html
 
 COLUMN_URL = "url"
 MIN_TEXT_LENGTH = 150
@@ -43,7 +44,7 @@ if "st.session_state.topic_expanded" not in st.session_state:
 
 @st.cache_data
 def parse_data_from_files(files: List[UploadedFile]) -> pd.DataFrame:
-    """Read a list of excel files and return a single dataframe containing the data"""
+    """Read a list of Excel files and return a single dataframe containing the data"""
     dataframes = []
 
     with TemporaryDirectory() as tmpdir:
@@ -91,7 +92,7 @@ def parse_data_from_feed(feed_url):
 
 def split_data():
     st.session_state["df_split"] = (
-        split_df_by_paragraphs(st.session_state["df"])
+        enhanced_split_df_by_paragraphs(st.session_state["df"])
         .drop("index", axis=1)
         .sort_values(
             by=TIMESTAMP_COLUMN,

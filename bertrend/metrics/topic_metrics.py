@@ -10,6 +10,7 @@ import pandas as pd
 import gensim.corpora as corpora
 from gensim.models.coherencemodel import CoherenceModel
 from bertopic import BERTopic
+from loguru import logger
 
 
 def get_coherence_value(
@@ -122,7 +123,44 @@ def get_diversity_value(
         raise ValueError(f"Unknown diversity score type: {diversity_score_type}")
 
 
-def proportion_unique_words(topics: List[List[str]], topk: int) -> float:
+def compute_cluster_metrics(bertopic: BERTopic, topics: list[int], dataset: list[str]):
+    """Print topic model coherence and diversity metrics"""
+    coherence_score_type = "c_npmi"
+    diversity_score_type = "puw"
+    logger.info(
+        f"Calculating {coherence_score_type} coherence and {diversity_score_type} diversity..."
+    )
+
+    try:
+        coherence = get_coherence_value(
+            bertopic,
+            topics,
+            dataset,
+            coherence_score_type,
+        )
+        logger.success(f"Coherence score [{coherence_score_type}]: {coherence}")
+
+    except IndexError as e:
+        logger.error(
+            "Error while calculating coherence metric. This likely happens when you're using an LLM to represent "
+            "the topics instead of keywords."
+        )
+    try:
+        diversity = get_diversity_value(
+            bertopic,
+            topics,
+            dataset,
+            diversity_score_type="puw",
+        )
+        logger.success(f"Diversity score [{diversity_score_type}]: {diversity}")
+    except IndexError as e:
+        logger.error(
+            "Error while calculating diversity metric. This likely happens when you're using an LLM to represent "
+            "the topics instead of keywords."
+        )
+
+
+def proportion_unique_words(topics: List[List[str]], top_k: int) -> float:
     """
     Compute the proportion of unique words.
 
@@ -135,12 +173,12 @@ def proportion_unique_words(topics: List[List[str]], topk: int) -> float:
     """
     unique_words = set()
     for topic in topics:
-        unique_words = unique_words.union(set(topic[:topk]))
-    puw = len(unique_words) / (topk * len(topics))
+        unique_words = unique_words.union(set(topic[:top_k]))
+    puw = len(unique_words) / (top_k * len(topics))
     return puw
 
 
-def pairwise_jaccard_diversity(topics: List[List[str]], topk: int) -> float:
+def pairwise_jaccard_diversity(topics: List[List[str]], top_k: int) -> float:
     """
     Compute the average pairwise Jaccard distance between the topics.
 
@@ -154,8 +192,8 @@ def pairwise_jaccard_diversity(topics: List[List[str]], topk: int) -> float:
     dist = 0
     count = 0
     for list1, list2 in combinations(topics, 2):
-        js = 1 - len(set(list1[:topk]).intersection(set(list2[:topk]))) / len(
-            set(list1[:topk]).union(set(list2[:topk]))
+        js = 1 - len(set(list1[:top_k]).intersection(set(list2[:top_k]))) / len(
+            set(list1[:top_k]).union(set(list2[:top_k]))
         )
         dist += js
         count += 1
