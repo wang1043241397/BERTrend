@@ -60,6 +60,9 @@ KEYBERTINSPIRED_REPRESENTATION_MODEL = "KeyBERTInspired"
 OPENAI_REPRESENTATION_MODEL = "OpenAI"
 
 # BERTopic Hyperparameters
+DEFAULT_BERTOPIC_CONFIG_FILE = (
+    Path(__file__).parent / "topic_model" / "topic_model_default_config.toml"
+)
 DEFAULT_UMAP_N_COMPONENTS = BERTOPIC_PARAMETERS["umap_n_components"]
 DEFAULT_UMAP_N_NEIGHBORS = BERTOPIC_PARAMETERS["umap_n_neighbors"]
 DEFAULT_HDBSCAN_MIN_CLUSTER_SIZE = BERTOPIC_PARAMETERS["hdbscan_min_cluster_size"]

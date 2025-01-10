@@ -46,6 +46,7 @@ from bertrend.parameters import (
     MMR_REPRESENTATION_MODEL,
     OPENAI_REPRESENTATION_MODEL,
     KEYBERTINSPIRED_REPRESENTATION_MODEL,
+    DEFAULT_BERTOPIC_CONFIG_FILE,
 )
 
 
@@ -77,132 +78,57 @@ class TopicModelOutput:
 
 class TopicModel:
     """
-    Class that encapsulates the parameters for topic models.
-
-    Args:
-        umap_n_components (int): Number of components for UMAP.
-        umap_n_neighbors (int): Number of neighbors for UMAP.
-        umap_min_dist (float): Minimum distance between neighbors for UMAP.
-        hdbscan_min_cluster_size (int): Minimum cluster size for HDBSCAN.
-        hdbscan_min_samples (int): Minimum samples for HDBSCAN.
-        hdbscan_cluster_selection_method (str): Cluster selection method for HDBSCAN.
-        vectorizer_ngram_range (Tuple[int, int]): N-gram range for CountVectorizer.
-        min_df (int): Minimum document frequency for CountVectorizer.
-        top_n_words (int): Number of top words to include in topic representations.
-        zeroshot_topic_list (List[str]): List of topics for zero-shot classification.
-        zeroshot_min_similarity (float): Minimum similarity threshold for zero-shot classification.
-        language (str): Used to determine the list of stopwords to use
+    Utility class to manage and configure BERTopic instances with custom parameters.
     """
 
-    def __init__(
-        self,
-        umap_n_components: int = DEFAULT_UMAP_N_COMPONENTS,
-        umap_n_neighbors: int = DEFAULT_UMAP_N_NEIGHBORS,
-        umap_min_dist: float = DEFAULT_UMAP_MIN_DIST,
-        hdbscan_min_cluster_size: int = DEFAULT_HDBSCAN_MIN_CLUSTER_SIZE,
-        hdbscan_min_samples: int = DEFAULT_HDBSCAN_MIN_SAMPLES,
-        hdbscan_cluster_selection_method: str = HDBSCAN_CLUSTER_SELECTION_METHODS[0],
-        vectorizer_ngram_range: Tuple[int, int] = VECTORIZER_NGRAM_RANGES[0],
-        min_df: int = DEFAULT_MIN_DF,
-        top_n_words: int = DEFAULT_TOP_N_WORDS,
-        language: str = LANGUAGES[0],
-        outlier_reduction_strategy: Literal[
-            "c-tf-idf", "embeddings"
-        ] = OUTLIER_REDUCTION_STRATEGY,
-        mmr_diversity: float = DEFAULT_MMR_DIVERSITY,
-        zeroshot_topic_list: List[str] = DEFAULT_ZEROSHOT_TOPICS,
-        representation_models=None,
-    ):
-        self.umap_n_components = umap_n_components
-        self.umap_n_neighbors = umap_n_neighbors
-        self.umap_min_dist = umap_min_dist
-        self.hdbscan_min_cluster_size = hdbscan_min_cluster_size
-        self.hdbscan_min_samples = hdbscan_min_samples
-        self.hdbscan_cluster_selection_method = hdbscan_cluster_selection_method
-        self.vectorizer_ngram_range = vectorizer_ngram_range
-        self.min_df = min_df
-        self.top_n_words = top_n_words
-        self.language = language
-        self.outlier_reduction_strategy = outlier_reduction_strategy
-        self.mmr_diversity = mmr_diversity
-        self.zeroshot_topic_list = zeroshot_topic_list
-        self.representation_models = (
-            representation_models
-            if representation_models is not None
-            else [MMR_REPRESENTATION_MODEL]
-        )
+    def __init__(self, config_file: str | Path = DEFAULT_BERTOPIC_CONFIG_FILE):
+        """
+        Instanciate a class from a TOML config file.
+        `config_file` can be:
+            - a `str` representing the TOML file
+            - a `Path` to a TOML file
+
+        To see file format and list of parameters: bertrend/topic_model/topic_model_default_config.toml
+        """
+        self.config_file = config_file
+
+        # Load config file
+        self.config = self.load_config()
 
         # Initialize models based on those parameters
         self._initialize_models()
 
-    @classmethod
-    def from_config(cls, config: Path) -> "TopicModel":
-        """Creates a topic model from a toml configuration file."""
-        parameters = load_toml_config(config)["bertopic_parameters"]
-        return cls(
-            umap_n_components=parameters.get(
-                "umap_n_components", DEFAULT_UMAP_N_COMPONENTS
-            ),
-            umap_n_neighbors=parameters.get(
-                "umap_n_neighbors", DEFAULT_UMAP_N_NEIGHBORS
-            ),
-            umap_min_dist=parameters.get("umap_min_dist", DEFAULT_UMAP_MIN_DIST),
-            hdbscan_min_cluster_size=parameters.get(
-                "hdbscan_min_cluster_size", DEFAULT_HDBSCAN_MIN_CLUSTER_SIZE
-            ),
-            hdbscan_min_samples=parameters.get(
-                "hdbscan_min_samples", DEFAULT_HDBSCAN_MIN_SAMPLES
-            ),
-            hdbscan_cluster_selection_method=parameters.get(
-                "hdbscan_cluster_selection_method", HDBSCAN_CLUSTER_SELECTION_METHODS[0]
-            ),
-            vectorizer_ngram_range=parameters.get(
-                "vectorizer_ngram_range", VECTORIZER_NGRAM_RANGES[0]
-            ),
-            min_df=parameters.get("min_df", DEFAULT_MIN_DF),
-            top_n_words=parameters.get("top_n_words", DEFAULT_TOP_N_WORDS),
-            language=parameters.get("language", LANGUAGES[0]),
-            outlier_reduction_strategy=parameters.get(
-                "outlier_reduction_strategy", OUTLIER_REDUCTION_STRATEGY
-            ),
-            mmr_diversity=parameters.get("mmr_diversity", DEFAULT_MMR_DIVERSITY),
-            zeroshot_topic_list=parameters.get(
-                "zeroshot_topic_list", DEFAULT_ZEROSHOT_TOPICS
-            ),
-            representation_models=parameters.get(
-                "representation_models", [MMR_REPRESENTATION_MODEL]
-            ),
+    def load_config(self) -> dict:
+        config = load_toml_config(self.config_file)
+
+        # Handle specific parameters
+        # Transform ngram_range into tuple
+        config["vectorizer_model"]["ngram_range"] = tuple(
+            config["vectorizer_model"]["ngram_range"]
         )
+        # Load stop words list
+        if config["vectorizer_model"]["stop_words"]:
+            stop_words = (
+                STOPWORDS
+                if config["bertopic_model"]["language"] == "French"
+                else ENGLISH_STOPWORDS
+            )
+            config["vectorizer_model"]["stop_words"] = stop_words
+        return config
 
     def _initialize_models(self):
         self.umap_model = UMAP(
-            n_components=self.umap_n_components,
-            n_neighbors=self.umap_n_neighbors,
-            min_dist=self.umap_min_dist,
+            **self.config["umap_model"],
             random_state=42,
-            metric="cosine",
         )
 
-        self.hdbscan_model = HDBSCAN(
-            min_cluster_size=self.hdbscan_min_cluster_size,
-            min_samples=self.hdbscan_min_samples,
-            metric="euclidean",
-            cluster_selection_method=self.hdbscan_cluster_selection_method,
-            prediction_data=True,
-        )
+        self.hdbscan_model = HDBSCAN(**self.config["hdbscan_model"])
 
-        self.stopword_set = (
-            STOPWORDS if self.language == "French" else ENGLISH_STOPWORDS
-        )
-        self.vectorizer_model = CountVectorizer(
-            stop_words=self.stopword_set,
-            min_df=self.min_df,
-            ngram_range=self.vectorizer_ngram_range,
-        )
-        self.mmr_model = MaximalMarginalRelevance(diversity=self.mmr_diversity)
-        self.ctfidf_model = ClassTfidfTransformer(
-            reduce_frequent_words=True, bm25_weighting=False
-        )
+        self.vectorizer_model = CountVectorizer(**self.config["vectorizer_model"])
+
+        self.ctfidf_model = ClassTfidfTransformer(**self.config["ctfidf_model"])
+
+        self.mmr_model = MaximalMarginalRelevance(**self.config["mmr_model"])
 
     def _initialize_openai_representation(self):
         return OpenAI(
@@ -215,7 +141,7 @@ class TopicModel:
             nr_docs=OPENAI_NR_DOCS,
             prompt=(
                 BERTOPIC_FRENCH_TOPIC_REPRESENTATION_PROMPT
-                if self.language == "French"
+                if self.config["bertopic_model"]["language"] == "fr"
                 else None
             ),
             chat=True,
@@ -239,7 +165,7 @@ class TopicModel:
         }
         models = [
             model_map[rep]
-            for rep in self.representation_models
+            for rep in self.config["bertopic_model"]["representation_model"]
             if rep != OPENAI_REPRESENTATION_MODEL and rep in model_map
         ]
         return models[0] if len(models) == 1 else models
@@ -272,7 +198,7 @@ class TopicModel:
         """
         if zeroshot_topic_list is None:
             # use value assigned at creation time
-            zeroshot_topic_list = self.zeroshot_topic_list
+            zeroshot_topic_list = self.config["bertopic_model"]["zeroshot_topic_list"]
         logger.debug(
             f"\tCreating topic model with zeroshot_topic_list: {zeroshot_topic_list}"
         )
@@ -308,7 +234,7 @@ class TopicModel:
                     documents=docs,
                     topics=topics,
                     embeddings=embeddings,
-                    strategy=OUTLIER_REDUCTION_STRATEGY,
+                    strategy=self.config["reduce_outliers"]["strategy"],
                 )
             topic_model.update_topics(
                 docs=docs,
@@ -319,7 +245,10 @@ class TopicModel:
             )
 
             # If OpenAI model is present, apply it after reducing outliers
-            if OPENAI_REPRESENTATION_MODEL in self.representation_models:
+            if (
+                OPENAI_REPRESENTATION_MODEL
+                in self.config["bertopic_model"]["representation_model"]
+            ):
                 logger.info("Applying OpenAI representation model...")
                 backup_representation_model = topic_model.representation_model
                 topic_model.update_topics(
