@@ -1,12 +1,16 @@
-# Example of configuration file to be used for topic model
+# Default configuration file to be used for topic model
+
+# Global parameters
+[global]
+language = "French"
 
 # BERTopic parameters: https://maartengr.github.io/BERTopic/api/bertopic.html#bertopic._bertopic.BERTopic.__init__
 [bertopic_model]
-language = "French"
 top_n_words = 10
 verbose = true
 representation_model = ["MaximalMarginalRelevance"] # KeyBERTInspired, OpenAI
 zeroshot_topic_list = []
+zeroshot_min_similarity = 0
 
 # UMAP parameters: https://umap-learn.readthedocs.io/en/latest/api.html
 [umap_model]
@@ -14,6 +18,7 @@ n_neighbors = 5
 n_components = 5
 min_dist = 0.0
 metric = "cosine"
+random_state = 42
 
 # HDBSCAN parameters: https://hdbscan.readthedocs.io/en/latest/api.html
 [hdbscan_model]

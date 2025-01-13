@@ -2,10 +2,11 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
-from pathlib import Path
-from typing import Tuple, List, Literal
-
 import numpy as np
+
+from pathlib import Path
+from loguru import logger
+
 from bertopic import BERTopic
 from bertopic.representation import (
     MaximalMarginalRelevance,
@@ -14,31 +15,18 @@ from bertopic.representation import (
     BaseRepresentation,
 )
 from bertopic.vectorizers import ClassTfidfTransformer
+
 from hdbscan import HDBSCAN
-from loguru import logger
-from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import CountVectorizer
 from umap import UMAP
+from sentence_transformers import SentenceTransformer
 
 from bertrend import load_toml_config, LLM_CONFIG
 from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend.llm_utils.prompts import BERTOPIC_FRENCH_TOPIC_REPRESENTATION_PROMPT
 from bertrend.parameters import (
-    DEFAULT_UMAP_N_COMPONENTS,
-    DEFAULT_UMAP_N_NEIGHBORS,
-    DEFAULT_HDBSCAN_MIN_CLUSTER_SIZE,
-    DEFAULT_HDBSCAN_MIN_SAMPLES,
-    HDBSCAN_CLUSTER_SELECTION_METHODS,
-    VECTORIZER_NGRAM_RANGES,
-    DEFAULT_MIN_DF,
-    DEFAULT_TOP_N_WORDS,
-    LANGUAGES,
-    DEFAULT_UMAP_MIN_DIST,
     STOPWORDS,
-    DEFAULT_MMR_DIVERSITY,
-    OUTLIER_REDUCTION_STRATEGY,
     ENGLISH_STOPWORDS,
-    DEFAULT_ZEROSHOT_TOPICS,
     KEYBERT_TOP_N_WORDS,
     KEYBERT_NR_REPR_DOCS,
     KEYBERT_NR_CANDIDATE_WORDS,
@@ -98,29 +86,40 @@ class TopicModel:
         # Initialize models based on those parameters
         self._initialize_models()
 
+        # Get representation model
+        self.config["bertopic_model"]["representation_model"] = (
+            self._get_representation_models(
+                self.config["bertopic_model"]["representation_model"]
+            )
+        )
+
     def load_config(self) -> dict:
         config = load_toml_config(self.config_file)
 
         # Handle specific parameters
+
         # Transform ngram_range into tuple
         config["vectorizer_model"]["ngram_range"] = tuple(
             config["vectorizer_model"]["ngram_range"]
         )
+
         # Load stop words list
         if config["vectorizer_model"]["stop_words"]:
             stop_words = (
                 STOPWORDS
-                if config["bertopic_model"]["language"] == "French"
+                if config["global"]["language"] == "French"
                 else ENGLISH_STOPWORDS
             )
             config["vectorizer_model"]["stop_words"] = stop_words
+
+        # BERTopic needs a "None" instead of an empty list, otherwise it'll attempt zeroshot topic modeling on an empty list
+        if len(config["bertopic_model"]["zeroshot_topic_list"]) == 0:
+            config["bertopic_model"]["zeroshot_topic_list"] = None
+
         return config
 
     def _initialize_models(self):
-        self.umap_model = UMAP(
-            **self.config["umap_model"],
-            random_state=42,
-        )
+        self.umap_model = UMAP(**self.config["umap_model"])
 
         self.hdbscan_model = HDBSCAN(**self.config["hdbscan_model"])
 
@@ -141,7 +140,7 @@ class TopicModel:
             nr_docs=OPENAI_NR_DOCS,
             prompt=(
                 BERTOPIC_FRENCH_TOPIC_REPRESENTATION_PROMPT
-                if self.config["bertopic_model"]["language"] == "fr"
+                if self.config["global"]["language"] == "French"
                 else None
             ),
             chat=True,
@@ -157,7 +156,8 @@ class TopicModel:
 
     def _get_representation_models(
         self,
-    ) -> BaseRepresentation | List[BaseRepresentation]:
+        representation_model: list[str],
+    ) -> BaseRepresentation | list[BaseRepresentation]:
         # NB. If OpenAI representation model is present, it will be used in separate step
         model_map = {
             MMR_REPRESENTATION_MODEL: self.mmr_model,
@@ -165,18 +165,20 @@ class TopicModel:
         }
         models = [
             model_map[rep]
-            for rep in self.config["bertopic_model"]["representation_model"]
+            for rep in representation_model
             if rep != OPENAI_REPRESENTATION_MODEL and rep in model_map
         ]
+        self.use_openai_representation = (
+            OPENAI_REPRESENTATION_MODEL in representation_model
+        )
+
         return models[0] if len(models) == 1 else models
 
     def fit(
         self,
-        docs: List[str],
+        docs: list[str],
         embedding_model: SentenceTransformer | str,
         embeddings: np.ndarray,
-        zeroshot_topic_list=None,
-        zeroshot_min_similarity: float = 0,
     ) -> TopicModelOutput:
         """
         Create a TopicModelOutput model.
@@ -189,25 +191,12 @@ class TopicModel:
             hdbscan_model (HDBSCAN): HDBSCAN model for clustering.
             vectorizer_model (CountVectorizer): CountVectorizer model for creating the document-term matrix.
             mmr_model (MaximalMarginalRelevance): MMR model for diverse topic representation.
-            top_n_words (int): Number of top words to include in topic representations.
-            zeroshot_topic_list (List[str]): List of topics for zero-shot classification.
-            zeroshot_min_similarity (float): Minimum similarity threshold for zero-shot classification.
 
         Returns:
             BERTopic: A fitted BERTopic model.
         """
-        if zeroshot_topic_list is None:
-            # use value assigned at creation time
-            zeroshot_topic_list = self.config["bertopic_model"]["zeroshot_topic_list"]
-        logger.debug(
-            f"\tCreating topic model with zeroshot_topic_list: {zeroshot_topic_list}"
-        )
+        # Load and fit model
         try:
-            # Handle scenario where user enters a bunch of white space characters or any scenario where we can't extract zeroshot topics
-            # BERTopic needs a "None" instead of an empty list, otherwise it'll attempt zeroshot topic modeling on an empty list
-            if len(zeroshot_topic_list) == 0:
-                zeroshot_topic_list = None
-
             logger.debug("\tInitializing BERTopic model")
 
             topic_model = BERTopic(
@@ -216,9 +205,7 @@ class TopicModel:
                 hdbscan_model=self.hdbscan_model,
                 vectorizer_model=self.vectorizer_model,
                 ctfidf_model=self.ctfidf_model,
-                representation_model=self._get_representation_models(),
-                zeroshot_topic_list=zeroshot_topic_list,
-                zeroshot_min_similarity=zeroshot_min_similarity,
+                **self.config["bertopic_model"],
             )
             logger.success("\tBERTopic model instance created successfully")
 
@@ -241,14 +228,13 @@ class TopicModel:
                 topics=new_topics,
                 vectorizer_model=self.vectorizer_model,
                 ctfidf_model=self.ctfidf_model,
-                representation_model=self._get_representation_models(),
+                representation_model=self.config["bertopic_model"][
+                    "representation_model"
+                ],
             )
 
             # If OpenAI model is present, apply it after reducing outliers
-            if (
-                OPENAI_REPRESENTATION_MODEL
-                in self.config["bertopic_model"]["representation_model"]
-            ):
+            if self.use_openai_representation:
                 logger.info("Applying OpenAI representation model...")
                 backup_representation_model = topic_model.representation_model
                 topic_model.update_topics(
