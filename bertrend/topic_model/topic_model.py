@@ -94,6 +94,9 @@ class TopicModel:
         )
 
     def _load_config(self) -> dict:
+        """
+        Load the TOML config file as a dict when instanciating the class.
+        """
         config = load_toml_config(self.config_file)
 
         # Handle specific parameters
