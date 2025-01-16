@@ -81,7 +81,7 @@ class TopicModel:
         self.config_file = config_file
 
         # Load config file
-        self.config = self.load_config()
+        self.config = self._load_config()
 
         # Initialize models based on those parameters
         self._initialize_models()
@@ -93,7 +93,7 @@ class TopicModel:
             )
         )
 
-    def load_config(self) -> dict:
+    def _load_config(self) -> dict:
         config = load_toml_config(self.config_file)
 
         # Handle specific parameters
