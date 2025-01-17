@@ -246,7 +246,7 @@ def test_create_topic_model_with_empty_zeroshot_topic_list(
     topic_model, mock_sentence_transformer, mock_embedding
 ):
     """Test create_topic_model with an empty zeroshot_topic_list."""
-    docs = ["Document 1", "Document 2"] * 100
+    docs = ["Car", "Machine Learning"] * 100
     zeroshot_topic_list = []
     zeroshot_min_similarity = 0.7
 
