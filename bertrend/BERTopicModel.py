@@ -181,6 +181,8 @@ class BERTopicModel:
         docs: list[str],
         embedding_model: SentenceTransformer | str,
         embeddings: np.ndarray,
+        zeroshot_topic_list: list[str] | None = None,
+        zeroshot_min_similarity: float | None = None,
     ) -> BERTopicModelOutput:
         """
         Create a TopicModelOutput model.
@@ -197,6 +199,13 @@ class BERTopicModel:
         Returns:
             BERTopic: A fitted BERTopic model.
         """
+        # Override zeroshot parameters if provided in method argument
+        if zeroshot_topic_list is not None:
+            self.config["bertopic_model"]["zeroshot_topic_list"] = zeroshot_topic_list
+        if zeroshot_min_similarity is not None:
+            self.config["bertopic_model"][
+                "zeroshot_min_similarity"
+            ] = zeroshot_min_similarity
         # Load and fit model
         try:
             logger.debug("\tInitializing BERTopic model")
