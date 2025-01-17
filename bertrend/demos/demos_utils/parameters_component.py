@@ -9,7 +9,7 @@ from code_editor import code_editor
 from bertrend import (
     BERTOPIC_DEFAULT_CONFIG_PATH,
     BERTREND_DEFAULT_CONFIG_PATH,
-    EMBEDDING_PARAMETERS,
+    EMBEDDING_CONFIG,
     load_toml_config,
 )
 from bertrend.demos.demos_utils.state_utils import (
@@ -70,9 +70,9 @@ def display_remote_embeddings():
     register_widget("embedding_service_hostname")
     register_widget("embedding_service_port")
     if "embedding_service_hostname" not in st.session_state:
-        st.session_state["embedding_service_hostname"] = EMBEDDING_PARAMETERS["host"]
+        st.session_state["embedding_service_hostname"] = EMBEDDING_CONFIG["host"]
     if "embedding_service_port" not in st.session_state:
-        st.session_state["embedding_service_port"] = EMBEDDING_PARAMETERS["port"]
+        st.session_state["embedding_service_port"] = EMBEDDING_CONFIG["port"]
     st.text_input(
         "Embedding service hostname",
         key="embedding_service_hostname",
@@ -80,7 +80,7 @@ def display_remote_embeddings():
     )
     st.text_input(
         "Embedding service port",
-        value=EMBEDDING_PARAMETERS["port"],
+        value=EMBEDDING_CONFIG["port"],
         on_change=save_widget_state,
     )
 

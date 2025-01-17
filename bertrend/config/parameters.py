@@ -8,7 +8,7 @@ from pathlib import Path
 
 import torch
 
-from bertrend import BERTREND_PARAMETERS, EMBEDDING_PARAMETERS
+from bertrend import BERTREND_CONFIG, EMBEDDING_CONFIG
 
 stopwords_en_file = Path(__file__).parent.parent / "resources" / "stopwords-en.json"
 stopwords_fr_file = Path(__file__).parent.parent / "resources" / "stopwords-fr.json"
@@ -69,13 +69,13 @@ REPRESENTATION_MODELS = [
 ]
 
 # BERTrend parameters
-SIGNAL_CLASSIF_LOWER_BOUND = BERTREND_PARAMETERS["signal_classif_lower_bound"]
-SIGNAL_CLASSIF_UPPER_BOUND = BERTREND_PARAMETERS["signal_classif_upper_bound"]
+SIGNAL_CLASSIF_LOWER_BOUND = BERTREND_CONFIG["signal_classif_lower_bound"]
+SIGNAL_CLASSIF_UPPER_BOUND = BERTREND_CONFIG["signal_classif_upper_bound"]
 
 # Embedding Settings
-EMBEDDING_DTYPES = EMBEDDING_PARAMETERS["embedding_dtypes"]
-EMBEDDING_BATCH_SIZE = EMBEDDING_PARAMETERS["embedding_batch_size"]
-EMBEDDING_MAX_SEQ_LENGTH = EMBEDDING_PARAMETERS["embedding_max_seq_length"]
+EMBEDDING_DTYPES = EMBEDDING_CONFIG["embedding_dtypes"]
+EMBEDDING_BATCH_SIZE = EMBEDDING_CONFIG["embedding_batch_size"]
+EMBEDDING_MAX_SEQ_LENGTH = EMBEDDING_CONFIG["embedding_max_seq_length"]
 EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Representation models parameters

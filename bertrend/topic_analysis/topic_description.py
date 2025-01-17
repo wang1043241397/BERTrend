@@ -6,7 +6,7 @@ import pandas as pd
 from bertopic import BERTopic
 from loguru import logger
 
-from bertrend import LLM_PARAMETERS
+from bertrend import LLM_CONFIG
 from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend.topic_analysis.prompts import TOPIC_DESCRIPTION_PROMPT
 
@@ -37,9 +37,9 @@ def generate_topic_description(
     # logger.debug(f"Prompt for GPT:\n{prompt}")
     try:
         client = OpenAI_Client(
-            api_key=LLM_PARAMETERS["api_key"],
-            endpoint=LLM_PARAMETERS["endpoint"],
-            model=LLM_PARAMETERS["model"],
+            api_key=LLM_CONFIG["api_key"],
+            endpoint=LLM_CONFIG["endpoint"],
+            model=LLM_CONFIG["model"],
         )
         return client.generate(
             user_prompt=prompt.format(

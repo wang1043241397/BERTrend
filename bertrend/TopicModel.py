@@ -21,7 +21,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from umap import UMAP
 from sentence_transformers import SentenceTransformer
 
-from bertrend import load_toml_config, BERTOPIC_DEFAULT_CONFIG_PATH, LLM_PARAMETERS
+from bertrend import load_toml_config, BERTOPIC_DEFAULT_CONFIG_PATH, LLM_CONFIG
 from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend.llm_utils.prompts import BERTOPIC_FRENCH_TOPIC_REPRESENTATION_PROMPT
 from bertrend.config.parameters import (
@@ -134,11 +134,11 @@ class TopicModel:
     def _initialize_openai_representation(self):
         return OpenAI(
             client=OpenAI_Client(
-                api_key=LLM_PARAMETERS["api_key"],
-                endpoint=LLM_PARAMETERS["endpoint"],
-                model=LLM_PARAMETERS["model"],
+                api_key=LLM_CONFIG["api_key"],
+                endpoint=LLM_CONFIG["endpoint"],
+                model=LLM_CONFIG["model"],
             ).llm_client,
-            model=LLM_PARAMETERS["model"],
+            model=LLM_CONFIG["model"],
             nr_docs=OPENAI_NR_DOCS,
             prompt=(
                 BERTOPIC_FRENCH_TOPIC_REPRESENTATION_PROMPT

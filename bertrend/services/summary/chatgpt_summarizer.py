@@ -5,7 +5,7 @@
 
 from loguru import logger
 
-from bertrend import LLM_PARAMETERS
+from bertrend import LLM_CONFIG
 from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend.services.summary.prompts import (
     FR_SYSTEM_SUMMARY_SENTENCES,
@@ -22,9 +22,9 @@ class GPTSummarizer(Summarizer):
     def __init__(self, api_key: str = None, endpoint: str = None):
         # retrieve chatGPT config
         self.api = OpenAI_Client(
-            api_key=LLM_PARAMETERS["api_key"] if not api_key else api_key,
-            endpoint=LLM_PARAMETERS["endpoint"] if not endpoint else endpoint,
-            model=LLM_PARAMETERS["model"],
+            api_key=LLM_CONFIG["api_key"] if not api_key else api_key,
+            endpoint=LLM_CONFIG["endpoint"] if not endpoint else endpoint,
+            model=LLM_CONFIG["model"],
         )
         logger.debug("GPTSummarizer initialized")
 
