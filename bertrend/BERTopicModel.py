@@ -115,7 +115,7 @@ class BERTopicModel:
             config["vectorizer_model"]["stop_words"] = stop_words
 
         # BERTopic needs a "None" instead of an empty list, otherwise it'll attempt zeroshot topic modeling on an empty list
-        if len(config["bertopic_model"]["zeroshot_topic_list"]) == 0:
+        if not config["bertopic_model"]["zeroshot_topic_list"]:  # empty list
             config["bertopic_model"]["zeroshot_topic_list"] = None
 
         return config
@@ -200,7 +200,7 @@ class BERTopicModel:
             BERTopic: A fitted BERTopic model.
         """
         # Override zeroshot parameters if provided in method argument
-        if zeroshot_topic_list is not None:
+        if zeroshot_topic_list:
             self.config["bertopic_model"]["zeroshot_topic_list"] = zeroshot_topic_list
         if zeroshot_min_similarity is not None:
             self.config["bertopic_model"][
