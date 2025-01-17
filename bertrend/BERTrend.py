@@ -15,11 +15,15 @@ from loguru import logger
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from bertrend import MODELS_DIR, CACHE_PATH, load_toml_config
+from bertrend import (
+    MODELS_DIR,
+    CACHE_PATH,
+    BERTREND_DEFAULT_CONFIG_PATH,
+    load_toml_config,
+)
 
-from bertrend.topic_model.topic_model import TopicModel
-from bertrend.parameters import (
-    DEFAULT_BERTREND_CONFIG_FILE,
+from bertrend.TopicModel import TopicModel
+from bertrend.config.parameters import (
     DOC_INFO_DF_FILE,
     TOPIC_INFO_DF_FILE,
     DOC_GROUPS_FILE,
@@ -50,9 +54,17 @@ class BERTrend:
 
     def __init__(
         self,
-        config_file: str | Path = DEFAULT_BERTREND_CONFIG_FILE,
+        config_file: str | Path = BERTREND_DEFAULT_CONFIG_PATH,
         topic_model: TopicModel = None,
     ):
+        """
+        Instanciate a class from a TOML config file.
+        `config_file` can be:
+            - a `str` representing the TOML file
+            - a `Path` to a TOML file
+
+        To see file format and list of parameters: bertrend/config/bertrend_default_config.toml
+        """
         # Load configuration file
         self.config_file = config_file
         self.config = self._load_config()
@@ -91,7 +103,7 @@ class BERTrend:
         """
         Load the TOML config file as a dict when instanciating the class.
         """
-        config = load_toml_config(self.config_file)["bertrend"]
+        config = load_toml_config(self.config_file)
         return config
 
     def _train_by_period(

@@ -8,7 +8,7 @@ from typing import List
 
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
-from bertrend.parameters import EMBEDDING_DEVICE
+from bertrend.config.parameters import EMBEDDING_DEVICE
 from bertrend.services.summarizer import Summarizer
 
 

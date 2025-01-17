@@ -9,8 +9,8 @@ from unittest.mock import MagicMock
 
 from bertopic import BERTopic
 
-from bertrend.topic_model.topic_model import TopicModel, TopicModelOutput
-from bertrend.parameters import (
+from bertrend.TopicModel import TopicModel, TopicModelOutput
+from bertrend.config.parameters import (
     DEFAULT_UMAP_N_COMPONENTS,
     DEFAULT_UMAP_N_NEIGHBORS,
     DEFAULT_HDBSCAN_MIN_CLUSTER_SIZE,

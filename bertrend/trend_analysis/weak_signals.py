@@ -16,11 +16,11 @@ from loguru import logger
 from tqdm import tqdm
 
 from bertrend.llm_utils.openai_client import OpenAI_Client
-from bertrend.parameters import (
+from bertrend.config.parameters import (
     SIGNAL_CLASSIF_LOWER_BOUND,
     SIGNAL_CLASSIF_UPPER_BOUND,
 )
-from bertrend import SIGNAL_EVOLUTION_DATA_DIR, LLM_CONFIG
+from bertrend import SIGNAL_EVOLUTION_DATA_DIR, LLM_PARAMETERS
 from bertrend.trend_analysis.prompts import get_prompt, save_html_output
 
 
@@ -530,9 +530,9 @@ def analyze_signal(
 
         try:
             openai_client = OpenAI_Client(
-                api_key=LLM_CONFIG["api_key"],
-                endpoint=LLM_CONFIG["endpoint"],
-                model=LLM_CONFIG["model"],
+                api_key=LLM_PARAMETERS["api_key"],
+                endpoint=LLM_PARAMETERS["endpoint"],
+                model=LLM_PARAMETERS["model"],
             )
 
             # First prompt: Generate summary
@@ -544,10 +544,10 @@ def analyze_signal(
                 content_summary=content_summary,
             )
             summary = openai_client.generate(
-                system_prompt=LLM_CONFIG["system_prompt"],
+                system_prompt=LLM_PARAMETERS["system_prompt"],
                 user_prompt=summary_prompt,
-                temperature=LLM_CONFIG["temperature"],
-                max_tokens=LLM_CONFIG["max_tokens"],
+                temperature=LLM_PARAMETERS["temperature"],
+                max_tokens=LLM_PARAMETERS["max_tokens"],
             )
 
             # Second prompt: Analyze weak signal
@@ -556,10 +556,10 @@ def analyze_signal(
                 language, "weak_signal", summary_from_first_prompt=summary
             )
             weak_signal_analysis = openai_client.generate(
-                system_prompt=LLM_CONFIG["system_prompt"],
+                system_prompt=LLM_PARAMETERS["system_prompt"],
                 user_prompt=weak_signal_prompt,
-                temperature=LLM_CONFIG["temperature"],
-                max_tokens=LLM_CONFIG["max_tokens"],
+                temperature=LLM_PARAMETERS["temperature"],
+                max_tokens=LLM_PARAMETERS["max_tokens"],
             )
 
             # Third prompt: Generate HTML format
@@ -571,10 +571,10 @@ def analyze_signal(
                 weak_signal_analysis=weak_signal_analysis,
             )
             formatted_html = openai_client.generate(
-                system_prompt=LLM_CONFIG["system_prompt"],
+                system_prompt=LLM_PARAMETERS["system_prompt"],
                 user_prompt=html_format_prompt,
-                temperature=LLM_CONFIG["temperature"],
-                max_tokens=LLM_CONFIG["max_tokens"],
+                temperature=LLM_PARAMETERS["temperature"],
+                max_tokens=LLM_PARAMETERS["max_tokens"],
             )
 
             # Save the formatted HTML

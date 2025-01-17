@@ -3,18 +3,6 @@
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
 
-# BERTrend Hyperparameters
-[bertrend]
-# Data split settings
-granularity = 2
-# Merge model settings
-min_similarity = 0.7
-# Signal popularity settings
-decay_factor = 0.01
-decay_power = 2
-signal_classif_lower_bound = 10
-signal_classif_upper_bound = 75
-
 # Embedding service parameters
 [embedding_service]
 # Indicates if BERTrend shall use local embedding service (run by BERTrend) or if the embedding service
@@ -24,6 +12,9 @@ use_local = true
 model_name = "OrdalieTech/Solon-embeddings-large-0.1"
 host = "10.132.6.110"
 port = 6464
+embedding_dtypes = ["float32", "float16", "bfloat16"]
+embedding_batch_size = 5000
+embedding_max_seq_length = 512
 
 # LLM service parameters
 [llm_service]

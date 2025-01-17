@@ -14,8 +14,8 @@ from loguru import logger
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
-from bertrend import EMBEDDING_CONFIG
-from bertrend.parameters import (
+from bertrend import EMBEDDING_PARAMETERS
+from bertrend.config.parameters import (
     EMBEDDING_DEVICE,
     EMBEDDING_BATCH_SIZE,
     EMBEDDING_MAX_SEQ_LENGTH,
@@ -27,13 +27,13 @@ class EmbeddingService(BaseEmbedder):
 
     def __init__(
         self,
-        local: bool = EMBEDDING_CONFIG.get("use_local", True),
-        model_name: str = EMBEDDING_CONFIG.get("model_name", None),
+        local: bool = EMBEDDING_PARAMETERS.get("use_local", True),
+        model_name: str = EMBEDDING_PARAMETERS.get("model_name", None),
         embedding_dtype: Literal[
             "float32", "float16", "bfloat16"
-        ] = EMBEDDING_CONFIG.get("embedding_dtype", "float32"),
-        host: str = EMBEDDING_CONFIG["host"],
-        port: str = EMBEDDING_CONFIG["port"],
+        ] = EMBEDDING_PARAMETERS.get("embedding_dtype", "float32"),
+        host: str = EMBEDDING_PARAMETERS["host"],
+        port: str = EMBEDDING_PARAMETERS["port"],
     ):
         """
         Class implementing embedding service.

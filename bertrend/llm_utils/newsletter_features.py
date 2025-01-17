@@ -14,7 +14,7 @@ import pandas as pd
 import tldextract
 from loguru import logger
 
-from bertrend import LLM_CONFIG
+from bertrend import LLM_PARAMETERS
 from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend.services.summary.chatgpt_summarizer import GPTSummarizer
 from bertrend.topic_analysis.representative_docs import get_most_representative_docs
@@ -78,10 +78,10 @@ def generate_newsletter(
     """
     logger.debug("Generating newsletters...")
     if not openai_model_name:
-        openai_model_name = LLM_CONFIG["model"]
+        openai_model_name = LLM_PARAMETERS["model"]
     openai_api = OpenAI_Client(
-        api_key=LLM_CONFIG["api_key"],
-        endpoint=LLM_CONFIG["endpoint"],
+        api_key=LLM_PARAMETERS["api_key"],
+        endpoint=LLM_PARAMETERS["endpoint"],
         model=openai_model_name,
     )
 

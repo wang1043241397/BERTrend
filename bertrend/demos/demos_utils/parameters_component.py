@@ -6,7 +6,12 @@ import streamlit as st
 
 from code_editor import code_editor
 
-from bertrend import EMBEDDING_CONFIG, load_toml_config
+from bertrend import (
+    BERTOPIC_DEFAULT_CONFIG_PATH,
+    BERTREND_DEFAULT_CONFIG_PATH,
+    EMBEDDING_PARAMETERS,
+    load_toml_config,
+)
 from bertrend.demos.demos_utils.state_utils import (
     register_widget,
     save_widget_state,
@@ -14,15 +19,13 @@ from bertrend.demos.demos_utils.state_utils import (
     register_multiple_widget,
     reset_widget_state,
 )
-from bertrend.parameters import (
+from bertrend.config.parameters import (
     EMBEDDING_DTYPES,
     LANGUAGES,
     ENGLISH_EMBEDDING_MODELS,
     FRENCH_EMBEDDING_MODELS,
     REPRESENTATION_MODELS,
     MMR_REPRESENTATION_MODEL,
-    DEFAULT_BERTOPIC_CONFIG_FILE,
-    DEFAULT_BERTREND_CONFIG_FILE,
 )
 
 from bertrend.demos.demos_utils.icons import INFO_ICON
@@ -67,9 +70,9 @@ def display_remote_embeddings():
     register_widget("embedding_service_hostname")
     register_widget("embedding_service_port")
     if "embedding_service_hostname" not in st.session_state:
-        st.session_state["embedding_service_hostname"] = EMBEDDING_CONFIG["host"]
+        st.session_state["embedding_service_hostname"] = EMBEDDING_PARAMETERS["host"]
     if "embedding_service_port" not in st.session_state:
-        st.session_state["embedding_service_port"] = EMBEDDING_CONFIG["port"]
+        st.session_state["embedding_service_port"] = EMBEDDING_PARAMETERS["port"]
     st.text_input(
         "Embedding service hostname",
         key="embedding_service_hostname",
@@ -77,7 +80,7 @@ def display_remote_embeddings():
     )
     st.text_input(
         "Embedding service port",
-        value=EMBEDDING_CONFIG["port"],
+        value=EMBEDDING_PARAMETERS["port"],
         on_change=save_widget_state,
     )
 
@@ -103,7 +106,7 @@ def display_bertopic_hyperparameters():
     # BERTopic model parameters
     with st.expander("BERTopic Model Settings", expanded=False):
         # Get BERTopic default configuration
-        with open(DEFAULT_BERTOPIC_CONFIG_FILE, "r") as f:
+        with open(BERTOPIC_DEFAULT_CONFIG_PATH, "r") as f:
             # Load default parameter the first time
             toml_txt = f.read()
 
@@ -123,7 +126,7 @@ def display_bertrend_hyperparameters():
     """UI settings for Bertrend hyperparameters"""
     with st.expander("BERTrend Model Settings", expanded=False):
         # Get BERTrend default configuration
-        with open(DEFAULT_BERTREND_CONFIG_FILE, "r") as f:
+        with open(BERTREND_DEFAULT_CONFIG_PATH, "r") as f:
             # Load default parameter the first time
             toml_txt = f.read()
 
@@ -141,7 +144,7 @@ def display_bertrend_hyperparameters():
         # Save granularity in session state as it is re-used in other components
         st.session_state["granularity"] = load_toml_config(
             st.session_state["bertrend_config"]
-        )["bertrend"]["granularity"]
+        )["granularity"]
 
 
 def display_representation_model_options():

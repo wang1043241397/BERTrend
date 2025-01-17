@@ -20,9 +20,9 @@ from pathlib import Path
 from numpy import ndarray
 
 from bertrend import FEED_BASE_PATH, BEST_CUDA_DEVICE, OUTPUT_PATH
-from bertrend.parameters import BERTOPIC_SERIALIZATION
+from bertrend.config.parameters import BERTOPIC_SERIALIZATION
 from bertrend.services.embedding_service import EmbeddingService
-from bertrend.topic_model.topic_model import TopicModel
+from bertrend.TopicModel import TopicModel
 from bertrend.utils.config_utils import load_toml_config
 from bertrend.utils.data_loading import (
     TIMESTAMP_COLUMN,

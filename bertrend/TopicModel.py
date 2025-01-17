@@ -21,10 +21,10 @@ from sklearn.feature_extraction.text import CountVectorizer
 from umap import UMAP
 from sentence_transformers import SentenceTransformer
 
-from bertrend import load_toml_config, LLM_CONFIG
+from bertrend import load_toml_config, BERTOPIC_DEFAULT_CONFIG_PATH, LLM_PARAMETERS
 from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend.llm_utils.prompts import BERTOPIC_FRENCH_TOPIC_REPRESENTATION_PROMPT
-from bertrend.parameters import (
+from bertrend.config.parameters import (
     STOPWORDS,
     ENGLISH_STOPWORDS,
     KEYBERT_TOP_N_WORDS,
@@ -34,7 +34,6 @@ from bertrend.parameters import (
     MMR_REPRESENTATION_MODEL,
     OPENAI_REPRESENTATION_MODEL,
     KEYBERTINSPIRED_REPRESENTATION_MODEL,
-    DEFAULT_BERTOPIC_CONFIG_FILE,
 )
 
 
@@ -69,14 +68,14 @@ class TopicModel:
     Utility class to manage and configure BERTopic instances with custom parameters.
     """
 
-    def __init__(self, config_file: str | Path = DEFAULT_BERTOPIC_CONFIG_FILE):
+    def __init__(self, config_file: str | Path = BERTOPIC_DEFAULT_CONFIG_PATH):
         """
         Instanciate a class from a TOML config file.
         `config_file` can be:
             - a `str` representing the TOML file
             - a `Path` to a TOML file
 
-        To see file format and list of parameters: bertrend/topic_model/topic_model_default_config.toml
+        To see file format and list of parameters: bertrend/config/topic_model_default_config.toml
         """
         self.config_file = config_file
 
@@ -135,11 +134,11 @@ class TopicModel:
     def _initialize_openai_representation(self):
         return OpenAI(
             client=OpenAI_Client(
-                api_key=LLM_CONFIG["api_key"],
-                endpoint=LLM_CONFIG["endpoint"],
-                model=LLM_CONFIG["model"],
+                api_key=LLM_PARAMETERS["api_key"],
+                endpoint=LLM_PARAMETERS["endpoint"],
+                model=LLM_PARAMETERS["model"],
             ).llm_client,
-            model=LLM_CONFIG["model"],
+            model=LLM_PARAMETERS["model"],
             nr_docs=OPENAI_NR_DOCS,
             prompt=(
                 BERTOPIC_FRENCH_TOPIC_REPRESENTATION_PROMPT

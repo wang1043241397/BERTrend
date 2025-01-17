@@ -7,17 +7,24 @@ from pathlib import Path
 
 from bertrend.utils.config_utils import load_toml_config
 
-# default config files path
-DEFAULT_BERTOPIC_CONFIG_FILE = (
-    Path(__file__).parent / "topic_model" / "topic_model_default_config.toml"
+# Default config files path
+BERTOPIC_DEFAULT_CONFIG_PATH = (
+    Path(__file__).parent / "config" / "topic_model_default_config.toml"
 )
-BERTREND_DEFAULT_CONFIG_PATH = Path(__file__).parent / "bertrend_default_config.toml"
+BERTREND_DEFAULT_CONFIG_PATH = (
+    Path(__file__).parent / "config" / "bertrend_default_config.toml"
+)
+SERVICES_DEFAULT_CONFIG_PATH = (
+    Path(__file__).parent / "config" / "services_default_config.toml"
+)
 
 # Read config
-BERTREND_CONFIG = load_toml_config(BERTREND_DEFAULT_CONFIG_PATH)
-BERTREND_PARAMETERS = BERTREND_CONFIG["bertrend"]
-EMBEDDING_CONFIG = BERTREND_CONFIG["embedding_service"]
-LLM_CONFIG = BERTREND_CONFIG["llm_service"]
+BERTOPIC_PARAMETERS = load_toml_config(BERTOPIC_DEFAULT_CONFIG_PATH)
+BERTREND_PARAMETERS = load_toml_config(BERTREND_DEFAULT_CONFIG_PATH)
+SERVICES_PARAMETERS = load_toml_config(SERVICES_DEFAULT_CONFIG_PATH)
+
+EMBEDDING_PARAMETERS = SERVICES_PARAMETERS["embedding_service"]
+LLM_PARAMETERS = SERVICES_PARAMETERS["llm_service"]
 
 # Linux command to find the index of the GPU device currently less used than the others
 BEST_CUDA_DEVICE = (

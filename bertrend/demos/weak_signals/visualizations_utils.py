@@ -14,7 +14,7 @@ from bertrend import OUTPUT_PATH, SIGNAL_EVOLUTION_DATA_DIR
 from bertrend.demos.demos_utils.icons import WARNING_ICON, SUCCESS_ICON, INFO_ICON
 from bertrend.demos.weak_signals.messages import HTML_GENERATION_FAILED_WARNING
 from bertrend.demos.demos_utils.state_utils import SessionStateManager
-from bertrend.parameters import (
+from bertrend.config.parameters import (
     MAX_WINDOW_SIZE,
     DEFAULT_WINDOW_SIZE,
     INDIVIDUAL_MODEL_TOPIC_COUNTS_FILE,

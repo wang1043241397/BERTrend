@@ -41,7 +41,7 @@ from bertrend.demos.demos_utils.parameters_component import (
     display_bertopic_hyperparameters,
     display_bertrend_hyperparameters,
 )
-from bertrend.topic_model.topic_model import TopicModel
+from bertrend.TopicModel import TopicModel
 from bertrend.demos.weak_signals.messages import (
     MODEL_MERGING_COMPLETE_MESSAGE,
     NO_CACHE_WARNING,
@@ -64,7 +64,7 @@ from bertrend.utils.data_loading import (
     group_by_days,
     TEXT_COLUMN,
 )
-from bertrend.parameters import *
+from bertrend.config.parameters import *
 from bertrend.demos.demos_utils.state_utils import SessionStateManager
 from bertrend.trend_analysis.visualizations import (
     plot_size_outliers,

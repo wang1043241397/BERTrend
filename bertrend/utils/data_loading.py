@@ -13,7 +13,7 @@ from sentence_transformers import SentenceTransformer
 from transformers import AutoTokenizer
 
 from bertrend import DATA_PATH
-from bertrend.parameters import MIN_CHARS_DEFAULT
+from bertrend.config.parameters import MIN_CHARS_DEFAULT
 
 # Define column names
 TEXT_COLUMN = "text"

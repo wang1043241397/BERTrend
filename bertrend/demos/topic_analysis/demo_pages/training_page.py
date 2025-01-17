@@ -41,9 +41,9 @@ from bertrend.demos.demos_utils.parameters_component import (
 )
 from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_CONFIG
 from bertrend.metrics.topic_metrics import compute_cluster_metrics
-from bertrend.parameters import BERTOPIC_SERIALIZATION
+from bertrend.config.parameters import BERTOPIC_SERIALIZATION
 from bertrend.topic_analysis.visualizations import plot_docs_repartition_over_time
-from bertrend.topic_model.topic_model import TopicModel
+from bertrend.TopicModel import TopicModel
 from bertrend.utils.data_loading import (
     TEXT_COLUMN,
 )

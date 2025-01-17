@@ -8,12 +8,12 @@ from pathlib import Path
 
 import torch
 
-from bertrend import BERTREND_PARAMETERS
+from bertrend import BERTREND_PARAMETERS, EMBEDDING_PARAMETERS
 
-stopwords_en_file = Path(__file__).parent / "resources" / "stopwords-en.json"
-stopwords_fr_file = Path(__file__).parent / "resources" / "stopwords-fr.json"
-stopwords_rte_file = Path(__file__).parent / "resources" / "stopwords-rte.json"
-common_ngrams_file = Path(__file__).parent / "resources" / "common_ngrams.json"
+stopwords_en_file = Path(__file__).parent.parent / "resources" / "stopwords-en.json"
+stopwords_fr_file = Path(__file__).parent.parent / "resources" / "stopwords-fr.json"
+stopwords_rte_file = Path(__file__).parent.parent / "resources" / "stopwords-rte.json"
+common_ngrams_file = Path(__file__).parent.parent / "resources" / "common_ngrams.json"
 with open(stopwords_en_file, "r", encoding="utf-8") as file:
     ENGLISH_STOPWORDS = json.load(file)
 with open(stopwords_fr_file, "r", encoding="utf-8") as file:
@@ -60,9 +60,6 @@ KEYBERTINSPIRED_REPRESENTATION_MODEL = "KeyBERTInspired"
 OPENAI_REPRESENTATION_MODEL = "OpenAI"
 
 # BERTopic Hyperparameters
-DEFAULT_BERTOPIC_CONFIG_FILE = (
-    Path(__file__).parent / "topic_model" / "topic_model_default_config.toml"
-)
 BERTOPIC_SERIALIZATION = "safetensors"  # or pickle
 LANGUAGES = ["French", "English"]
 REPRESENTATION_MODELS = [
@@ -72,16 +69,13 @@ REPRESENTATION_MODELS = [
 ]
 
 # BERTrend parameters
-DEFAULT_BERTREND_CONFIG_FILE = Path(__file__).parent / "bertrend_default_config.toml"
-
-# Signal classification Settings
 SIGNAL_CLASSIF_LOWER_BOUND = BERTREND_PARAMETERS["signal_classif_lower_bound"]
 SIGNAL_CLASSIF_UPPER_BOUND = BERTREND_PARAMETERS["signal_classif_upper_bound"]
 
 # Embedding Settings
-EMBEDDING_DTYPES = ["float32", "float16", "bfloat16"]
-EMBEDDING_BATCH_SIZE = 5000
-EMBEDDING_MAX_SEQ_LENGTH = 512
+EMBEDDING_DTYPES = EMBEDDING_PARAMETERS["embedding_dtypes"]
+EMBEDDING_BATCH_SIZE = EMBEDDING_PARAMETERS["embedding_batch_size"]
+EMBEDDING_MAX_SEQ_LENGTH = EMBEDDING_PARAMETERS["embedding_max_seq_length"]
 EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Representation models parameters
