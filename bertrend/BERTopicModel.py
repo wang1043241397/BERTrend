@@ -37,12 +37,12 @@ from bertrend.config.parameters import (
 )
 
 
-class TopicModelOutput:
+class BERTopicModelOutput:
     """Wrapper to encapsulate all results related to topic model output"""
 
     def __init__(self, topic_model: BERTopic):
         """
-        - a topic model
+        - a BERTopic model
         - a list of topics indices corresponding to the documents
         - an array of probabilities
         - the document embeddings
@@ -63,7 +63,7 @@ class TopicModelOutput:
         self.token_strings = None
 
 
-class TopicModel:
+class BERTopicModel:
     """
     Utility class to manage and configure BERTopic instances with custom parameters.
     """
@@ -181,7 +181,7 @@ class TopicModel:
         docs: list[str],
         embedding_model: SentenceTransformer | str,
         embeddings: np.ndarray,
-    ) -> TopicModelOutput:
+    ) -> BERTopicModelOutput:
         """
         Create a TopicModelOutput model.
 
@@ -247,7 +247,7 @@ class TopicModel:
                 topic_model.representation_model = backup_representation_model
 
             logger.success("\tBERTopic model fitted successfully")
-            output = TopicModelOutput(topic_model)
+            output = BERTopicModelOutput(topic_model)
             output.topics = new_topics
             output.probs = probs
             return output

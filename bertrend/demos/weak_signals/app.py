@@ -41,7 +41,7 @@ from bertrend.demos.demos_utils.parameters_component import (
     display_bertopic_hyperparameters,
     display_bertrend_hyperparameters,
 )
-from bertrend.TopicModel import TopicModel
+from bertrend.BERTopicModel import BERTopicModel
 from bertrend.demos.weak_signals.messages import (
     MODEL_MERGING_COMPLETE_MESSAGE,
     NO_CACHE_WARNING,
@@ -229,7 +229,7 @@ def training_page():
                 )
 
                 # Initialize topic model
-                topic_model = TopicModel(st.session_state["bertopic_config"])
+                topic_model = BERTopicModel(st.session_state["bertopic_config"])
 
                 # Created BERTrend object
                 bertrend = BERTrend(

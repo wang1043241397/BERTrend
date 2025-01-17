@@ -9,7 +9,7 @@ from bertrend.utils.config_utils import load_toml_config
 
 # Default config files path
 BERTOPIC_DEFAULT_CONFIG_PATH = (
-    Path(__file__).parent / "config" / "topic_model_default_config.toml"
+    Path(__file__).parent / "config" / "bertopic_default_config.toml"
 )
 BERTREND_DEFAULT_CONFIG_PATH = (
     Path(__file__).parent / "config" / "bertrend_default_config.toml"

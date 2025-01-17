@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 
 from bertopic import BERTopic
 
-from bertrend.TopicModel import TopicModel, TopicModelOutput
+from bertrend.BERTopicModel import BERTopicModel, BERTopicModelOutput
 from bertrend.config.parameters import (
     DEFAULT_UMAP_N_COMPONENTS,
     DEFAULT_UMAP_N_NEIGHBORS,
@@ -39,7 +39,7 @@ def mock_embedding():
 @pytest.fixture
 def topic_model():
     """Fixture for creating a TopicModel instance."""
-    return TopicModel()
+    return BERTopicModel()
 
 
 def test_topic_model_initialization_default_values(topic_model):
@@ -72,7 +72,7 @@ def test_topic_model_initialization_custom_values():
         "language": "French",
     }
 
-    topic_model = TopicModel(**custom_params)
+    topic_model = BERTopicModel(**custom_params)
 
     assert topic_model.umap_n_components == custom_params["umap_n_components"]
     assert topic_model.umap_n_neighbors == custom_params["umap_n_neighbors"]

@@ -22,7 +22,7 @@ from bertrend import (
     load_toml_config,
 )
 
-from bertrend.TopicModel import TopicModel
+from bertrend.BERTopicModel import BERTopicModel
 from bertrend.config.parameters import (
     DOC_INFO_DF_FILE,
     TOPIC_INFO_DF_FILE,
@@ -55,7 +55,7 @@ class BERTrend:
     def __init__(
         self,
         config_file: str | Path = BERTREND_DEFAULT_CONFIG_PATH,
-        topic_model: TopicModel = None,
+        topic_model: BERTopicModel = None,
     ):
         """
         Instanciate a class from a TOML config file.
@@ -70,7 +70,7 @@ class BERTrend:
         self.config = self._load_config()
 
         # Initialize topic model
-        self.topic_model = TopicModel() if topic_model is None else topic_model
+        self.topic_model = BERTopicModel() if topic_model is None else topic_model
 
         # State variables of BERTrend
         self._is_fitted = False

@@ -22,7 +22,7 @@ from numpy import ndarray
 from bertrend import FEED_BASE_PATH, BEST_CUDA_DEVICE, OUTPUT_PATH
 from bertrend.config.parameters import BERTOPIC_SERIALIZATION
 from bertrend.services.embedding_service import EmbeddingService
-from bertrend.TopicModel import TopicModel
+from bertrend.BERTopicModel import BERTopicModel
 from bertrend.utils.config_utils import load_toml_config
 from bertrend.utils.data_loading import (
     TIMESTAMP_COLUMN,
@@ -206,7 +206,7 @@ if __name__ == "__main__":
         embedding_model: str,
         embeddings: ndarray,
     ) -> Tuple[List, BERTopic]:
-        topic_model = TopicModel.from_config(config_file)
+        topic_model = BERTopicModel.from_config(config_file)
         output = topic_model.fit(
             docs=dataset[TEXT_COLUMN],
             embedding_model=embedding_model,

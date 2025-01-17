@@ -43,7 +43,7 @@ from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_
 from bertrend.metrics.topic_metrics import compute_cluster_metrics
 from bertrend.config.parameters import BERTOPIC_SERIALIZATION
 from bertrend.topic_analysis.visualizations import plot_docs_repartition_over_time
-from bertrend.TopicModel import TopicModel
+from bertrend.BERTopicModel import BERTopicModel
 from bertrend.utils.data_loading import (
     TEXT_COLUMN,
 )
@@ -131,7 +131,7 @@ def train_model():
         # indices = full_dataset.index.tolist()
 
         # Initialize topic model
-        topic_model = TopicModel(st.session_state["bertopic_config"])
+        topic_model = BERTopicModel(st.session_state["bertopic_config"])
         embeddings = st.session_state["embeddings"]
         topic_model_output = topic_model.fit(
             docs=dataset,
