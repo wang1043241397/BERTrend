@@ -15,18 +15,16 @@ from loguru import logger
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from bertrend import MODELS_DIR, CACHE_PATH
+from bertrend import MODELS_DIR, CACHE_PATH, load_toml_config
 
 from bertrend.topic_model.topic_model import TopicModel
 from bertrend.parameters import (
-    DEFAULT_MIN_SIMILARITY,
-    DEFAULT_GRANULARITY,
+    DEFAULT_BERTREND_CONFIG_FILE,
     DOC_INFO_DF_FILE,
     TOPIC_INFO_DF_FILE,
     DOC_GROUPS_FILE,
     MODELS_TRAINED_FILE,
     EMB_GROUPS_FILE,
-    GRANULARITY_FILE,
     HYPERPARAMS_FILE,
     BERTOPIC_SERIALIZATION,
 )
@@ -52,16 +50,15 @@ class BERTrend:
 
     def __init__(
         self,
+        config_file: str | Path = DEFAULT_BERTREND_CONFIG_FILE,
         topic_model: TopicModel = None,
-        zeroshot_topic_list: List[str] = None,
-        zeroshot_min_similarity: float = 0,
     ):
-        self.topic_model_parameters = (
-            TopicModel() if topic_model is None else topic_model
-        )
-        self.zeroshot_topic_list = zeroshot_topic_list
-        self.zeroshot_min_similarity = zeroshot_min_similarity
-        self.granularity = DEFAULT_GRANULARITY
+        # Load configuration file
+        self.config_file = config_file
+        self.config = self._load_config()
+
+        # Initialize topic model
+        self.topic_model = TopicModel() if topic_model is None else topic_model
 
         # State variables of BERTrend
         self._is_fitted = False
@@ -89,6 +86,13 @@ class BERTrend:
         self.topic_last_popularity: Dict[int, float] = {}
         # - topic_last_update: Dictionary storing the last update timestamp of each topic.
         self.topic_last_update: Dict[int, pd.Timestamp] = {}
+
+    def _load_config(self) -> dict:
+        """
+        Load the TOML config file as a dict when instanciating the class.
+        """
+        config = load_toml_config(self.config_file)["bertrend"]
+        return config
 
     def _train_by_period(
         self,
@@ -124,12 +128,10 @@ class BERTrend:
         logger.debug(f"Number of documents: {len(docs)}")
 
         logger.debug("Creating topic model...")
-        topic_model = self.topic_model_parameters.fit(
+        topic_model = self.topic_model.fit(
             docs=docs,
             embedding_model=embedding_model,
             embeddings=embeddings_subset,
-            zeroshot_topic_list=self.zeroshot_topic_list,
-            zeroshot_min_similarity=self.zeroshot_min_similarity,
         ).topic_model
 
         logger.debug("Topic model created successfully")
@@ -212,10 +214,6 @@ class BERTrend:
         # progress_bar = st.progress(0)
         # progress_text = st.empty()
 
-        logger.debug(
-            f"Starting to train topic models with zeroshot_topic_list: {self.zeroshot_topic_list}"
-        )
-
         for i, (period, group) in enumerate(non_empty_groups):
             try:
                 logger.info(f"Training topic model {i+1}/{len(non_empty_groups)}...")
@@ -250,9 +248,14 @@ class BERTrend:
 
     def merge_all_models(
         self,
-        min_similarity: int = DEFAULT_MIN_SIMILARITY,
+        min_similarity: int | None = None,
     ):
         """Merge together all topic models."""
+        # Get default BERTrend config if argument is not provided
+        if min_similarity is None:
+            min_similarity = self.config["min_similarity"]
+
+        # Check if model is fitted
         if not self._is_fitted:
             raise RuntimeError("You must fit the BERTrend model before merging models.")
 
@@ -329,9 +332,8 @@ class BERTrend:
 
     def calculate_signal_popularity(
         self,
-        granularity: int = DEFAULT_GRANULARITY,
-        decay_factor: float = 0.01,
-        decay_power: float = 2,
+        decay_factor: float | None = None,
+        decay_power: float | None = None,
     ):
         """
         Compute the popularity of signals (topics) over time, accounting for merges and applying decay.
@@ -349,8 +351,13 @@ class BERTrend:
         Returns:
 
         """
-        self.granularity = granularity
+        # Get default BERTrend config if argument is not provided
+        if decay_factor is None:
+            decay_factor = self.config["decay_factor"]
+        if decay_power is None:
+            decay_power = self.config["decay_power"]
 
+        # Check if models are merged
         if not self._are_models_merged:
             raise RuntimeWarning(
                 "You must merge topic models first before computing signal popularity."
@@ -362,7 +369,7 @@ class BERTrend:
 
         min_timestamp = self.all_merge_histories_df["Timestamp"].min()
         max_timestamp = self.all_merge_histories_df["Timestamp"].max()
-        granularity_timedelta = pd.Timedelta(days=granularity)
+        granularity_timedelta = pd.Timedelta(days=self.config["granularity"])
         time_range = pd.date_range(
             start=min_timestamp.to_pydatetime(),
             end=(max_timestamp + granularity_timedelta).to_pydatetime(),
@@ -450,10 +457,7 @@ class BERTrend:
 
         # Save topic model parameters
         with open(CACHE_PATH / HYPERPARAMS_FILE, "wb") as f:
-            pickle.dump(self.topic_model_parameters, f)
-        # Save granularity file
-        with open(CACHE_PATH / GRANULARITY_FILE, "wb") as f:
-            pickle.dump(self.granularity, f)
+            pickle.dump(self.topic_model, f)
         # Save doc_groups file
         with open(CACHE_PATH / DOC_GROUPS_FILE, "wb") as f:
             pickle.dump(self.doc_groups, f)
@@ -478,10 +482,7 @@ class BERTrend:
 
         # load topic model parameters
         with open(CACHE_PATH / HYPERPARAMS_FILE, "rb") as f:
-            bertrend.topic_model_parameters = pickle.load(f)
-        # load granularity file
-        with open(CACHE_PATH / GRANULARITY_FILE, "rb") as f:
-            bertrend.granularity = pickle.load(f)
+            bertrend.topic_model = pickle.load(f)
         # load doc_groups file
         with open(CACHE_PATH / DOC_GROUPS_FILE, "rb") as f:
             bertrend.doc_groups = pickle.load(f)

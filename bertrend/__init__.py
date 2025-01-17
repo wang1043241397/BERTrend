@@ -7,12 +7,15 @@ from pathlib import Path
 
 from bertrend.utils.config_utils import load_toml_config
 
-BERTREND_DEFAULT_CONFIG_PATH = Path(__file__).parent / "bertrend.toml"
+# default config files path
+DEFAULT_BERTOPIC_CONFIG_FILE = (
+    Path(__file__).parent / "topic_model" / "topic_model_default_config.toml"
+)
+BERTREND_DEFAULT_CONFIG_PATH = Path(__file__).parent / "bertrend_default_config.toml"
 
 # Read config
 BERTREND_CONFIG = load_toml_config(BERTREND_DEFAULT_CONFIG_PATH)
-BERTOPIC_PARAMETERS = BERTREND_CONFIG["bertopic_parameters"]
-BERTREND_PARAMETERS = BERTREND_CONFIG["bertrend_parameters"]
+BERTREND_PARAMETERS = BERTREND_CONFIG["bertrend"]
 EMBEDDING_CONFIG = BERTREND_CONFIG["embedding_service"]
 LLM_CONFIG = BERTREND_CONFIG["llm_service"]
 

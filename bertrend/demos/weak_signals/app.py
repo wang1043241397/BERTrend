@@ -13,10 +13,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from loguru import logger
 
-from bertrend import (
-    ZEROSHOT_TOPICS_DATA_DIR,
-    CACHE_PATH,
-)
+from bertrend import ZEROSHOT_TOPICS_DATA_DIR, CACHE_PATH
 from bertrend.BERTrend import BERTrend
 from bertrend.demos.demos_utils import is_admin_mode
 from bertrend.demos.demos_utils.data_loading_component import (
@@ -181,21 +178,12 @@ def training_page():
         st.warning(NO_EMBEDDINGS_WARNING_MESSAGE, icon=WARNING_ICON)
         st.stop()
 
-    # Select granularity
-    st.number_input(
-        "Select Granularity",
-        value=DEFAULT_GRANULARITY,
-        min_value=1,
-        max_value=30,
-        key="granularity_select",
-        help="Number of days to split the data by",
-    )
-
     # Show documents per grouped timestamp
     with st.expander("Documents per Timestamp", expanded=True):
+        st.write(f"Granularity: {st.session_state['granularity']}")
         grouped_data = group_by_days(
             SessionStateManager.get_dataframe("time_filtered_df"),
-            day_granularity=SessionStateManager.get("granularity_select"),
+            day_granularity=st.session_state["granularity"],
         )
         non_empty_timestamps = [
             timestamp for timestamp, group in grouped_data.items() if not group.empty
@@ -237,35 +225,16 @@ def training_page():
                 # FIXME: called twice (see above)
                 grouped_data = group_by_days(
                     SessionStateManager.get_dataframe("time_filtered_df"),
-                    day_granularity=SessionStateManager.get("granularity_select"),
+                    day_granularity=st.session_state["granularity"],
                 )
 
                 # Initialize topic model
-                topic_model = TopicModel(
-                    umap_n_components=SessionStateManager.get("umap_n_components"),
-                    umap_n_neighbors=SessionStateManager.get("umap_n_neighbors"),
-                    hdbscan_min_cluster_size=SessionStateManager.get(
-                        "hdbscan_min_cluster_size"
-                    ),
-                    hdbscan_min_samples=SessionStateManager.get("hdbscan_min_samples"),
-                    hdbscan_cluster_selection_method=SessionStateManager.get(
-                        "hdbscan_cluster_selection_method"
-                    ),
-                    vectorizer_ngram_range=SessionStateManager.get(
-                        "vectorizer_ngram_range"
-                    ),
-                    min_df=SessionStateManager.get("min_df"),
-                    top_n_words=SessionStateManager.get("top_n_words"),
-                    language=SessionStateManager.get("language"),
-                )
+                topic_model = TopicModel(st.session_state["bertopic_config"])
 
                 # Created BERTrend object
                 bertrend = BERTrend(
+                    config_file=st.session_state["bertrend_config"],
                     topic_model=topic_model,
-                    zeroshot_topic_list=zeroshot_topic_list,
-                    zeroshot_min_similarity=SessionStateManager.get(
-                        "zeroshot_min_similarity"
-                    ),
                 )
                 # Train topic models on data
                 bertrend.train_topic_models(
@@ -295,9 +264,7 @@ def training_page():
                         min_similarity=SessionStateManager.get("min_similarity"),
                     )
 
-                    bertrend.calculate_signal_popularity(
-                        granularity=SessionStateManager.get("granularity_select"),
-                    )
+                    bertrend.calculate_signal_popularity()
 
                     SessionStateManager.set("popularity_computed", True)
 
@@ -346,7 +313,7 @@ def analysis_page():
             weak_signal_trends = detect_weak_signals_zeroshot(
                 topic_models,
                 zeroshot_topic_list,
-                SessionStateManager.get("granularity_select"),
+                st.session_state["granularity"],
             )
             with st.expander("Zero-shot Weak Signal Trends", expanded=False):
                 fig_trend = go.Figure()

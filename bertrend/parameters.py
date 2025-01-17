@@ -8,7 +8,7 @@ from pathlib import Path
 
 import torch
 
-from bertrend import BERTOPIC_PARAMETERS, BERTREND_PARAMETERS
+from bertrend import BERTREND_PARAMETERS
 
 stopwords_en_file = Path(__file__).parent / "resources" / "stopwords-en.json"
 stopwords_fr_file = Path(__file__).parent / "resources" / "stopwords-fr.json"
@@ -63,10 +63,7 @@ OPENAI_REPRESENTATION_MODEL = "OpenAI"
 DEFAULT_BERTOPIC_CONFIG_FILE = (
     Path(__file__).parent / "topic_model" / "topic_model_default_config.toml"
 )
-DEFAULT_GRANULARITY = BERTOPIC_PARAMETERS["granularity"]
-DEFAULT_MIN_SIMILARITY = BERTOPIC_PARAMETERS["min_similarity"]
-DEFAULT_ZEROSHOT_MIN_SIMILARITY = BERTOPIC_PARAMETERS["zeroshot_min_similarity"]
-BERTOPIC_SERIALIZATION = BERTOPIC_PARAMETERS["bertopic_serialization"]
+BERTOPIC_SERIALIZATION = "safetensors"  # or pickle
 LANGUAGES = ["French", "English"]
 REPRESENTATION_MODELS = [
     MMR_REPRESENTATION_MODEL,
@@ -75,6 +72,8 @@ REPRESENTATION_MODELS = [
 ]
 
 # BERTrend parameters
+DEFAULT_BERTREND_CONFIG_FILE = Path(__file__).parent / "bertrend_default_config.toml"
+
 # Signal classification Settings
 SIGNAL_CLASSIF_LOWER_BOUND = BERTREND_PARAMETERS["signal_classif_lower_bound"]
 SIGNAL_CLASSIF_UPPER_BOUND = BERTREND_PARAMETERS["signal_classif_upper_bound"]

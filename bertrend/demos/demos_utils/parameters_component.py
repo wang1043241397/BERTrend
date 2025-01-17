@@ -6,7 +6,7 @@ import streamlit as st
 
 from code_editor import code_editor
 
-from bertrend import EMBEDDING_CONFIG
+from bertrend import EMBEDDING_CONFIG, load_toml_config
 from bertrend.demos.demos_utils.state_utils import (
     register_widget,
     save_widget_state,
@@ -15,8 +15,6 @@ from bertrend.demos.demos_utils.state_utils import (
     reset_widget_state,
 )
 from bertrend.parameters import (
-    DEFAULT_MIN_SIMILARITY,
-    DEFAULT_ZEROSHOT_MIN_SIMILARITY,
     EMBEDDING_DTYPES,
     LANGUAGES,
     ENGLISH_EMBEDDING_MODELS,
@@ -24,6 +22,7 @@ from bertrend.parameters import (
     REPRESENTATION_MODELS,
     MMR_REPRESENTATION_MODEL,
     DEFAULT_BERTOPIC_CONFIG_FILE,
+    DEFAULT_BERTREND_CONFIG_FILE,
 )
 
 from bertrend.demos.demos_utils.icons import INFO_ICON
@@ -110,7 +109,7 @@ def display_bertopic_hyperparameters():
 
         # Add code editor to edit the config file
         st.write(INFO_ICON + " CTRL + Enter to update")
-        config_editor = code_editor(toml_txt, lang="yaml")
+        config_editor = code_editor(toml_txt, lang="toml")
 
         # If code is edited, update config
         if config_editor["text"] != "":
@@ -122,29 +121,27 @@ def display_bertopic_hyperparameters():
 
 def display_bertrend_hyperparameters():
     """UI settings for Bertrend hyperparameters"""
-    with st.expander("Merging Hyperparameters", expanded=False):
-        register_widget("min_similarity")
-        st.slider(
-            "Minimum Similarity for Merging",
-            0.0,
-            1.0,
-            DEFAULT_MIN_SIMILARITY,
-            0.01,
-            key="min_similarity",
-            on_change=save_widget_state,
-        )
+    with st.expander("BERTrend Model Settings", expanded=False):
+        # Get BERTrend default configuration
+        with open(DEFAULT_BERTREND_CONFIG_FILE, "r") as f:
+            # Load default parameter the first time
+            toml_txt = f.read()
 
-    with st.expander("Zero-shot Parameters", expanded=False):
-        register_widget("zeroshot_min_similarity")
-        st.slider(
-            "Zeroshot Minimum Similarity",
-            0.0,
-            1.0,
-            DEFAULT_ZEROSHOT_MIN_SIMILARITY,
-            0.01,
-            key="zeroshot_min_similarity",
-            on_change=save_widget_state,
-        )
+        # Add code editor to edit the config file
+        st.write(INFO_ICON + " CTRL + Enter to update")
+        config_editor = code_editor(toml_txt, lang="toml")
+
+        # If code is edited, update config
+        if config_editor["text"] != "":
+            st.session_state["bertrend_config"] = config_editor["text"]
+        # Else use default config
+        else:
+            st.session_state["bertrend_config"] = toml_txt
+
+        # Save granularity in session state as it is re-used in other components
+        st.session_state["granularity"] = load_toml_config(
+            st.session_state["bertrend_config"]
+        )["bertrend"]["granularity"]
 
 
 def display_representation_model_options():
