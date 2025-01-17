@@ -4,23 +4,14 @@
 #  This file is part of BERTrend.
 import pytest
 import numpy as np
+import tomllib
 
 from unittest.mock import MagicMock
 
 from bertopic import BERTopic
 
-from bertrend.BERTopicModel import BERTopicModel, BERTopicModelOutput
-from bertrend.config.parameters import (
-    DEFAULT_UMAP_N_COMPONENTS,
-    DEFAULT_UMAP_N_NEIGHBORS,
-    DEFAULT_HDBSCAN_MIN_CLUSTER_SIZE,
-    DEFAULT_HDBSCAN_MIN_SAMPLES,
-    HDBSCAN_CLUSTER_SELECTION_METHODS,
-    VECTORIZER_NGRAM_RANGES,
-    DEFAULT_MIN_DF,
-    DEFAULT_TOP_N_WORDS,
-    LANGUAGES,
-)
+from bertrend import BERTOPIC_CONFIG
+from bertrend.BERTopicModel import BERTopicModel
 
 
 # Mocking dependencies
@@ -38,66 +29,183 @@ def mock_embedding():
 
 @pytest.fixture
 def topic_model():
-    """Fixture for creating a TopicModel instance."""
+    """Fixture for creating a BERTopicModel instance."""
     return BERTopicModel()
 
 
 def test_topic_model_initialization_default_values(topic_model):
     """Test initialization of TopicModel with default values."""
-    assert topic_model.umap_n_components == DEFAULT_UMAP_N_COMPONENTS
-    assert topic_model.umap_n_neighbors == DEFAULT_UMAP_N_NEIGHBORS
-    assert topic_model.hdbscan_min_cluster_size == DEFAULT_HDBSCAN_MIN_CLUSTER_SIZE
-    assert topic_model.hdbscan_min_samples == DEFAULT_HDBSCAN_MIN_SAMPLES
     assert (
-        topic_model.hdbscan_cluster_selection_method
-        == HDBSCAN_CLUSTER_SELECTION_METHODS[0]
+        topic_model.config["umap_model"]["n_components"]
+        == BERTOPIC_CONFIG["umap_model"]["n_components"]
     )
-    assert topic_model.vectorizer_ngram_range == VECTORIZER_NGRAM_RANGES[0]
-    assert topic_model.min_df == DEFAULT_MIN_DF
-    assert topic_model.top_n_words == DEFAULT_TOP_N_WORDS
-    assert topic_model.language == LANGUAGES[0]
+    assert (
+        topic_model.config["umap_model"]["n_neighbors"]
+        == BERTOPIC_CONFIG["umap_model"]["n_neighbors"]
+    )
+    assert (
+        topic_model.config["hdbscan_model"]["min_cluster_size"]
+        == BERTOPIC_CONFIG["hdbscan_model"]["min_cluster_size"]
+    )
+    assert (
+        topic_model.config["hdbscan_model"]["min_samples"]
+        == BERTOPIC_CONFIG["hdbscan_model"]["min_samples"]
+    )
+    assert (
+        topic_model.config["hdbscan_model"]["cluster_selection_method"]
+        == BERTOPIC_CONFIG["hdbscan_model"]["cluster_selection_method"]
+    )
+    assert topic_model.config["vectorizer_model"]["ngram_range"] == tuple(
+        BERTOPIC_CONFIG["vectorizer_model"]["ngram_range"]
+    )
+    assert (
+        topic_model.config["vectorizer_model"]["min_df"]
+        == BERTOPIC_CONFIG["vectorizer_model"]["min_df"]
+    )
+    assert (
+        topic_model.config["bertopic_model"]["top_n_words"]
+        == BERTOPIC_CONFIG["bertopic_model"]["top_n_words"]
+    )
+    assert (
+        topic_model.config["global"]["language"]
+        == BERTOPIC_CONFIG["global"]["language"]
+    )
 
 
 def test_topic_model_initialization_custom_values():
     """Test initialization of TopicModel with custom values."""
-    custom_params = {
-        "umap_n_components": 15,
-        "umap_n_neighbors": 20,
-        "hdbscan_min_cluster_size": 10,
-        "hdbscan_min_samples": 5,
-        "hdbscan_cluster_selection_method": "eom",
-        "vectorizer_ngram_range": (1, 2),
-        "min_df": 2,
-        "top_n_words": 50,
-        "language": "French",
-    }
+    custom_toml_config = """
+    [global]
+    language = "English"
 
-    topic_model = BERTopicModel(**custom_params)
+    [bertopic_model]
+    top_n_words = 7
+    verbose = false
+    representation_model = ["KeyBERTInspired"]
+    zeroshot_topic_list = ["TopicA", "TopicB"]
+    zeroshot_min_similarity = 0.5
 
-    assert topic_model.umap_n_components == custom_params["umap_n_components"]
-    assert topic_model.umap_n_neighbors == custom_params["umap_n_neighbors"]
+    [umap_model]
+    n_neighbors = 10
+    n_components = 10
+    min_dist = 0.1
+    metric = "leaf"
+    random_state = 100
+
+    [hdbscan_model]
+    min_cluster_size = 10
+    min_samples = 10
+    metric = "manhattan"
+    cluster_selection_method = "leaf"
+    prediction_data = false
+
+    [vectorizer_model]
+    ngram_range = [2, 2]
+    stop_words = false
+    min_df = 5
+
+    [ctfidf_model]
+    bm25_weighting = true
+    reduce_frequent_words = false
+
+    [mmr_model]
+    diversity = 0.5
+
+    [reduce_outliers]
+    strategy = "tf-idf"
+    """
+    custom_params = tomllib.loads(custom_toml_config)
+
+    topic_model = BERTopicModel(custom_toml_config)
+
     assert (
-        topic_model.hdbscan_min_cluster_size
-        == custom_params["hdbscan_min_cluster_size"]
+        topic_model.config["global"]["language"] == custom_params["global"]["language"]
     )
-    assert topic_model.hdbscan_min_samples == custom_params["hdbscan_min_samples"]
     assert (
-        topic_model.hdbscan_cluster_selection_method
-        == custom_params["hdbscan_cluster_selection_method"]
+        topic_model.config["bertopic_model"]["top_n_words"]
+        == custom_params["bertopic_model"]["top_n_words"]
     )
-    assert topic_model.vectorizer_ngram_range == custom_params["vectorizer_ngram_range"]
-    assert topic_model.min_df == custom_params["min_df"]
-    assert topic_model.top_n_words == custom_params["top_n_words"]
-    assert topic_model.language == custom_params["language"]
+    assert (
+        topic_model.config["bertopic_model"]["verbose"]
+        == custom_params["bertopic_model"]["verbose"]
+    )
+    assert (
+        topic_model.config["bertopic_model"]["zeroshot_topic_list"]
+        == custom_params["bertopic_model"]["zeroshot_topic_list"]
+    )
+    assert (
+        topic_model.config["bertopic_model"]["zeroshot_min_similarity"]
+        == custom_params["bertopic_model"]["zeroshot_min_similarity"]
+    )
+    assert (
+        topic_model.config["umap_model"]["n_neighbors"]
+        == custom_params["umap_model"]["n_neighbors"]
+    )
+    assert (
+        topic_model.config["umap_model"]["n_components"]
+        == custom_params["umap_model"]["n_components"]
+    )
+    assert (
+        topic_model.config["umap_model"]["min_dist"]
+        == custom_params["umap_model"]["min_dist"]
+    )
+    assert (
+        topic_model.config["umap_model"]["metric"]
+        == custom_params["umap_model"]["metric"]
+    )
+    assert (
+        topic_model.config["umap_model"]["random_state"]
+        == custom_params["umap_model"]["random_state"]
+    )
+    assert (
+        topic_model.config["hdbscan_model"]["min_cluster_size"]
+        == custom_params["hdbscan_model"]["min_cluster_size"]
+    )
+    assert (
+        topic_model.config["hdbscan_model"]["min_samples"]
+        == custom_params["hdbscan_model"]["min_samples"]
+    )
+    assert (
+        topic_model.config["hdbscan_model"]["metric"]
+        == custom_params["hdbscan_model"]["metric"]
+    )
+    assert (
+        topic_model.config["hdbscan_model"]["cluster_selection_method"]
+        == custom_params["hdbscan_model"]["cluster_selection_method"]
+    )
+    assert (
+        topic_model.config["hdbscan_model"]["prediction_data"]
+        == custom_params["hdbscan_model"]["prediction_data"]
+    )
+    assert topic_model.config["vectorizer_model"]["ngram_range"] == tuple(
+        custom_params["vectorizer_model"]["ngram_range"]
+    )
+    assert (
+        topic_model.config["vectorizer_model"]["min_df"]
+        == custom_params["vectorizer_model"]["min_df"]
+    )
+    assert (
+        topic_model.config["ctfidf_model"]["bm25_weighting"]
+        == custom_params["ctfidf_model"]["bm25_weighting"]
+    )
+    assert (
+        topic_model.config["ctfidf_model"]["reduce_frequent_words"]
+        == custom_params["ctfidf_model"]["reduce_frequent_words"]
+    )
+    assert (
+        topic_model.config["mmr_model"]["diversity"]
+        == custom_params["mmr_model"]["diversity"]
+    )
+    assert (
+        topic_model.config["reduce_outliers"]["strategy"]
+        == custom_params["reduce_outliers"]["strategy"]
+    )
 
 
 def test_initialize_models_called(topic_model):
     """Test that internal models are initialized properly."""
-    assert hasattr(topic_model, "umap_model")
-    assert hasattr(topic_model, "hdbscan_model")
-    assert hasattr(topic_model, "vectorizer_model")
-    assert hasattr(topic_model, "mmr_model")
-    assert hasattr(topic_model, "ctfidf_model")
+    assert hasattr(topic_model, "config_file")
+    assert hasattr(topic_model, "config")
 
 
 def test_create_topic_model_with_valid_input(
@@ -120,16 +228,16 @@ def test_create_topic_model_with_valid_input(
         docs,
         mock_sentence_transformer,
         embeddings,
-        zeroshot_topic_list,
-        zeroshot_min_similarity,
+        zeroshot_topic_list=zeroshot_topic_list,
+        zeroshot_min_similarity=zeroshot_min_similarity,
     )
 
     topic_model.fit.assert_called_once_with(
         docs,
         mock_sentence_transformer,
         embeddings,
-        zeroshot_topic_list,
-        zeroshot_min_similarity,
+        zeroshot_topic_list=zeroshot_topic_list,
+        zeroshot_min_similarity=zeroshot_min_similarity,
     )
     assert result == mock_bertopic
 
@@ -146,8 +254,8 @@ def test_create_topic_model_with_empty_zeroshot_topic_list(
         docs,
         None,  # mock_sentence_transformer,
         np.random.random((len(docs), 768)),
-        zeroshot_topic_list,
-        zeroshot_min_similarity,
+        zeroshot_topic_list=zeroshot_topic_list,
+        zeroshot_min_similarity=zeroshot_min_similarity,
     )
 
     assert result is not None
@@ -173,6 +281,6 @@ def test_create_topic_model_exception_handling(
             docs,
             mock_sentence_transformer,
             embeddings,
-            zeroshot_topic_list,
-            zeroshot_min_similarity,
+            zeroshot_topic_list=zeroshot_topic_list,
+            zeroshot_min_similarity=zeroshot_min_similarity,
         )
