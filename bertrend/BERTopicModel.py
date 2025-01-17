@@ -101,12 +101,13 @@ class BERTopicModel:
         # Handle specific parameters
 
         # Transform ngram_range into tuple
-        config["vectorizer_model"]["ngram_range"] = tuple(
-            config["vectorizer_model"]["ngram_range"]
-        )
+        if config["vectorizer_model"].get("ngram_range"):
+            config["vectorizer_model"]["ngram_range"] = tuple(
+                config["vectorizer_model"]["ngram_range"]
+            )
 
         # Load stop words list
-        if config["vectorizer_model"]["stop_words"]:
+        if config["vectorizer_model"].get("stop_words"):
             stop_words = (
                 STOPWORDS
                 if config["global"]["language"] == "French"
@@ -115,7 +116,7 @@ class BERTopicModel:
             config["vectorizer_model"]["stop_words"] = stop_words
 
         # BERTopic needs a "None" instead of an empty list, otherwise it'll attempt zeroshot topic modeling on an empty list
-        if not config["bertopic_model"]["zeroshot_topic_list"]:  # empty list
+        if not config["bertopic_model"].get("zeroshot_topic_list"):  # empty list
             config["bertopic_model"]["zeroshot_topic_list"] = None
 
         return config
