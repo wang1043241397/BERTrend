@@ -23,6 +23,7 @@ bertopic = "0.16.2"
 black = "^24.10.0"
 datamapplot = "0.3.0"
 dateparser = "^1.2.0"
+dask = "2024.9.1" # issues with >=2025.x (https://github.com/dask/dask/issues/11678)
 gensim = "4.3.2"
 hdbscan = "^0.8.40"
 joblib = "^1.4.2"
