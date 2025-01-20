@@ -70,7 +70,7 @@ class BERTopicModel:
 
     def __init__(self, config_file: str | Path = BERTOPIC_DEFAULT_CONFIG_PATH):
         """
-        Instanciate a class from a TOML config file.
+        Initialize a class from a TOML config file.
         `config_file` can be:
             - a `str` representing the TOML file
             - a `Path` to a TOML file
@@ -94,7 +94,7 @@ class BERTopicModel:
 
     def _load_config(self) -> dict:
         """
-        Load the TOML config file as a dict when instanciating the class.
+        Load the TOML config file as a dict when initializing the class.
         """
         config = load_toml_config(self.config_file)
 
