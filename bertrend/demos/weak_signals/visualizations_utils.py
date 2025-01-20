@@ -27,10 +27,9 @@ from bertrend.trend_analysis.visualizations import (
     plot_topic_size_evolution,
 )
 from bertrend.trend_analysis.weak_signals import (
-    classify_signals,
-    save_signal_evolution_data,
     analyze_signal,
 )
+from bertrend.BERTrend import classify_signals, save_signal_evolution_data
 
 PLOTLY_BUTTON_SAVE_CONFIG = {
     "toImageButtonOptions": {
@@ -164,14 +163,14 @@ def display_popularity_evolution():
         key="current_date",
     )
 
-    # Compute threshold values
+    # Compute threshold values and classify signals
     window_start, window_end, all_popularity_values, q1, q3 = (
-        bertrend.compute_popularity_values_and_thresholds(window_size, current_date)
+        bertrend._compute_popularity_values_and_thresholds(window_size, current_date)
     )
 
     # Classify signals
-    noise_topics_df, weak_signal_topics_df, strong_signal_topics_df = classify_signals(
-        bertrend.topic_sizes, window_start, window_end, q1, q3
+    noise_topics_df, weak_signal_topics_df, strong_signal_topics_df = (
+        bertrend._classify_signals(window_start, window_end, q1, q3)
     )
 
     # Display threshold values for noise and strong signals
@@ -221,10 +220,8 @@ def save_signal_evolution():
 
     if st.button("Save Signal Evolution Data"):
         try:
-            save_path = save_signal_evolution_data(
-                topic_sizes=dict(bertrend.topic_sizes),
+            save_path = bertrend.save_signal_evolution_data(
                 window_size=SessionStateManager.get("window_size"),
-                granularity=granularity,
                 start_timestamp=pd.Timestamp(start_date),
                 end_timestamp=pd.Timestamp(end_date),
             )

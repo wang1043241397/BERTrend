@@ -3,24 +3,14 @@
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
 
-import os
-import pickle
-from pathlib import Path
-from typing import Any
-
 import numpy as np
 import pandas as pd
 import scipy
 from bertopic import BERTopic
 from loguru import logger
-from tqdm import tqdm
 
 from bertrend.llm_utils.openai_client import OpenAI_Client
-from bertrend.config.parameters import (
-    SIGNAL_CLASSIF_LOWER_BOUND,
-    SIGNAL_CLASSIF_UPPER_BOUND,
-)
-from bertrend import SIGNAL_EVOLUTION_DATA_DIR, LLM_CONFIG
+from bertrend import LLM_CONFIG
 from bertrend.trend_analysis.prompts import get_prompt, save_html_output
 
 
@@ -337,169 +327,6 @@ def _apply_decay_to_inactive_topics(
                 topic_sizes[topic]["Representation"]
             )
             topic_last_popularity[topic] = decayed_popularity
-
-
-def classify_signals(
-    topic_sizes: dict[int, dict[str, Any]],
-    window_start: pd.Timestamp,
-    window_end: pd.Timestamp,
-    q1: float,
-    q3: float,
-    rising_popularity_only: bool = True,
-    keep_documents: bool = True,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """
-    Classify signals into weak signal and strong signal dataframes.
-
-    Args:
-        topic_sizes (Dict[int, Dict[str, Any]]): Dictionary storing topic sizes and related information.
-        window_start (pd.Timestamp): The start timestamp of the window.
-        window_end (pd.Timestamp): The end timestamp of the window.
-        q1 (float): The 10th percentile of popularity values.
-        q3 (float): The 50th percentile of popularity values.
-        rising_popularity_only (bool): Whether to consider only rising popularity topics as weak signals.
-        keep_documents (bool): Whether to keep track of the documents or not.
-
-    Returns:
-        Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-            - noise_topics_df: DataFrame containing noise topics.
-            - weak_signal_topics_df: DataFrame containing weak signal topics.
-            - strong_signal_topics_df: DataFrame containing strong signal topics.
-    """
-    noise_topics = []
-    weak_signal_topics = []
-    strong_signal_topics = []
-
-    sorted_topics = sorted(topic_sizes.items(), key=lambda x: x[0])
-
-    for topic, data in sorted_topics:
-        filtered_data = _filter_data(data, window_end, keep_documents)
-        if not filtered_data["Timestamps"]:
-            continue
-
-        window_popularities = [
-            (timestamp, popularity)
-            for timestamp, popularity in zip(
-                filtered_data["Timestamps"], filtered_data["Popularity"]
-            )
-            if window_start <= timestamp <= window_end
-        ]
-
-        if window_popularities:
-            latest_timestamp, latest_popularity = window_popularities[-1]
-            docs_count = (
-                filtered_data["Docs_Count"][-1] if filtered_data["Docs_Count"] else 0
-            )
-            paragraphs_count = (
-                filtered_data["Paragraphs_Count"][-1]
-                if filtered_data["Paragraphs_Count"]
-                else 0
-            )
-            source_diversity = (
-                filtered_data["Source_Diversity"][-1]
-                if filtered_data["Source_Diversity"]
-                else 0
-            )
-
-            topic_data = (
-                topic,
-                latest_popularity,
-                latest_timestamp,
-                docs_count,
-                paragraphs_count,
-                source_diversity,
-                filtered_data,
-            )
-
-            if latest_popularity < q1:
-                noise_topics.append(topic_data)
-            elif q1 <= latest_popularity <= q3:
-                if rising_popularity_only:
-                    if _is_rising_popularity(filtered_data, latest_timestamp):
-                        weak_signal_topics.append(topic_data)
-                    else:
-                        noise_topics.append(topic_data)
-                else:
-                    weak_signal_topics.append(topic_data)
-            else:
-                strong_signal_topics.append(topic_data)
-
-    return _create_dataframes(
-        noise_topics, weak_signal_topics, strong_signal_topics, keep_documents
-    )
-
-
-def save_signal_evolution_data(
-    topic_sizes: dict[int, dict[str, Any]],
-    window_size: int,
-    granularity: int,
-    start_timestamp: pd.Timestamp,
-    end_timestamp: pd.Timestamp,
-) -> Path:
-    window_size_timedelta = pd.Timedelta(days=window_size)
-    granularity_timedelta = pd.Timedelta(days=granularity)
-
-    save_path = SIGNAL_EVOLUTION_DATA_DIR / f"retrospective_{window_size}_days"
-    os.makedirs(save_path, exist_ok=True)
-
-    q1_values, q3_values, timestamps_over_time = [], [], []
-    noise_dfs, weak_signal_dfs, strong_signal_dfs = [], [], []
-
-    for current_timestamp in tqdm(
-        pd.date_range(
-            start=start_timestamp, end=end_timestamp, freq=granularity_timedelta
-        ),
-        desc="Processing timestamps",
-    ):
-        window_end = current_timestamp + granularity_timedelta
-        window_start = window_end - granularity_timedelta - window_size_timedelta
-
-        all_popularity_values = [
-            popularity
-            for topic, data in topic_sizes.items()
-            for timestamp, popularity in zip(data["Timestamps"], data["Popularity"])
-            if window_start <= timestamp <= current_timestamp and popularity > 1 ^ -5
-        ]
-
-        if all_popularity_values:
-            q1 = np.percentile(all_popularity_values, SIGNAL_CLASSIF_LOWER_BOUND)
-            q3 = np.percentile(all_popularity_values, SIGNAL_CLASSIF_UPPER_BOUND)
-        else:
-            q1, q3 = 0, 0
-
-        q1_values.append(q1)
-        q3_values.append(q3)
-
-        noise_df, weak_signal_df, strong_signal_df = classify_signals(
-            topic_sizes, window_start, window_end, q1, q3, keep_documents=False
-        )
-
-        noise_dfs.append(noise_df)
-        weak_signal_dfs.append(weak_signal_df)
-        strong_signal_dfs.append(strong_signal_df)
-
-        timestamps_over_time.append(current_timestamp)
-
-    # Save the grouped dataframes
-    with open(save_path / "noise_dfs_over_time.pkl", "wb") as f:
-        pickle.dump(noise_dfs, f)
-    with open(save_path / "weak_signal_dfs_over_time.pkl", "wb") as f:
-        pickle.dump(weak_signal_dfs, f)
-    with open(save_path / "strong_signal_dfs_over_time.pkl", "wb") as f:
-        pickle.dump(strong_signal_dfs, f)
-
-    # Save the metadata
-    with open(save_path / "metadata.pkl", "wb") as f:
-        metadata = {
-            "window_size": window_size,
-            "granularity": granularity,
-            "timestamps": timestamps_over_time,
-            "q1_values": q1_values,
-            "q3_values": q3_values,
-        }
-        pickle.dump(metadata, f)
-
-    return save_path
 
 
 def analyze_signal(
