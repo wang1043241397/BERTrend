@@ -6,12 +6,13 @@ import pickle
 import shutil
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, Tuple, List, Any
+from typing import Any
 
 import numpy as np
 import pandas as pd
 from bertopic import BERTopic
 from loguru import logger
+from pandas import Timestamp
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -31,6 +32,8 @@ from bertrend.config.parameters import (
     EMB_GROUPS_FILE,
     HYPERPARAMS_FILE,
     BERTOPIC_SERIALIZATION,
+    SIGNAL_CLASSIF_LOWER_BOUND,
+    SIGNAL_CLASSIF_UPPER_BOUND,
 )
 from bertrend.trend_analysis.weak_signals import (
     _initialize_new_topic,
@@ -78,11 +81,11 @@ class BERTrend:
 
         # Variables related to time-based topic models
         # - topic_models: Dictionary of trained BERTopic models for each timestamp.
-        self.topic_models: Dict[pd.Timestamp, BERTopic] = {}
+        self.topic_models: dict[pd.Timestamp, BERTopic] = {}
         # - doc_groups: Dictionary of document groups for each timestamp.
-        self.doc_groups: Dict[pd.Timestamp, List[str]] = {}
+        self.doc_groups: dict[pd.Timestamp, list[str]] = {}
         # - emb_groups: Dictionary of document embeddings for each timestamp.
-        self.emb_groups: Dict[pd.Timestamp, np.ndarray] = {}
+        self.emb_groups: dict[pd.Timestamp, np.ndarray] = {}
 
         # Variables containing info about merged topics
         self.all_new_topics_df = None
@@ -91,13 +94,13 @@ class BERTrend:
 
         # Variables containing info about topic popularity
         # - topic_sizes: Dictionary storing topic sizes and related information over time.
-        self.topic_sizes: Dict[int, Dict[str, Any]] = defaultdict(
+        self.topic_sizes: dict[int, dict[str, Any]] = defaultdict(
             lambda: defaultdict(list)
         )
         # - topic_last_popularity: Dictionary storing the last known popularity of each topic.
-        self.topic_last_popularity: Dict[int, float] = {}
+        self.topic_last_popularity: dict[int, float] = {}
         # - topic_last_update: Dictionary storing the last update timestamp of each topic.
-        self.topic_last_update: Dict[int, pd.Timestamp] = {}
+        self.topic_last_update: dict[int, pd.Timestamp] = {}
 
     def _load_config(self) -> dict:
         """
@@ -112,9 +115,9 @@ class BERTrend:
         group: pd.DataFrame,
         embedding_model: SentenceTransformer,
         embeddings: np.ndarray,
-    ) -> Tuple[
+    ) -> tuple[
         BERTopic,
-        List[str],
+        list[str],
         np.ndarray,
     ]:
         """
@@ -196,7 +199,7 @@ class BERTrend:
 
     def train_topic_models(
         self,
-        grouped_data: Dict[pd.Timestamp, pd.DataFrame],
+        grouped_data: dict[pd.Timestamp, pd.DataFrame],
         embedding_model: SentenceTransformer,
         embeddings: np.ndarray,
     ):
@@ -447,6 +450,48 @@ class BERTrend:
         self.topic_last_popularity = topic_last_popularity
         self.topic_last_update = topic_last_update
 
+    def compute_popularity_values_and_thresholds(
+        self, window_size: int, current_date: Timestamp
+    ) -> tuple[Timestamp, Timestamp, list, float, float]:
+        """
+        Computes the popularity values and thresholds for the considered time window.
+
+        Args:
+            window_size (int): The retrospective window size in days.
+            current_date (datetime): The current date selected by the user.
+
+        Returns:
+            Tuple[Timestamp,Timestamp, list, float, float,]:
+                window_start, window_end indicates the start / end periods.
+                all_popularities_values
+                The q1 and q3 values representing the 10th and 90th percentiles of popularity values,
+        """
+
+        window_size_timedelta = pd.Timedelta(days=window_size)
+        granularity_timedelta = pd.Timedelta(days=self.config["granularity"])
+
+        current_date = pd.to_datetime(current_date).floor("D")  # Floor to start of day
+        window_start = current_date - window_size_timedelta
+        window_end = current_date + granularity_timedelta
+
+        # Calculate q1 and q3 values (we remove very low values of disappearing signals to not skew the thresholds)
+        all_popularity_values = [
+            popularity
+            for topic, data in self.topic_sizes.items()
+            for timestamp, popularity in zip(
+                pd.to_datetime(data["Timestamps"]), data["Popularity"]
+            )
+            if window_start <= timestamp <= current_date and popularity > 1e-5
+        ]
+
+        if all_popularity_values:
+            q1 = np.percentile(all_popularity_values, SIGNAL_CLASSIF_LOWER_BOUND)
+            q3 = np.percentile(all_popularity_values, SIGNAL_CLASSIF_UPPER_BOUND)
+        else:
+            q1, q3 = 0, 0
+
+        return window_start, window_end, all_popularity_values, q1, q3
+
     def save_models(self, models_path: Path = MODELS_DIR):
         if models_path.exists():
             shutil.rmtree(models_path)
@@ -529,7 +574,7 @@ class BERTrend:
 
 
 def _preprocess_model(
-    topic_model: BERTopic, docs: List[str], embeddings: np.ndarray
+    topic_model: BERTopic, docs: list[str], embeddings: np.ndarray
 ) -> pd.DataFrame:
     """
     Preprocess a BERTopic model by extracting topic information, document groups, document embeddings, and URLs.
@@ -581,7 +626,7 @@ def _preprocess_model(
 
 def _merge_models(
     df1: pd.DataFrame, df2: pd.DataFrame, min_similarity: float, timestamp: pd.Timestamp
-) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     merged_df = df1.copy()
     merge_history = []
 

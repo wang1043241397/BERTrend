@@ -2,7 +2,6 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
-from typing import Dict
 
 import pandas as pd
 import streamlit as st
@@ -24,7 +23,6 @@ from bertrend.trend_analysis.visualizations import (
     create_sankey_diagram_plotly,
     plot_newly_emerged_topics,
     plot_topics_for_model,
-    compute_popularity_values_and_thresholds,
     create_topic_size_evolution_figure,
     plot_topic_size_evolution,
 )
@@ -168,9 +166,7 @@ def display_popularity_evolution():
 
     # Compute threshold values
     window_start, window_end, all_popularity_values, q1, q3 = (
-        compute_popularity_values_and_thresholds(
-            bertrend.topic_sizes, window_size, granularity, current_date
-        )
+        bertrend.compute_popularity_values_and_thresholds(window_size, current_date)
     )
 
     # Classify signals
@@ -226,10 +222,7 @@ def save_signal_evolution():
     if st.button("Save Signal Evolution Data"):
         try:
             save_path = save_signal_evolution_data(
-                all_merge_histories_df=all_merge_histories_df,
                 topic_sizes=dict(bertrend.topic_sizes),
-                topic_last_popularity=bertrend.topic_last_popularity,
-                topic_last_update=bertrend.topic_last_update,
                 window_size=SessionStateManager.get("window_size"),
                 granularity=granularity,
                 start_timestamp=pd.Timestamp(start_date),
@@ -270,7 +263,7 @@ def display_newly_emerged_topics(all_new_topics_df: pd.DataFrame) -> None:
         )
 
 
-def display_topics_per_timestamp(topic_models: Dict[pd.Timestamp, BERTopic]) -> None:
+def display_topics_per_timestamp(topic_models: dict[pd.Timestamp, BERTopic]) -> None:
     """
     Plot the topics discussed per source for each timestamp.
 
@@ -335,7 +328,7 @@ def display_signal_analysis(
                 st.markdown(analysis)
 
 
-def retrieve_topic_counts(topic_models: Dict[pd.Timestamp, BERTopic]) -> None:
+def retrieve_topic_counts(topic_models: dict[pd.Timestamp, BERTopic]) -> None:
     individual_model_topic_counts = [
         (timestamp, model.topic_info_df["Topic"].max() + 1)
         for timestamp, model in topic_models.items()

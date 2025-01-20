@@ -6,7 +6,7 @@
 import os
 import pickle
 from pathlib import Path
-from typing import Dict, List, Tuple, Any
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -25,12 +25,12 @@ from bertrend.trend_analysis.prompts import get_prompt, save_html_output
 
 
 def detect_weak_signals_zeroshot(
-    topic_models: Dict[pd.Timestamp, BERTopic],
-    zeroshot_topic_list: List[str],
+    topic_models: dict[pd.Timestamp, BERTopic],
+    zeroshot_topic_list: list[str],
     granularity: int,
     decay_factor: float = 0.01,
     decay_power: float = 2,
-) -> Dict[str, Dict[pd.Timestamp, Dict[str, any]]]:
+) -> dict[str, dict[pd.Timestamp, dict[str, any]]]:
     """
     Detect weak signals based on the zero-shot list of topics to monitor.
 
@@ -340,14 +340,14 @@ def _apply_decay_to_inactive_topics(
 
 
 def classify_signals(
-    topic_sizes: Dict[int, Dict[str, Any]],
+    topic_sizes: dict[int, dict[str, Any]],
     window_start: pd.Timestamp,
     window_end: pd.Timestamp,
     q1: float,
     q3: float,
     rising_popularity_only: bool = True,
     keep_documents: bool = True,
-) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Classify signals into weak signal and strong signal dataframes.
 
@@ -430,10 +430,7 @@ def classify_signals(
 
 
 def save_signal_evolution_data(
-    all_merge_histories_df: pd.DataFrame,
-    topic_sizes: Dict[int, Dict[str, Any]],
-    topic_last_popularity: Dict[int, float],
-    topic_last_update: Dict[int, pd.Timestamp],
+    topic_sizes: dict[int, dict[str, Any]],
     window_size: int,
     granularity: int,
     start_timestamp: pd.Timestamp,
