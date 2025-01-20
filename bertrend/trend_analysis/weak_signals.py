@@ -16,7 +16,7 @@ from loguru import logger
 from tqdm import tqdm
 
 from bertrend.llm_utils.openai_client import OpenAI_Client
-from bertrend.parameters import (
+from bertrend.config.parameters import (
     SIGNAL_CLASSIF_LOWER_BOUND,
     SIGNAL_CLASSIF_UPPER_BOUND,
 )

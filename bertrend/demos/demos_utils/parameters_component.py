@@ -4,7 +4,14 @@
 #  This file is part of BERTrend.
 import streamlit as st
 
-from bertrend import EMBEDDING_CONFIG
+from code_editor import code_editor
+
+from bertrend import (
+    BERTOPIC_DEFAULT_CONFIG_PATH,
+    BERTREND_DEFAULT_CONFIG_PATH,
+    EMBEDDING_CONFIG,
+    load_toml_config,
+)
 from bertrend.demos.demos_utils.state_utils import (
     register_widget,
     save_widget_state,
@@ -12,17 +19,7 @@ from bertrend.demos.demos_utils.state_utils import (
     register_multiple_widget,
     reset_widget_state,
 )
-from bertrend.parameters import (
-    DEFAULT_UMAP_N_COMPONENTS,
-    DEFAULT_UMAP_N_NEIGHBORS,
-    DEFAULT_HDBSCAN_MIN_CLUSTER_SIZE,
-    DEFAULT_HDBSCAN_MIN_SAMPLES,
-    DEFAULT_TOP_N_WORDS,
-    DEFAULT_MIN_DF,
-    DEFAULT_MIN_SIMILARITY,
-    VECTORIZER_NGRAM_RANGES,
-    DEFAULT_ZEROSHOT_MIN_SIMILARITY,
-    HDBSCAN_CLUSTER_SELECTION_METHODS,
+from bertrend.config.parameters import (
     EMBEDDING_DTYPES,
     LANGUAGES,
     ENGLISH_EMBEDDING_MODELS,
@@ -30,6 +27,8 @@ from bertrend.parameters import (
     REPRESENTATION_MODELS,
     MMR_REPRESENTATION_MODEL,
 )
+
+from bertrend.demos.demos_utils.icons import INFO_ICON
 
 
 def display_local_embeddings():
@@ -87,7 +86,7 @@ def display_remote_embeddings():
 
 
 def display_bertopic_hyperparameters():
-    """UI settings for Bertopic hyperparameters"""
+    # Embedding model parameters
     with st.expander("Embedding Model Settings", expanded=False):
         register_widget("embedding_service_type")
         if "embedding_service_type" not in st.session_state:
@@ -104,110 +103,48 @@ def display_bertopic_hyperparameters():
         else:
             display_remote_embeddings()
 
-    for expander, params in [
-        (
-            "UMAP Hyperparameters",
-            [
-                (
-                    "umap_n_components",
-                    "UMAP n_components",
-                    DEFAULT_UMAP_N_COMPONENTS,
-                    2,
-                    100,
-                ),
-                (
-                    "umap_n_neighbors",
-                    "UMAP n_neighbors",
-                    DEFAULT_UMAP_N_NEIGHBORS,
-                    2,
-                    100,
-                ),
-            ],
-        ),
-        (
-            "HDBSCAN Hyperparameters",
-            [
-                (
-                    "hdbscan_min_cluster_size",
-                    "HDBSCAN min_cluster_size",
-                    DEFAULT_HDBSCAN_MIN_CLUSTER_SIZE,
-                    2,
-                    100,
-                ),
-                (
-                    "hdbscan_min_samples",
-                    "HDBSCAN min_sample",
-                    DEFAULT_HDBSCAN_MIN_SAMPLES,
-                    1,
-                    100,
-                ),
-            ],
-        ),
-        (
-            "Vectorizer Hyperparameters",
-            [
-                ("top_n_words", "Top N Words", DEFAULT_TOP_N_WORDS, 1, 50),
-                ("min_df", "min_df", DEFAULT_MIN_DF, 1, 50),
-            ],
-        ),
-    ]:
-        with st.expander(expander, expanded=False):
-            for key, label, default, min_val, max_val in params:
-                register_widget(key)
-                st.number_input(
-                    label,
-                    value=default,
-                    min_value=min_val,
-                    max_value=max_val,
-                    key=key,
-                    on_change=save_widget_state,
-                )
+    # BERTopic model parameters
+    with st.expander("BERTopic Model Settings", expanded=False):
+        # Get BERTopic default configuration
+        with open(BERTOPIC_DEFAULT_CONFIG_PATH, "r") as f:
+            # Load default parameter the first time
+            toml_txt = f.read()
 
-            if expander == "HDBSCAN Hyperparameters":
-                register_widget("hdbscan_cluster_selection_method")
-                st.selectbox(
-                    "Cluster Selection Method",
-                    HDBSCAN_CLUSTER_SELECTION_METHODS,
-                    key="hdbscan_cluster_selection_method",
-                    on_change=save_widget_state,
-                )
-            elif expander == "Vectorizer Hyperparameters":
-                register_widget("vectorizer_ngram_range")
-                st.selectbox(
-                    "N-Gram range",
-                    VECTORIZER_NGRAM_RANGES,
-                    key="vectorizer_ngram_range",
-                    on_change=save_widget_state,
-                )
+        # Add code editor to edit the config file
+        st.write(INFO_ICON + " CTRL + Enter to update")
+        config_editor = code_editor(toml_txt, lang="toml")
 
-    display_representation_model_options()
+        # If code is edited, update config
+        if config_editor["text"] != "":
+            st.session_state["bertopic_config"] = config_editor["text"]
+        # Else use default config
+        else:
+            st.session_state["bertopic_config"] = toml_txt
 
 
 def display_bertrend_hyperparameters():
     """UI settings for Bertrend hyperparameters"""
-    with st.expander("Merging Hyperparameters", expanded=False):
-        register_widget("min_similarity")
-        st.slider(
-            "Minimum Similarity for Merging",
-            0.0,
-            1.0,
-            DEFAULT_MIN_SIMILARITY,
-            0.01,
-            key="min_similarity",
-            on_change=save_widget_state,
-        )
+    with st.expander("BERTrend Model Settings", expanded=False):
+        # Get BERTrend default configuration
+        with open(BERTREND_DEFAULT_CONFIG_PATH, "r") as f:
+            # Load default parameter the first time
+            toml_txt = f.read()
 
-    with st.expander("Zero-shot Parameters", expanded=False):
-        register_widget("zeroshot_min_similarity")
-        st.slider(
-            "Zeroshot Minimum Similarity",
-            0.0,
-            1.0,
-            DEFAULT_ZEROSHOT_MIN_SIMILARITY,
-            0.01,
-            key="zeroshot_min_similarity",
-            on_change=save_widget_state,
-        )
+        # Add code editor to edit the config file
+        st.write(INFO_ICON + " CTRL + Enter to update")
+        config_editor = code_editor(toml_txt, lang="toml")
+
+        # If code is edited, update config
+        if config_editor["text"] != "":
+            st.session_state["bertrend_config"] = config_editor["text"]
+        # Else use default config
+        else:
+            st.session_state["bertrend_config"] = toml_txt
+
+        # Save granularity in session state as it is re-used in other components
+        st.session_state["granularity"] = load_toml_config(
+            st.session_state["bertrend_config"]
+        )["granularity"]
 
 
 def display_representation_model_options():

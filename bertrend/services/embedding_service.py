@@ -15,7 +15,7 @@ from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
 from bertrend import EMBEDDING_CONFIG
-from bertrend.parameters import (
+from bertrend.config.parameters import (
     EMBEDDING_DEVICE,
     EMBEDDING_BATCH_SIZE,
     EMBEDDING_MAX_SEQ_LENGTH,

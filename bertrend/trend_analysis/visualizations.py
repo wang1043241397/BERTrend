@@ -12,7 +12,10 @@ from bertopic import BERTopic
 from pandas import Timestamp
 from plotly_resampler import FigureWidgetResampler
 
-from bertrend.parameters import SIGNAL_CLASSIF_LOWER_BOUND, SIGNAL_CLASSIF_UPPER_BOUND
+from bertrend.config.parameters import (
+    SIGNAL_CLASSIF_LOWER_BOUND,
+    SIGNAL_CLASSIF_UPPER_BOUND,
+)
 
 # Visualization Settings
 SANKEY_NODE_PAD = 15

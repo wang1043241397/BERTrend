@@ -8,12 +8,12 @@ from pathlib import Path
 
 import torch
 
-from bertrend import BERTOPIC_PARAMETERS, BERTREND_PARAMETERS
+from bertrend import BERTREND_CONFIG, EMBEDDING_CONFIG
 
-stopwords_en_file = Path(__file__).parent / "resources" / "stopwords-en.json"
-stopwords_fr_file = Path(__file__).parent / "resources" / "stopwords-fr.json"
-stopwords_rte_file = Path(__file__).parent / "resources" / "stopwords-rte.json"
-common_ngrams_file = Path(__file__).parent / "resources" / "common_ngrams.json"
+stopwords_en_file = Path(__file__).parent.parent / "resources" / "stopwords-en.json"
+stopwords_fr_file = Path(__file__).parent.parent / "resources" / "stopwords-fr.json"
+stopwords_rte_file = Path(__file__).parent.parent / "resources" / "stopwords-rte.json"
+common_ngrams_file = Path(__file__).parent.parent / "resources" / "common_ngrams.json"
 with open(stopwords_en_file, "r", encoding="utf-8") as file:
     ENGLISH_STOPWORDS = json.load(file)
 with open(stopwords_fr_file, "r", encoding="utf-8") as file:
@@ -60,23 +60,8 @@ KEYBERTINSPIRED_REPRESENTATION_MODEL = "KeyBERTInspired"
 OPENAI_REPRESENTATION_MODEL = "OpenAI"
 
 # BERTopic Hyperparameters
-DEFAULT_UMAP_N_COMPONENTS = BERTOPIC_PARAMETERS["umap_n_components"]
-DEFAULT_UMAP_N_NEIGHBORS = BERTOPIC_PARAMETERS["umap_n_neighbors"]
-DEFAULT_HDBSCAN_MIN_CLUSTER_SIZE = BERTOPIC_PARAMETERS["hdbscan_min_cluster_size"]
-DEFAULT_HDBSCAN_MIN_SAMPLES = BERTOPIC_PARAMETERS["hdbscan_min_samples"]
-DEFAULT_TOP_N_WORDS = BERTOPIC_PARAMETERS["top_n_words"]
-DEFAULT_MIN_DF = BERTOPIC_PARAMETERS["min_df"]
-DEFAULT_GRANULARITY = BERTOPIC_PARAMETERS["granularity"]
-DEFAULT_MIN_SIMILARITY = BERTOPIC_PARAMETERS["min_similarity"]
-DEFAULT_ZEROSHOT_MIN_SIMILARITY = BERTOPIC_PARAMETERS["zeroshot_min_similarity"]
-BERTOPIC_SERIALIZATION = BERTOPIC_PARAMETERS["bertopic_serialization"]
-DEFAULT_MMR_DIVERSITY = BERTOPIC_PARAMETERS["mmr_diversity"]
-DEFAULT_UMAP_MIN_DIST = BERTOPIC_PARAMETERS["umap_min_dist"]
-OUTLIER_REDUCTION_STRATEGY = BERTOPIC_PARAMETERS["outlier_reduction_strategy"]
-DEFAULT_ZEROSHOT_TOPICS = BERTOPIC_PARAMETERS["zeroshot_topics"]
+BERTOPIC_SERIALIZATION = "safetensors"  # or pickle
 LANGUAGES = ["French", "English"]
-HDBSCAN_CLUSTER_SELECTION_METHODS = ["eom", "leaf"]
-VECTORIZER_NGRAM_RANGES = [(1, 2), (1, 1), (2, 2)]
 REPRESENTATION_MODELS = [
     MMR_REPRESENTATION_MODEL,
     KEYBERTINSPIRED_REPRESENTATION_MODEL,
@@ -84,14 +69,13 @@ REPRESENTATION_MODELS = [
 ]
 
 # BERTrend parameters
-# Signal classification Settings
-SIGNAL_CLASSIF_LOWER_BOUND = BERTREND_PARAMETERS["signal_classif_lower_bound"]
-SIGNAL_CLASSIF_UPPER_BOUND = BERTREND_PARAMETERS["signal_classif_upper_bound"]
+SIGNAL_CLASSIF_LOWER_BOUND = BERTREND_CONFIG["signal_classif_lower_bound"]
+SIGNAL_CLASSIF_UPPER_BOUND = BERTREND_CONFIG["signal_classif_upper_bound"]
 
 # Embedding Settings
-EMBEDDING_DTYPES = ["float32", "float16", "bfloat16"]
-EMBEDDING_BATCH_SIZE = 5000
-EMBEDDING_MAX_SEQ_LENGTH = 512
+EMBEDDING_DTYPES = EMBEDDING_CONFIG["embedding_dtypes"]
+EMBEDDING_BATCH_SIZE = EMBEDDING_CONFIG["embedding_batch_size"]
+EMBEDDING_MAX_SEQ_LENGTH = EMBEDDING_CONFIG["embedding_max_seq_length"]
 EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Representation models parameters

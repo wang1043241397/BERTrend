@@ -2,7 +2,7 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
-from bertrend.parameters import BERTOPIC_SERIALIZATION
+from bertrend.config.parameters import BERTOPIC_SERIALIZATION
 
 FR_USER_SUMMARY_MULTIPLE_DOCS = (
     "Vous êtes une IA hautement qualifiée, formée à la compréhension et à la synthèse du langage. "

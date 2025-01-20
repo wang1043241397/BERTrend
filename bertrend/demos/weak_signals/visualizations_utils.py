@@ -14,7 +14,7 @@ from bertrend import OUTPUT_PATH, SIGNAL_EVOLUTION_DATA_DIR
 from bertrend.demos.demos_utils.icons import WARNING_ICON, SUCCESS_ICON, INFO_ICON
 from bertrend.demos.weak_signals.messages import HTML_GENERATION_FAILED_WARNING
 from bertrend.demos.demos_utils.state_utils import SessionStateManager
-from bertrend.parameters import (
+from bertrend.config.parameters import (
     MAX_WINDOW_SIZE,
     DEFAULT_WINDOW_SIZE,
     INDIVIDUAL_MODEL_TOPIC_COUNTS_FILE,
@@ -149,12 +149,15 @@ def display_popularity_evolution():
     min_datetime = all_merge_histories_df["Timestamp"].min().to_pydatetime()
     max_datetime = all_merge_histories_df["Timestamp"].max().to_pydatetime()
 
+    # Get granularity
+    granularity = st.session_state["granularity"]
+
     # Slider to select the date
     current_date = st.slider(
         "Current date",
         min_value=min_datetime,
         max_value=max_datetime,
-        step=pd.Timedelta(days=SessionStateManager.get("granularity_select")),
+        step=pd.Timedelta(days=granularity),
         format="YYYY-MM-DD",
         help="""The earliest selectable date corresponds to the earliest timestamp when topics were merged 
         (with the smallest possible value being the earliest timestamp in the provided data). 
@@ -162,8 +165,6 @@ def display_popularity_evolution():
         to the latest timestamp in the data minus the provided granularity.""",
         key="current_date",
     )
-
-    granularity = SessionStateManager.get("granularity_select")
 
     # Compute threshold values
     window_start, window_end, all_popularity_values, q1, q3 = (
@@ -205,6 +206,7 @@ def display_popularity_evolution():
 def save_signal_evolution():
     """Save Signal Evolution Data to investigate later on in a separate notebook"""
     bertrend = SessionStateManager.get("bertrend")
+    granularity = SessionStateManager.get("granularity")
     all_merge_histories_df = bertrend.all_merge_histories_df
     min_datetime = all_merge_histories_df["Timestamp"].min().to_pydatetime()
     max_datetime = all_merge_histories_df["Timestamp"].max().to_pydatetime()
@@ -215,7 +217,7 @@ def save_signal_evolution():
         options=pd.date_range(
             start=min_datetime,
             end=max_datetime,
-            freq=pd.Timedelta(days=SessionStateManager.get("granularity_select")),
+            freq=pd.Timedelta(days=granularity),
         ),
         value=(min_datetime, max_datetime),
         format_func=lambda x: x.strftime("%Y-%m-%d"),
@@ -229,7 +231,7 @@ def save_signal_evolution():
                 topic_last_popularity=bertrend.topic_last_popularity,
                 topic_last_update=bertrend.topic_last_update,
                 window_size=SessionStateManager.get("window_size"),
-                granularity=SessionStateManager.get("granularity_select"),
+                granularity=granularity,
                 start_timestamp=pd.Timestamp(start_date),
                 end_timestamp=pd.Timestamp(end_date),
             )
@@ -302,6 +304,7 @@ def display_signal_analysis(
     """Display a LLM-based analyis of a specific topic."""
     language = SessionStateManager.get("language")
     bertrend = SessionStateManager.get("bertrend")
+    granularity = SessionStateManager.get("granularity")
     all_merge_histories_df = bertrend.all_merge_histories_df
 
     st.subheader("Signal Interpretation")
@@ -310,7 +313,7 @@ def display_signal_analysis(
             topic_number,
             SessionStateManager.get("current_date"),
             all_merge_histories_df,
-            SessionStateManager.get("granularity_select"),
+            granularity,
             language,
         )
 

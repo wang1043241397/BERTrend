@@ -27,7 +27,7 @@ from bertrend.demos.demos_utils.state_utils import (
     register_widget,
     SessionStateManager,
 )
-from bertrend.parameters import MIN_CHARS_DEFAULT, SAMPLE_SIZE_DEFAULT
+from bertrend.config.parameters import MIN_CHARS_DEFAULT, SAMPLE_SIZE_DEFAULT
 from bertrend.utils.data_loading import (
     find_compatible_files,
     TEXT_COLUMN,

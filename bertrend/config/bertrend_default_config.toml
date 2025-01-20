@@ -1,0 +1,16 @@
+#  Copyright (c) 2024, RTE (https://www.rte-france.com)
+#  See AUTHORS.txt
+#  SPDX-License-Identifier: MPL-2.0
+#  This file is part of BERTrend.
+
+# BERTrend Hyperparameters
+
+# Data split settings
+granularity = 2
+# Merge model settings
+min_similarity = 0.7
+# Signal popularity settings
+decay_factor = 0.01
+decay_power = 2
+signal_classif_lower_bound = 10
+signal_classif_upper_bound = 75
