@@ -29,7 +29,6 @@ from bertrend.trend_analysis.visualizations import (
 from bertrend.trend_analysis.weak_signals import (
     analyze_signal,
 )
-from bertrend.BERTrend import classify_signals, save_signal_evolution_data
 
 PLOTLY_BUTTON_SAVE_CONFIG = {
     "toImageButtonOptions": {
@@ -292,19 +291,14 @@ def display_signal_analysis(
     topic_number: int, output_file_name: str = "signal_llm.html"
 ):
     """Display a LLM-based analyis of a specific topic."""
-    language = SessionStateManager.get("language")
     bertrend = SessionStateManager.get("bertrend")
-    granularity = SessionStateManager.get("granularity")
-    all_merge_histories_df = bertrend.all_merge_histories_df
 
     st.subheader("Signal Interpretation")
     with st.spinner("Analyzing signal..."):
         summary, analysis, formatted_html = analyze_signal(
+            bertrend,
             topic_number,
             SessionStateManager.get("current_date"),
-            all_merge_histories_df,
-            granularity,
-            language,
         )
 
         # Check if the HTML file was created successfully

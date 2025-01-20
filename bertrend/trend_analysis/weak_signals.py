@@ -329,11 +329,9 @@ def _apply_decay_to_inactive_topics(
             topic_last_popularity[topic] = decayed_popularity
 
 
-def analyze_signal(
-    topic_number, current_date, all_merge_histories_df, granularity, language
-):
-    topic_merge_rows = all_merge_histories_df[
-        all_merge_histories_df["Topic1"] == topic_number
+def analyze_signal(bertrend, topic_number: int, current_date):
+    topic_merge_rows = bertrend.all_merge_histories_df[
+        bertrend.all_merge_histories_df["Topic1"] == topic_number
     ].sort_values("Timestamp")
     topic_merge_rows_filtered = topic_merge_rows[
         topic_merge_rows["Timestamp"] <= current_date
@@ -345,12 +343,14 @@ def analyze_signal(
                 f"Timestamp: {row.Timestamp.strftime('%Y-%m-%d')}\n"
                 f"Topic representation: {row.Representation1}\n"
                 f"{' '.join(f'- {doc}' for doc in row.Documents1 if isinstance(doc, str))}\n"
-                f"Timestamp: {(row.Timestamp + pd.Timedelta(days=granularity)).strftime('%Y-%m-%d')}\n"
+                f"Timestamp: {(row.Timestamp + pd.Timedelta(days=bertrend.config['granularity'])).strftime('%Y-%m-%d')}\n"
                 f"Topic representation: {row.Representation2}\n"
                 f"{' '.join(f'- {doc}' for doc in row.Documents2 if isinstance(doc, str))}\n"
                 for row in topic_merge_rows_filtered.itertuples()
             ]
         )
+
+        language = bertrend.topic_model.config["global"]["language"]
 
         try:
             openai_client = OpenAI_Client(
