@@ -105,14 +105,21 @@ def display_bertopic_hyperparameters():
 
     # BERTopic model parameters
     with st.expander("BERTopic Model Settings", expanded=False):
-        # Get BERTopic default configuration
-        with open(BERTOPIC_DEFAULT_CONFIG_PATH, "r") as f:
-            # Load default parameter the first time
-            toml_txt = f.read()
+        # If BERTopic config is already in session state, use it
+        if "bertopic_config" in st.session_state:
+            toml_txt = st.session_state["bertopic_config"]
+        # Else get BERTopic default configuration
+        else:
+            with open(BERTOPIC_DEFAULT_CONFIG_PATH, "r") as f:
+                # Load default parameter the first time
+                toml_txt = f.read()
 
         # Add code editor to edit the config file
         st.write(INFO_ICON + " CTRL + Enter to update")
-        config_editor = code_editor(toml_txt, lang="toml")
+        config_editor = code_editor(
+            toml_txt,
+            lang="toml",
+        )
 
         # If code is edited, update config
         if config_editor["text"] != "":
