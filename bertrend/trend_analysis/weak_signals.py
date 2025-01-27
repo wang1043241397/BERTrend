@@ -8,6 +8,7 @@ import pandas as pd
 import scipy
 from bertopic import BERTopic
 from loguru import logger
+from pandas import Timestamp
 
 from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend import LLM_CONFIG
@@ -15,24 +16,24 @@ from bertrend.trend_analysis.prompts import get_prompt, save_html_output
 
 
 def detect_weak_signals_zeroshot(
-    topic_models: dict[pd.Timestamp, BERTopic],
+    topic_models: dict[Timestamp, BERTopic],
     zeroshot_topic_list: list[str],
     granularity: int,
     decay_factor: float = 0.01,
     decay_power: float = 2,
-) -> dict[str, dict[pd.Timestamp, dict[str, any]]]:
+) -> dict[str, dict[Timestamp, dict[str, any]]]:
     """
     Detect weak signals based on the zero-shot list of topics to monitor.
 
     Args:
-        topic_models (Dict[pd.Timestamp, BERTopic]): Dictionary of BERTopic models for each timestamp.
+        topic_models (Dict[Timestamp, BERTopic]): Dictionary of BERTopic models for each timestamp.
         zeroshot_topic_list (List[str]): List of topics to monitor for weak signals.
         granularity (int): The granularity of the timestamps in days.
         decay_factor (float): The decay factor for exponential decay.
         decay_power (float): The decay power for exponential decay.
 
     Returns:
-        Dict[str, Dict[pd.Timestamp, Dict[str, any]]]: Dictionary of weak signal trends for each monitored topic.
+        Dict[str, Dict[Timestamp, Dict[str, any]]]: Dictionary of weak signal trends for each monitored topic.
     """
     weak_signal_trends = {}
 
@@ -329,7 +330,7 @@ def _apply_decay_to_inactive_topics(
             topic_last_popularity[topic] = decayed_popularity
 
 
-def analyze_signal(bertrend, topic_number: int, current_date):
+def analyze_signal(bertrend, topic_number: int, current_date: Timestamp):
     topic_merge_rows = bertrend.all_merge_histories_df[
         bertrend.all_merge_histories_df["Topic1"] == topic_number
     ].sort_values("Timestamp")

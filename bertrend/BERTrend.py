@@ -259,12 +259,13 @@ class BERTrend:
 
         self._is_fitted = True
 
+        # Merge the newly obtained topic models with new ones
         # Update topic_models: Dictionary of trained BERTopic models for each timestamp.
-        self.topic_models = topic_models
+        self.topic_models.update(topic_models)
         # Update doc_groups: Dictionary of document groups for each timestamp.
-        self.doc_groups = doc_groups
+        self.doc_groups.update(doc_groups)
         # Update emb_groups: Dictionary of document embeddings for each timestamp.
-        self.emb_groups = emb_groups
+        self.emb_groups.update(emb_groups)
         logger.success("Finished training all topic models")
 
     def merge_all_models(
