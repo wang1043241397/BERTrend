@@ -21,6 +21,10 @@ def generate_topic_description(
 ) -> dict:
     """Generates a LLM-based human-readable description of a topic composed of a title and a description (as a dict)"""
     topic_words = topic_model.get_topic(topic_number)
+    if not topic_words:
+        logger.warning(f"No words found for topic number {topic_number}")
+        return {"title": "", "description": ""}
+
     topic_representation = ", ".join(
         [word for word, _ in topic_words[:10]]
     )  # Get top 10 words
