@@ -289,6 +289,14 @@ class BERTrend:
         }
 
         timestamps = sorted(topic_dfs.keys())
+
+        if len(self.topic_models)<2:  # beginning of the process, no real merge needed
+            logger.warning("This function requires at least two topic models. Ignored")
+            self._are_models_merged = False
+            return
+
+        assert len(self.topic_models) >= 2
+
         merged_df_without_outliers = None
         all_merge_histories = []
         all_new_topics = []
@@ -296,8 +304,8 @@ class BERTrend:
         # TODO: tqdm
         merge_df_size_over_time = []
 
-        for i, (current_timestamp, next_timestamp) in enumerate(
-            zip(timestamps[:-1], timestamps[1:])
+        for i, (current_timestamp, next_timestamp) in tqdm(
+            enumerate(zip(timestamps[:-1], timestamps[1:]))
         ):
             df1 = topic_dfs[current_timestamp][
                 topic_dfs[current_timestamp]["Topic"] != -1
@@ -313,7 +321,7 @@ class BERTrend:
                     ) = _merge_models(
                         df1,
                         df2,
-                        min_similarity=min_similarity,  # SessionStateManager.get("min_similarity"),
+                        min_similarity=min_similarity,
                         timestamp=current_timestamp,
                     )
             elif not df2.empty:
@@ -324,7 +332,7 @@ class BERTrend:
                 ) = _merge_models(
                     merged_df_without_outliers,
                     df2,
-                    min_similarity=min_similarity,  # SessionStateManager.get("min_similarity"),
+                    min_similarity=min_similarity,
                     timestamp=current_timestamp,
                 )
             else:
@@ -332,7 +340,7 @@ class BERTrend:
 
             all_merge_histories.append(merge_history)
             all_new_topics.append(new_topics)
-            merge_df_size_over_time = merge_df_size_over_time  # SessionStateManager.get("merge_df_size_over_time")
+            merge_df_size_over_time = merge_df_size_over_time
             merge_df_size_over_time.append(
                 (
                     current_timestamp,
