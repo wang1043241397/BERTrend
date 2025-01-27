@@ -290,7 +290,7 @@ class BERTrend:
 
         timestamps = sorted(topic_dfs.keys())
 
-        if len(self.topic_models)<2:  # beginning of the process, no real merge needed
+        if len(self.topic_models) < 2:  # beginning of the process, no real merge needed
             logger.warning("This function requires at least two topic models. Ignored")
             self._are_models_merged = False
             return
