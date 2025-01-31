@@ -107,7 +107,8 @@ class DataProvider(ABC):
         if not data:
             logger.error("No data to be stored!")
             return -1
-        with jsonlines.open(file_path, "w") as writer:
+        with jsonlines.open(file_path, "a") as writer:
+            # append to existing file
             writer.write_all(data)
 
         logger.info(f"Data stored to {file_path} [{len(data)} entries].")

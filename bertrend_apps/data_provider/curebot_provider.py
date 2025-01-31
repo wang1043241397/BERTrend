@@ -2,11 +2,13 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
+import re
 from pathlib import Path
 
 import pandas as pd
 from loguru import logger
 
+from bertrend_apps.data_provider import URL_PATTERN
 from bertrend_apps.data_provider.data_provider import DataProvider
 import feedparser
 
@@ -19,6 +21,8 @@ class CurebotProvider(DataProvider):
         self.data_file = curebot_export_file
         if self.data_file:
             self.df_dict = pd.read_excel(self.data_file, sheet_name=None, dtype=str)
+        else:
+            self.df_dict = None
         self.feed_url = feed_url
 
     def get_articles(
@@ -30,16 +34,22 @@ class CurebotProvider(DataProvider):
         language: str = "fr",
     ) -> list[dict]:
         """Requests the news data provider, collects a set of URLs to be parsed, return results as json lines"""
+        if query and re.match(URL_PATTERN, query):
+            # if using a config file, the "query" field may contain the feed url
+            self.feed_url = query
         if self.feed_url:
             return self.parse_ATOM_feed()
 
-        entries = []
-        for k in self.df_dict.keys():
-            entries += self.df_dict[k].to_dict(orient="records")
-        results = [self._parse_entry(res) for res in entries]
-        return [
-            res for res in results if res is not None
-        ]  # sanity check to remove errors
+        if self.df_dict:
+            entries = []
+            for k in self.df_dict.keys():
+                entries += self.df_dict[k].to_dict(orient="records")
+            results = [self._parse_entry(res) for res in entries]
+            return [
+                res for res in results if res is not None
+            ]  # sanity check to remove errors
+
+        return []
 
     def parse_ATOM_feed(self) -> list[dict]:
         feed = feedparser.parse(self.feed_url)
