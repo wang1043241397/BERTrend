@@ -11,7 +11,6 @@ import streamlit as st
 import toml
 from loguru import logger
 
-from bertrend import FEED_BASE_PATH, load_toml_config
 from bertrend.config.parameters import LANGUAGES
 from bertrend.demos.demos_utils.icons import (
     INFO_ICON,
@@ -30,6 +29,10 @@ from bertrend_apps.common.crontab_utils import (
     schedule_scrapping,
 )
 from bertrend_apps.data_provider import URL_PATTERN
+from bertrend_apps.prospective_demo.feeds_common import (
+    USER_FEEDS_BASE_PATH,
+    read_user_feeds,
+)
 from bertrend_apps.prospective_demo.streamlit_utils import clickable_df
 
 # Default feed configs
@@ -39,10 +42,6 @@ DEFAULT_MAX_RESULTS = 20
 DEFAULT_NUMBER_OF_DAYS = 14
 FEED_SOURCES = ["google", "curebot"]
 TRANSLATION = {"English": "Anglais", "French": "Français"}
-
-# Feed config path
-USER_FEEDS_BASE_PATH = FEED_BASE_PATH / "users"
-USER_FEEDS_BASE_PATH.mkdir(parents=True, exist_ok=True)
 
 
 @st.dialog("Configuration d'un nouveau flux de données")
@@ -157,22 +156,6 @@ def display_crontab_description(crontab_expr: str) -> str:
         return f":blue[{INFO_ICON} {get_understandable_cron_description(crontab_expr)}]"
     except Exception:
         return f":red[{ERROR_ICON} Expression mal écrite !]"
-
-
-def read_user_feeds(username: str) -> tuple[dict[str, dict], dict[str, Path]]:
-    user_feed_dir = USER_FEEDS_BASE_PATH / username
-    user_feed_dir.mkdir(parents=True, exist_ok=True)
-    logger.debug(f"Reading user feeds from: {user_feed_dir}")
-    matching_files = user_feed_dir.rglob("*_feed.toml")
-
-    user_feeds = {}
-    feed_files = {}
-    for f in matching_files:
-        feed_id = f.name.split("_feed.toml")[0]
-        user_feeds[feed_id] = load_toml_config(f)
-        feed_files[feed_id] = f
-
-    return user_feeds, feed_files
 
 
 def configure_information_sources():

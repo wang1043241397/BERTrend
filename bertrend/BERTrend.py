@@ -38,6 +38,7 @@ from bertrend.config.parameters import (
     SIGNAL_CLASSIF_LOWER_BOUND,
     SIGNAL_CLASSIF_UPPER_BOUND,
 )
+from bertrend.services.embedding_service import EmbeddingService
 from bertrend.trend_analysis.weak_signals import (
     _initialize_new_topic,
     update_existing_topic,
@@ -761,6 +762,53 @@ class BERTrend:
             pickle.dump(metadata, f)
 
         return save_path
+
+
+def train_new_data(
+    new_data: pd.DataFrame,
+    bertrend_models_path: Path,
+    embedding_service: EmbeddingService,
+) -> BERTrend:
+    """Helper function for processing new data (incremental trend analysis:
+    - loads a previous saved BERTrend model
+    - train a new topic model with the new data
+    - merge the models and update merge histories
+    - save the model and returns it
+    """
+    logger.debug(f"Processing new data: {len(new_data)} items")
+
+    # timestamp used to reference the model
+    reference_timestamp = new_data["timestamp"].max().date()
+
+    # Restore previous models
+    try:
+        bertrend = BERTrend.restore_models(bertrend_models_path)
+    except:
+        logger.warning("Cannot restore previous models, creating new one")
+        bertrend = BERTrend(topic_model=BERTopicModel())
+
+    # Embed new data
+    embeddings, token_strings, token_embeddings = embedding_service.embed(
+        texts=new_data[TEXT_COLUMN]
+    )
+    embedding_model_name = embedding_service.embedding_model_name
+
+    # Create topic model for new data
+    bertrend.train_topic_models(
+        {reference_timestamp: new_data},
+        embeddings=embeddings,
+        embedding_model=embedding_model_name,
+    )
+
+    # Merge models
+    bertrend.merge_all_models()
+
+    logger.info(f"BERTrend contains {len(bertrend.topic_models)} topic models")
+
+    # Save models
+    bertrend.save_models(models_path=bertrend_models_path)
+
+    return bertrend
 
 
 def _preprocess_model(
