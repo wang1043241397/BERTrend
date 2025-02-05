@@ -7,15 +7,7 @@ from pathlib import Path
 from loguru import logger
 
 from bertrend import FEED_BASE_PATH, load_toml_config
-
-# Feed config path
-USER_FEEDS_BASE_PATH = FEED_BASE_PATH / "users"
-USER_FEEDS_BASE_PATH.mkdir(parents=True, exist_ok=True)
-
-
-def get_user_feed_path(user_name: str, feed_id: str):
-    feed_path = USER_FEEDS_BASE_PATH / user_name / f"{feed_id}_feed.toml"
-    return feed_path
+from bertrend_apps.prospective_demo import USER_FEEDS_BASE_PATH
 
 
 def read_user_feeds(username: str) -> tuple[dict[str, dict], dict[str, Path]]:

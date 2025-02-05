@@ -30,9 +30,9 @@ from bertrend_apps.common.crontab_utils import (
 )
 from bertrend_apps.data_provider import URL_PATTERN
 from bertrend_apps.prospective_demo.feeds_common import (
-    USER_FEEDS_BASE_PATH,
     read_user_feeds,
 )
+from bertrend_apps.prospective_demo import USER_FEEDS_BASE_PATH
 from bertrend_apps.prospective_demo.streamlit_utils import clickable_df
 
 # Default feed configs

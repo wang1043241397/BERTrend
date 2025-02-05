@@ -65,7 +65,7 @@ def remove_from_crontab(pattern: str) -> bool:
     try:
         # Retrieve current crontab
         output = subprocess.check_output(
-            f"crontab -l | grep -vE {pattern} | crontab -", shell=True
+            f"crontab -l | grep -Ev {pattern} | crontab -", shell=True
         )
         return output == 0
     except subprocess.CalledProcessError:

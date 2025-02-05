@@ -25,10 +25,11 @@ from bertrend_apps.prospective_demo.authentication import check_password
 from bertrend_apps.prospective_demo.dashboard_analysis import dashboard_analysis
 from bertrend_apps.prospective_demo.feeds_config import configure_information_sources
 from bertrend_apps.prospective_demo.feeds_data import display_data_status
-from bertrend_apps.prospective_demo.models_config import models_monitoring
+from bertrend_apps.prospective_demo.models_info import models_monitoring
 
 # UI Settings
-PAGE_TITLE = "BERTrend - Prospective Analysis demo"
+# PAGE_TITLE = "BERTrend - Prospective Analysis demo"
+PAGE_TITLE = "BERTrend - Démo Veille & Analyse"
 LAYOUT: Literal["centered", "wide"] = "wide"
 
 # TODO: reactivate password
@@ -61,17 +62,14 @@ def main():
     # Sidebar
     with st.sidebar:
         st.header(SETTINGS_ICON + " Settings and Controls")
-        st.subheader(TOPIC_ICON + " BERTopic Hyperparameters")
-        display_bertopic_hyperparameters()
-        st.subheader(TREND_ICON + " BERTrend Hyperparameters")
-        display_bertrend_hyperparameters()
 
     # Main content
-    tab1, tab2, tab3 = st.tabs(
+    tab1, tab2, tab3, tab4 = st.tabs(
         [
             NEWSLETTER_ICON + " Mes veilles",
             MODELS_ICON + " Mes modèles",
             ANALYSIS_ICON + " Mes analyses",
+            NEWSLETTER_ICON + " Génération de rapports",
         ]
     )
 
@@ -86,10 +84,16 @@ def main():
         ):
             display_data_status()
     with tab2:
-        models_monitoring()
+        with st.expander(
+            "Statut des modèles par veille", expanded=True, icon=MODELS_ICON
+        ):
+            models_monitoring()
 
     with tab3:
         dashboard_analysis()
+
+    with tab4:
+        pass
 
 
 if __name__ == "__main__":

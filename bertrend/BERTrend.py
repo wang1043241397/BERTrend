@@ -274,6 +274,14 @@ class BERTrend:
         min_similarity: int | None = None,
     ):
         """Merge together all topic models."""
+        logger.debug(
+            f"{len(self.topic_models)} topic models to be merged:\n{list(self.topic_models.keys())}"
+        )
+        if len(self.topic_models) < 2:  # beginning of the process, no real merge needed
+            logger.warning("This function requires at least two topic models. Ignored")
+            self._are_models_merged = False
+            return
+
         # Get default BERTrend config if argument is not provided
         if min_similarity is None:
             min_similarity = self.config["min_similarity"]
@@ -290,11 +298,6 @@ class BERTrend:
         }
 
         timestamps = sorted(topic_dfs.keys())
-
-        if len(self.topic_models) < 2:  # beginning of the process, no real merge needed
-            logger.warning("This function requires at least two topic models. Ignored")
-            self._are_models_merged = False
-            return
 
         assert len(self.topic_models) >= 2
 
@@ -390,9 +393,10 @@ class BERTrend:
 
         # Check if models are merged
         if not self._are_models_merged:
-            raise RuntimeWarning(
+            logger.error(
                 "You must merge topic models first before computing signal popularity."
             )
+            return
 
         topic_sizes = defaultdict(lambda: defaultdict(list))
         topic_last_popularity = {}
@@ -627,8 +631,6 @@ class BERTrend:
         return noise_topics_df, weak_signal_topics_df, strong_signal_topics_df
 
     def save_models(self, models_path: Path = MODELS_DIR):
-        if models_path.exists():
-            shutil.rmtree(models_path)
         models_path.mkdir(parents=True, exist_ok=True)
 
         # Save topic models using the selected serialization type
@@ -778,10 +780,11 @@ def train_new_data(
     logger.debug(f"Processing new data: {len(new_data)} items")
 
     # timestamp used to reference the model
-    reference_timestamp = new_data["timestamp"].max().date()
+    reference_timestamp = pd.Timestamp(new_data["timestamp"].max().date())
 
     # Restore previous models
     try:
+        logger.info(f"Restoring previous BERTrend models from {bertrend_models_path}")
         bertrend = BERTrend.restore_models(bertrend_models_path)
     except:
         logger.warning("Cannot restore previous models, creating new one")
@@ -800,13 +803,12 @@ def train_new_data(
         embedding_model=embedding_model_name,
     )
 
-    # Merge models
-    bertrend.merge_all_models()
-
     logger.info(f"BERTrend contains {len(bertrend.topic_models)} topic models")
-
     # Save models
     bertrend.save_models(models_path=bertrend_models_path)
+
+    # Merge models
+    bertrend.merge_all_models()
 
     return bertrend
 

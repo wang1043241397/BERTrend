@@ -7,16 +7,22 @@ from pathlib import Path
 
 import pandas as pd
 import typer
+from jsonlines import jsonlines
 from loguru import logger
 
-from bertrend import MODELS_DIR, load_toml_config, FEED_BASE_PATH
-from bertrend.BERTrend import train_new_data
+from bertrend import load_toml_config, FEED_BASE_PATH
+from bertrend.BERTrend import train_new_data, BERTrend
 from bertrend.services.embedding_service import EmbeddingService
 from bertrend.topic_analysis.topic_description import generate_topic_description
+from bertrend.trend_analysis.weak_signals import analyze_signal
 from bertrend.utils.data_loading import load_data, split_data
-from bertrend_apps.prospective_demo.feeds_common import get_user_feed_path
+from bertrend_apps.prospective_demo import (
+    get_user_feed_path,
+    get_user_models_path,
+    INTERPRETATION_PATH,
+)
 
-BASE_MODELS_DIR = MODELS_DIR / "prospective_demo" / "users"
+DEFAULT_TOP_K = 5
 
 if __name__ == "__main__":
     app = typer.Typer()
@@ -41,7 +47,7 @@ if __name__ == "__main__":
         language_code = "fr" if language == "French" else "en"
 
         # Path to previously saved models for those data and this user
-        bertrend_models_path = BASE_MODELS_DIR / user_name / model_id
+        bertrend_models_path = get_user_models_path(user_name, model_id)
 
         # Initialization of embedding service
         # TODO: customize service (lang, etc)
@@ -49,7 +55,11 @@ if __name__ == "__main__":
 
         # load data for last period
         # TODO: to be improved
-        cfg = load_toml_config(get_user_feed_path(user_name, model_id))
+        cfg_file = get_user_feed_path(user_name, model_id)
+        if not cfg_file.exists():
+            logger.error(f"Cannot find/process config file: {cfg_file}")
+            return
+        cfg = load_toml_config(cfg_file)
         feed_base_dir = cfg["data-feed"]["feed_dir_path"]
         files = list(
             Path(FEED_BASE_PATH, feed_base_dir).glob(
@@ -58,7 +68,7 @@ if __name__ == "__main__":
         )
 
         if not files:
-            logger.warning("No new data, nothing to do")
+            logger.warning(f"No new data for '{model_id}', nothing to do")
             return
 
         dfs = [load_data(Path(f), language=language) for f in files]
@@ -68,7 +78,7 @@ if __name__ == "__main__":
 
         # filter data according to granularity
         # Calculate the date X days ago
-        reference_timestamp = (
+        reference_timestamp = pd.Timestamp(
             new_data["timestamp"].max().date()
         )  # used to identify the last model
         cut_off_date = new_data["timestamp"].max() - timedelta(days=granularity)
@@ -77,6 +87,7 @@ if __name__ == "__main__":
 
         filtered_df = split_data(filtered_df)
 
+        logger.info(f'Processing new data for user "{user_name}" about "{model_id}"...')
         # Process new data
         bertrend = train_new_data(
             filtered_df,
@@ -84,7 +95,10 @@ if __name__ == "__main__":
             embedding_service=embedding_service,
         )
 
-        # Generate data analysis
+        if not bertrend._are_models_merged:
+            # This is generally the case when we have only one model
+            return
+
         # Compute popularities
         bertrend.calculate_signal_popularity()
 
@@ -92,30 +106,53 @@ if __name__ == "__main__":
         noise_topics_df, weak_signal_topics_df, strong_signal_topics_df = (
             bertrend.classify_signals(window_size, cut_off_date)
         )
-        # TODO store signals
 
-        # generate topic descriptions for the top k
-        wt = weak_signal_topics_df["Topic"]
-        logger.info(f"Weak topics: {wt}")
-        wt_list = []
-        for topic in wt:
-            desc = generate_topic_description(
-                topic_model=bertrend.topic_models[reference_timestamp],
-                topic_number=topic,
-                filtered_docs=filtered_df,
-                language_code=language_code,
+        # enrich signal description with LLM-based topic description
+        for df in [noise_topics_df, weak_signal_topics_df, strong_signal_topics_df]:
+            df["llm_topic_description"] = df["Topic"].apply(
+                lambda topic: generate_topic_description(
+                    topic_model=bertrend.topic_models[reference_timestamp],
+                    topic_number=topic,
+                    filtered_docs=filtered_df,
+                    language_code=language_code,
+                )
             )
-            wt_list.append(
-                {
-                    "timestamp": reference_timestamp,
-                    "topic": topic,
-                    "title": desc["title"],
-                    "description": desc["description"],
-                }
-            )
-        # TODO: store topic descriptions
 
-        # generate detailed analysis for the top k (using template)
+        # Store signals
+        for df, df_name in zip(
+            [noise_topics_df, weak_signal_topics_df, strong_signal_topics_df],
+            ["noise_topics", "weak_signals", "strong_signals"],
+        ):
+            df.to_parquet(
+                f"{INTERPRETATION_PATH}/{reference_timestamp}/{df_name}.parquet"
+            )
+            generate_llm_interpretation(bertrend, reference_timestamp, df, df_name)
+
+    def generate_llm_interpretation(
+        bertrend: BERTrend,
+        reference_timestamp: pd.Timestamp,
+        df: pd.DataFrame,
+        df_name: str,
+        top_k: int = DEFAULT_TOP_K,
+    ):
+        """Generate detailed analysis for the top k (using template)"""
+
+        interpretation = []
+        for topic in df.head(top_k)["Topic"]:
+            summary, analysis, formatted_html = analyze_signal(
+                bertrend, topic, reference_timestamp
+            )
+            interpretation.append(
+                {"topic": topic, "summary": summary, "analysis": formatted_html}
+            )
+
+        # Save interpretation
+        with jsonlines.open(
+            f"{INTERPRETATION_PATH}/{reference_timestamp}/{df_name}_interpretation.jsonl",
+            mode="w",
+        ) as writer:
+            for item in interpretation:
+                writer.write(item)
 
     # Main app
     app()
