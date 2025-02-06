@@ -185,11 +185,13 @@ def remove_scheduled_training_for_user(model_id: str, user: str):
 def schedule_training_for_user(model_id: str, user: str):
     """Schedule data scrapping on the basis of a feed configuration file"""
     schedule = generate_crontab_expression(st.session_state["granularity"][model_id])
+    logpath = BERTREND_LOG_PATH / user / model_id
+    logpath.mkdir(parents=True, exist_ok=True)
     command = (
         f"{sys.prefix}/bin/python -m bertrend_apps.prospective_demo.process_new_data {user} {model_id} "
-        f"--granularity {st.session_state['granularity'][model_id]} --window_size {st.session_state['window_size'][model_id]} "
+        f"--granularity {st.session_state['granularity'][model_id]} --window-size {st.session_state['window_size'][model_id]} "
         f"--language {st.session_state.user_feeds[model_id]['data-feed']['language']} "
-        f"> {BERTREND_LOG_PATH}/{user}/{model_id}/learning_{model_id}.log 2>&1"
+        f"> {logpath}/learning_{model_id}.log 2>&1"
     )
     env_vars = f"CUDA_VISIBLE_DEVICES={BEST_CUDA_DEVICE}"
     add_job_to_crontab(schedule, command, env_vars)

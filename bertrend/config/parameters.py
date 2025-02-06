@@ -28,13 +28,9 @@ STOPWORDS = STOP_WORDS_RTE + COMMON_NGRAMS + FRENCH_STOPWORDS
 # File names
 STATE_FILE = "app_state.pkl"
 EMBEDDINGS_FILE = "embeddings.npy"
-DOC_GROUPS_FILE = "doc_groups.pkl"
-EMB_GROUPS_FILE = "emb_groups.pkl"
-GRANULARITY_FILE = "granularity.pkl"
-HYPERPARAMS_FILE = "hyperparams.pkl"
+BERTREND_FILE = "bertrend.dill"
 DOC_INFO_DF_FILE = "doc_info_df.pkl"
 TOPIC_INFO_DF_FILE = "topic_info_df.pkl"
-MODELS_TRAINED_FILE = "models_trained_flag.pkl"
 
 # Model file names
 ZEROSHOT_TOPICS_DATA_FILE = "zeroshot_topics_data.json"

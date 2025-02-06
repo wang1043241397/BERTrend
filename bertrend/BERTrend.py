@@ -2,9 +2,11 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
+import copy
 import os
 import pickle
-import shutil
+
+import dill  # improvement to pickle
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
@@ -30,13 +32,10 @@ from bertrend.BERTopicModel import BERTopicModel
 from bertrend.config.parameters import (
     DOC_INFO_DF_FILE,
     TOPIC_INFO_DF_FILE,
-    DOC_GROUPS_FILE,
-    MODELS_TRAINED_FILE,
-    EMB_GROUPS_FILE,
-    HYPERPARAMS_FILE,
     BERTOPIC_SERIALIZATION,
     SIGNAL_CLASSIF_LOWER_BOUND,
     SIGNAL_CLASSIF_UPPER_BOUND,
+    BERTREND_FILE,
 )
 from bertrend.services.embedding_service import EmbeddingService
 from bertrend.trend_analysis.weak_signals import (
@@ -648,18 +647,12 @@ class BERTrend:
             topic_model.doc_info_df.to_pickle(model_dir / DOC_INFO_DF_FILE)
             topic_model.topic_info_df.to_pickle(model_dir / TOPIC_INFO_DF_FILE)
 
-        # Save topic model parameters
-        with open(CACHE_PATH / HYPERPARAMS_FILE, "wb") as f:
-            pickle.dump(self.topic_model, f)
-        # Save doc_groups file
-        with open(CACHE_PATH / DOC_GROUPS_FILE, "wb") as f:
-            pickle.dump(self.doc_groups, f)
-        # Save emb_groups file
-        with open(CACHE_PATH / EMB_GROUPS_FILE, "wb") as f:
-            pickle.dump(self.emb_groups, f)
-        # Save the models_trained flag
-        with open(CACHE_PATH / MODELS_TRAINED_FILE, "wb") as f:
-            pickle.dump(self._is_fitted, f)
+        # Serialize BERTrend (excluding topic models for separete reuse if needed)
+        topic_models_bak = copy.deepcopy(self.topic_models)
+        self.topic_models = None
+        with open(models_path / BERTREND_FILE, "wb") as f:
+            dill.dump(self, f)
+        self.topic_models = topic_models_bak
 
         logger.info(f"Models saved to: {models_path}")
 
@@ -670,21 +663,9 @@ class BERTrend:
 
         logger.info(f"Loading models from: {models_path}")
 
-        # Create BERTrend object
-        bertrend = cls()
-
-        # load topic model parameters
-        with open(CACHE_PATH / HYPERPARAMS_FILE, "rb") as f:
-            bertrend.topic_model = pickle.load(f)
-        # load doc_groups file
-        with open(CACHE_PATH / DOC_GROUPS_FILE, "rb") as f:
-            bertrend.doc_groups = pickle.load(f)
-        # load emb_groups file
-        with open(CACHE_PATH / EMB_GROUPS_FILE, "rb") as f:
-            bertrend.emb_groups = pickle.load(f)
-        # load the models_trained flag
-        with open(CACHE_PATH / MODELS_TRAINED_FILE, "rb") as f:
-            bertrend._is_fitted = pickle.load(f)
+        # Unserialize BERTrend object (using dill as an improvement of pickle for complex objects)
+        with open(models_path / BERTREND_FILE, "rb") as f:
+            bertrend = dill.load(f)
 
         # Restore topic models using the selected serialization type
         topic_models = {}
