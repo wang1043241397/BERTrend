@@ -12,7 +12,11 @@ from pandas import Timestamp
 
 from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend import LLM_CONFIG
-from bertrend.trend_analysis.prompts import get_prompt, save_html_output
+from bertrend.trend_analysis.prompts import (
+    get_prompt,
+    save_html_output,
+    clean_html_output,
+)
 
 
 def detect_weak_signals_zeroshot(
@@ -401,10 +405,7 @@ def analyze_signal(bertrend, topic_number: int, current_date: Timestamp):
                 temperature=LLM_CONFIG["temperature"],
                 max_tokens=LLM_CONFIG["max_tokens"],
             )
-
-            # Save the formatted HTML
-            save_html_output(formatted_html)
-
+            formatted_html = clean_html_output(formatted_html)
             return summary, weak_signal_analysis, formatted_html
 
         except Exception as e:

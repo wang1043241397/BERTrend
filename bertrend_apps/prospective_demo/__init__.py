@@ -12,7 +12,13 @@ USER_FEEDS_BASE_PATH.mkdir(parents=True, exist_ok=True)
 
 # Models config path
 BASE_MODELS_DIR = MODELS_DIR / "prospective_demo" / "users"
-INTERPRETATION_PATH = BASE_MODELS_DIR / "interpretation"
+INTERPRETATION_PATH = "interpretation"
+
+# some identifiers
+NOISE = "noise"
+WEAK_SIGNALS = "weak_signals"
+STRONG_SIGNALS = "strong_signals"
+LLM_TOPIC_DESCRIPTION_COLUMN = "LLM Description"
 
 
 def get_user_feed_path(user_name: str, feed_id: str) -> Path:

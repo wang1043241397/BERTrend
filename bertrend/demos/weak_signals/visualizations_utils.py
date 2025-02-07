@@ -9,9 +9,14 @@ from bertopic import BERTopic
 from pandas import Timestamp
 from plotly import graph_objects as go
 
-from bertrend import OUTPUT_PATH, SIGNAL_EVOLUTION_DATA_DIR
-from bertrend.demos.demos_utils.icons import WARNING_ICON, SUCCESS_ICON, INFO_ICON
-from bertrend.demos.weak_signals.messages import HTML_GENERATION_FAILED_WARNING
+from bertrend import SIGNAL_EVOLUTION_DATA_DIR
+from bertrend.demos.demos_utils.icons import (
+    SUCCESS_ICON,
+    INFO_ICON,
+    STRONG_SIGNAL_ICON,
+    WEAK_SIGNAL_ICON,
+    NOISE_ICON,
+)
 from bertrend.demos.demos_utils.state_utils import SessionStateManager
 from bertrend.config.parameters import (
     MAX_WINDOW_SIZE,
@@ -77,56 +82,74 @@ def display_signal_categories_df(
     weak_signal_topics_df: pd.DataFrame,
     strong_signal_topics_df: pd.DataFrame,
     window_end: Timestamp,
+    columns=None,
+    column_order=None,
 ):
     """Display the dataframes associated to each signal category: noise, weak signal, strong signal."""
-    columns = [
-        "Topic",
-        "Sources",
-        "Source_Diversity",
-        "Representation",
-        "Latest_Popularity",
-        "Docs_Count",
-        "Paragraphs_Count",
-        "Latest_Timestamp",
-        "Documents",
-    ]
+    if columns is None:
+        columns = [
+            "Topic",
+            "Sources",
+            "Source_Diversity",
+            "Representation",
+            "Latest_Popularity",
+            "Docs_Count",
+            "Paragraphs_Count",
+            "Latest_Timestamp",
+            "Documents",
+        ]
+    if column_order is None:
+        column_order = columns
 
-    st.subheader(":grey[Noise]")
-    if not noise_topics_df.empty:
-        st.dataframe(
-            noise_topics_df.astype(str)[columns].sort_values(
-                by=["Topic", "Latest_Popularity"], ascending=[False, False]
+    with st.expander(f":grey[{NOISE_ICON} Noise]", expanded=True):
+        st.subheader(":grey[Noise]")
+        if not noise_topics_df.empty:
+            st.dataframe(
+                noise_topics_df.astype(str)[columns].sort_values(
+                    by=["Topic", "Latest_Popularity"], ascending=[False, False]
+                ),
+                hide_index=True,
+                column_order=column_order,
             )
-        )
-    else:
-        st.info(
-            f"No noisy signals were detected at timestamp {window_end}.", icon=INFO_ICON
-        )
+        else:
+            st.info(
+                f"No noisy signals were detected at timestamp {window_end}.",
+                icon=INFO_ICON,
+            )
 
-    st.subheader(":orange[Weak Signals]")
-    if not weak_signal_topics_df.empty:
-        st.dataframe(
-            weak_signal_topics_df.astype(str)[columns].sort_values(
-                by=["Latest_Popularity"], ascending=True
+    with st.expander(f":orange[{WEAK_SIGNAL_ICON} Weak Signals]", expanded=True):
+        st.subheader(":orange[Weak Signals]")
+        if not weak_signal_topics_df.empty:
+            st.dataframe(
+                weak_signal_topics_df.astype(str)[columns].sort_values(
+                    by=["Latest_Popularity"], ascending=True
+                ),
+                hide_index=True,
+                column_order=column_order,
             )
-        )
-    else:
-        st.info(
-            f"No weak signals were detected at timestamp {window_end}.", icon=INFO_ICON
-        )
 
-    st.subheader(":green[Strong Signals]")
-    if not strong_signal_topics_df.empty:
-        st.dataframe(
-            strong_signal_topics_df.astype(str)[columns].sort_values(
-                by=["Topic", "Latest_Popularity"], ascending=[False, False]
+        else:
+            st.info(
+                f"No weak signals were detected at timestamp {window_end}.",
+                icon=INFO_ICON,
             )
-        )
-    else:
-        st.info(
-            f"No strong signals were detected at timestamp {window_end}.",
-            icon=INFO_ICON,
-        )
+
+    with st.expander(f":green[{STRONG_SIGNAL_ICON} Strong Signals]", expanded=True):
+        st.subheader(":green[Strong Signals]")
+        if not strong_signal_topics_df.empty:
+            st.dataframe(
+                strong_signal_topics_df.astype(str)[columns].sort_values(
+                    by=["Topic", "Latest_Popularity"],
+                    ascending=[False, False],
+                ),
+                hide_index=True,
+                column_order=column_order,
+            )
+        else:
+            st.info(
+                f"No strong signals were detected at timestamp {window_end}.",
+                icon=INFO_ICON,
+            )
 
 
 def display_popularity_evolution():
@@ -287,9 +310,7 @@ def display_topics_per_timestamp(topic_models: dict[pd.Timestamp, BERTopic]) -> 
         st.dataframe(selected_model.topic_info_df, use_container_width=True)
 
 
-def display_signal_analysis(
-    topic_number: int, output_file_name: str = "signal_llm.html"
-):
+def display_signal_analysis(topic_number: int):
     """Display a LLM-based analyis of a specific topic."""
     bertrend = SessionStateManager.get("bertrend")
 
@@ -301,22 +322,8 @@ def display_signal_analysis(
             SessionStateManager.get("current_date"),
         )
 
-        # Check if the HTML file was created successfully
-        output_file_path = OUTPUT_PATH / output_file_name
-        if output_file_path.exists():
-            # Read the HTML file
-            with open(output_file_path, "r", encoding="utf-8") as file:
-                html_content = file.read()
-            # Display the HTML content
-            st.html(html_content)
-        else:
-            st.warning(HTML_GENERATION_FAILED_WARNING, icon=WARNING_ICON)
-            # Fallback to displaying markdown if HTML generation fails
-            col1, col2 = st.columns(spec=[0.5, 0.5], gap="medium")
-            with col1:
-                st.markdown(summary)
-            with col2:
-                st.markdown(analysis)
+        # Display the HTML content
+        st.html(formatted_html)
 
 
 def retrieve_topic_counts(topic_models: dict[pd.Timestamp, BERTopic]) -> None:

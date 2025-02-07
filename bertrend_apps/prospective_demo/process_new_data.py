@@ -20,6 +20,10 @@ from bertrend_apps.prospective_demo import (
     get_user_feed_path,
     get_user_models_path,
     INTERPRETATION_PATH,
+    NOISE,
+    WEAK_SIGNALS,
+    STRONG_SIGNALS,
+    LLM_TOPIC_DESCRIPTION_COLUMN,
 )
 
 DEFAULT_TOP_K = 5
@@ -107,38 +111,54 @@ if __name__ == "__main__":
             bertrend.classify_signals(window_size, cut_off_date)
         )
 
-        # enrich signal description with LLM-based topic description
-        for df in [noise_topics_df, weak_signal_topics_df, strong_signal_topics_df]:
-            df["llm_topic_description"] = df["Topic"].apply(
-                lambda topic: generate_topic_description(
-                    topic_model=bertrend.topic_models[reference_timestamp],
-                    topic_number=topic,
-                    filtered_docs=filtered_df,
-                    language_code=language_code,
-                )
-            )
-
-        # Store signals
+        # LLM-based interpretation
+        interpretation_path = (
+            bertrend_models_path
+            / INTERPRETATION_PATH
+            / reference_timestamp.strftime("%Y-%m-%d")
+        )
+        interpretation_path.mkdir(parents=True, exist_ok=True)
         for df, df_name in zip(
             [noise_topics_df, weak_signal_topics_df, strong_signal_topics_df],
-            ["noise_topics", "weak_signals", "strong_signals"],
+            [NOISE, WEAK_SIGNALS, STRONG_SIGNALS],
         ):
-            df.to_parquet(
-                f"{INTERPRETATION_PATH}/{reference_timestamp}/{df_name}.parquet"
-            )
-            generate_llm_interpretation(bertrend, reference_timestamp, df, df_name)
+            if not df.empty:
+                # enrich signal description with LLM-based topic description
+                df[LLM_TOPIC_DESCRIPTION_COLUMN] = df["Topic"].apply(
+                    lambda topic: generate_topic_description(
+                        topic_model=bertrend.topic_models[reference_timestamp],
+                        topic_number=topic,
+                        filtered_docs=filtered_df,
+                        language_code=language_code,
+                    )
+                )
+                df.to_parquet(f"{interpretation_path}/{df_name}.parquet")
+
+                # Obtain detailed LLM-based interpretion for signals
+                generate_llm_interpretation(
+                    bertrend,
+                    reference_timestamp=reference_timestamp,
+                    df=df,
+                    df_name=df_name,
+                    output_path=interpretation_path,
+                )
 
     def generate_llm_interpretation(
         bertrend: BERTrend,
         reference_timestamp: pd.Timestamp,
         df: pd.DataFrame,
         df_name: str,
+        output_path: Path,
         top_k: int = DEFAULT_TOP_K,
     ):
         """Generate detailed analysis for the top k (using template)"""
 
         interpretation = []
-        for topic in df.head(top_k)["Topic"]:
+        for topic in (
+            df.head(top_k)
+            .astype(str)["Topic"]
+            .sort_values(by=["Latest_Popularity"], ascending=True)
+        ):
             summary, analysis, formatted_html = analyze_signal(
                 bertrend, topic, reference_timestamp
             )
@@ -148,7 +168,7 @@ if __name__ == "__main__":
 
         # Save interpretation
         with jsonlines.open(
-            f"{INTERPRETATION_PATH}/{reference_timestamp}/{df_name}_interpretation.jsonl",
+            f"{output_path}/{df_name}_interpretation.jsonl",
             mode="w",
         ) as writer:
             for item in interpretation:

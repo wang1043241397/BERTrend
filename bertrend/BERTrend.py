@@ -647,7 +647,7 @@ class BERTrend:
             topic_model.doc_info_df.to_pickle(model_dir / DOC_INFO_DF_FILE)
             topic_model.topic_info_df.to_pickle(model_dir / TOPIC_INFO_DF_FILE)
 
-        # Serialize BERTrend (excluding topic models for separete reuse if needed)
+        # Serialize BERTrend (excluding topic models for separate reuse if needed)
         topic_models_bak = copy.deepcopy(self.topic_models)
         self.topic_models = None
         with open(models_path / BERTREND_FILE, "wb") as f:
@@ -762,6 +762,7 @@ def train_new_data(
 
     # timestamp used to reference the model
     reference_timestamp = pd.Timestamp(new_data["timestamp"].max().date())
+    logger.info(f"Reference timestamp: {reference_timestamp}")
 
     # Restore previous models
     try:
