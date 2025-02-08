@@ -33,6 +33,9 @@ from bertrend_apps.prospective_demo.feeds_common import (
     read_user_feeds,
 )
 from bertrend_apps.prospective_demo import USER_FEEDS_BASE_PATH
+from bertrend_apps.prospective_demo.models_info import (
+    remove_scheduled_training_for_user,
+)
 from bertrend_apps.prospective_demo.streamlit_utils import clickable_df
 
 # Default feed configs
@@ -180,7 +183,7 @@ def configure_information_sources():
     if not df.empty:
         df = df.sort_values(by="id", inplace=False).reset_index(drop=True)
 
-    if st.button(ADD_ICON, type="tertiary", help="Nouveau flux de veille"):
+    if st.button(f":green[{ADD_ICON}]", type="tertiary", help="Nouveau flux de veille"):
         edit_feed_monitoring()
 
     clickable_df_buttons = [
@@ -243,6 +246,10 @@ def handle_delete(row_dict: dict):
             remove_scrapping_for_user(feed_id=feed_id, user=st.session_state.username)
             delete_feed_config(feed_id)
             logger.info(f"Flux {feed_id} supprimé !")
+            # Remove from crontab associated training
+            remove_scheduled_training_for_user(
+                model_id=feed_id, user=st.session_state.username
+            )
             time.sleep(0.2)
             st.rerun()
     with col2:

@@ -24,6 +24,8 @@ from bertrend_apps.prospective_demo import (
     WEAK_SIGNALS,
     STRONG_SIGNALS,
     LLM_TOPIC_DESCRIPTION_COLUMN,
+    DEFAULT_ANALYSIS_CFG,
+    get_model_cfg_path,
 )
 
 DEFAULT_TOP_K = 5
@@ -35,17 +37,17 @@ if __name__ == "__main__":
     def train_new_model(
         user_name: str = typer.Argument(help="Identifier of the user"),
         model_id: str = typer.Argument(help="ID of the model/data to train"),
-        language: str = typer.Option(
-            help="The language to use for the model ('French' or 'English')",
-            default="French",
-        ),
-        granularity: int = typer.Option(
-            help="The granularity to use for the model (in days)", default=7
-        ),
-        window_size: int = typer.Option(
-            help="The window size for analysis (in days)", default=7
-        ),
     ):
+        # Load model & analysis config
+        model_cfg_path = get_model_cfg_path(user_name, model_id)
+        try:
+            model_analysis_cfg = load_toml_config(model_cfg_path)
+        except Exception:
+            model_analysis_cfg = DEFAULT_ANALYSIS_CFG
+        # Extract relevant values
+        granularity = model_analysis_cfg["model_config"]["granularity"]
+        window_size = model_analysis_cfg["model_config"]["window_size"]
+        language = model_analysis_cfg["model_config"]["language"]
         if language not in ["French", "English"]:
             language = "French"
         language_code = "fr" if language == "French" else "en"
@@ -70,7 +72,6 @@ if __name__ == "__main__":
                 f"*{cfg['data-feed'].get('id')}*.jsonl*"
             )
         )
-
         if not files:
             logger.warning(f"No new data for '{model_id}', nothing to do")
             return
@@ -175,12 +176,14 @@ if __name__ == "__main__":
             )
 
         # Save interpretation
+        output_file_name = output_path / f"{df_name}_interpretation.jsonl"
         with jsonlines.open(
-            f"{output_path}/{df_name}_interpretation.jsonl",
+            output_file_name,
             mode="w",
         ) as writer:
             for item in interpretation:
                 writer.write(item)
+        logger.success(f"Interpretation saved to: {output_file_name}")
 
     # Main app
     app()

@@ -9,9 +9,10 @@ import time
 
 import pandas as pd
 import streamlit as st
+import toml
 from loguru import logger
 
-from bertrend import BERTREND_LOG_PATH, BEST_CUDA_DEVICE
+from bertrend import BERTREND_LOG_PATH, BEST_CUDA_DEVICE, load_toml_config
 from bertrend.demos.demos_utils.icons import (
     EDIT_ICON,
     DELETE_ICON,
@@ -25,11 +26,12 @@ from bertrend_apps.common.crontab_utils import (
     remove_from_crontab,
     add_job_to_crontab,
 )
-from bertrend_apps.prospective_demo import get_user_models_path
+from bertrend_apps.prospective_demo import (
+    get_user_models_path,
+    get_model_cfg_path,
+    DEFAULT_ANALYSIS_CFG,
+)
 from bertrend_apps.prospective_demo.streamlit_utils import clickable_df
-
-DEFAULT_GRANULARITY = 2
-DEFAULT_WINDOW_SIZE = 7
 
 
 @st.fragment
@@ -37,31 +39,31 @@ def models_monitoring():
     if not st.session_state.user_feeds:
         st.stop()
 
-    if "granularity" not in st.session_state:
-        st.session_state["granularity"] = {}
-    if "window_size" not in st.session_state:
-        st.session_state["window_size"] = {}
-
+    st.session_state.model_analysis_cfg = {}
     displayed_list = []
 
     for model_id in sorted(st.session_state.user_feeds.keys()):
-        st.session_state["granularity"][model_id] = get_param(model_id, "granularity")
-        st.session_state["window_size"][model_id] = get_param(model_id, "window_size")
-
+        try:
+            st.session_state.model_analysis_cfg[model_id] = load_toml_config(
+                get_model_cfg_path(
+                    user_name=st.session_state.username, model_id=model_id
+                )
+            )
+        except Exception:
+            st.session_state.model_analysis_cfg[model_id] = DEFAULT_ANALYSIS_CFG
         list_models = get_models_info(model_id)
-
         displayed_list.append(
             {
                 "id": model_id,
                 "# modèles": len(list_models) if list_models else 0,
                 "date 1er modèle": list_models[0] if list_models else None,
                 "date dernier modèle": list_models[-1] if list_models else None,
-                "fréquence mise à jour (# jours)": st.session_state["granularity"][
+                "fréquence mise à jour (# jours)": st.session_state.model_analysis_cfg[
                     model_id
-                ],
-                "fenêtre d'analyse (# jours)": st.session_state["window_size"][
+                ]["model_config"]["granularity"],
+                "fenêtre d'analyse (# jours)": st.session_state.model_analysis_cfg[
                     model_id
-                ],
+                ]["model_config"]["window_size"],
             }
         )
 
@@ -87,27 +89,91 @@ def edit_model_parameters(row_dict: dict):
     model_id = row_dict["id"]
     st.write(f"Paramètres des modèles pour la veille {model_id}")
 
-    st.session_state.granularity["model_id"] = st.slider(
+    new_granularity = st.slider(
         "Fréquence de mise à jour des modèles (en jours)",
         min_value=2,
         max_value=30,
-        value=DEFAULT_GRANULARITY,
+        value=st.session_state.model_analysis_cfg[model_id]["model_config"][
+            "granularity"
+        ],
         step=1,
         help=f"{INFO_ICON} Sélection de la fréquence à laquelle la détection de sujets est effectuée. "
         f"Le nombre de jours sélectionné doit être choisi pour s'assurer d'un volume de données suffisant.",
     )
-    st.session_state.window_size[model_id] = st.slider(
+    new_window_size = st.slider(
         "Sélection de la fenêtre temporelle (en jours)",
-        min_value=st.session_state.granularity["model_id"],
+        min_value=new_granularity,
         max_value=30,
-        value=max(DEFAULT_WINDOW_SIZE, st.session_state.granularity["model_id"]),
+        value=max(
+            st.session_state.model_analysis_cfg[model_id]["model_config"][
+                "window_size"
+            ],
+            new_granularity,
+        ),
         step=1,
         help=f"{INFO_ICON} Sélection de la plage temporelle considérée pour calculer les différents "
         f"types de signaux (faibles, forts)",
     )
 
+    st.write(f"Paramètres d'analyse de la veille {model_id}: éléments à inclure")
+    topic_evolution = st.checkbox(
+        "Evolution du sujet",
+        value=st.session_state.model_analysis_cfg[model_id]["analysis_config"][
+            "topic_evolution"
+        ],
+    )
+    evolution_scenarios = st.checkbox(
+        "Scénarios d'évolution",
+        value=st.session_state.model_analysis_cfg[model_id]["analysis_config"][
+            "evolution_scenarios"
+        ],
+    )
+    multifactorial_analysis = st.checkbox(
+        "Analyse multifactorielle",
+        value=st.session_state.model_analysis_cfg[model_id]["analysis_config"][
+            "multifactorial_analysis"
+        ],
+    )
+
+    model_config = {
+        "granularity": new_granularity,
+        "window_size": new_window_size,
+        "language": (
+            "French"
+            if st.session_state.user_feeds[model_id]["data-feed"]["language"] == "fr"
+            else "English"
+        ),
+    }
+    analysis_config = {
+        "topic_evolution": topic_evolution,
+        "evolution_scenarios": evolution_scenarios,
+        "multifactorial_analysis": multifactorial_analysis,
+    }
+
     if st.button("OK"):
+        save_model_config(
+            model_id, {"model_config": model_config, "analysis_config": analysis_config}
+        )
         st.rerun()
+
+
+def save_model_config(model_id: str, config: dict):
+    model_cfg_path = get_model_cfg_path(
+        user_name=st.session_state.username, model_id=model_id
+    )
+    with open(model_cfg_path, "w") as toml_file:
+        toml.dump(config, toml_file)
+    logger.debug(f"Saved model analysis config {config} to {model_cfg_path}")
+
+
+def load_model_config(model_id: str) -> dict:
+    model_cfg_path = get_model_cfg_path(
+        user_name=st.session_state.username, model_id=model_id
+    )
+    try:
+        return load_toml_config(model_cfg_path)
+    except Exception:
+        return DEFAULT_ANALYSIS_CFG
 
 
 @st.dialog("Confirmation")
@@ -184,13 +250,13 @@ def remove_scheduled_training_for_user(model_id: str, user: str):
 
 def schedule_training_for_user(model_id: str, user: str):
     """Schedule data scrapping on the basis of a feed configuration file"""
-    schedule = generate_crontab_expression(st.session_state["granularity"][model_id])
+    schedule = generate_crontab_expression(
+        st.session_state.model_analysis_cfg[model_id]["model_config"]["granularity"]
+    )
     logpath = BERTREND_LOG_PATH / user / model_id
     logpath.mkdir(parents=True, exist_ok=True)
     command = (
         f"{sys.prefix}/bin/python -m bertrend_apps.prospective_demo.process_new_data {user} {model_id} "
-        f"--granularity {st.session_state['granularity'][model_id]} --window-size {st.session_state['window_size'][model_id]} "
-        f"--language {st.session_state.user_feeds[model_id]['data-feed']['language']} "
         f"> {logpath}/learning_{model_id}.log 2>&1"
     )
     env_vars = f"CUDA_VISIBLE_DEVICES={BEST_CUDA_DEVICE}"
@@ -213,14 +279,6 @@ def generate_crontab_expression(days_interval: int) -> str:
     # Crontab expression format: minute hour day_of_month month day_of_week
     crontab_expression = f"{minute} {hour} {','.join(days)} * *"
     return crontab_expression
-
-
-def get_param(model_id: str, param_name: str) -> int:
-    if not check_if_learning_active_for_user(model_id, st.session_state.username):
-        return (
-            DEFAULT_GRANULARITY if param_name == "granularity" else DEFAULT_WINDOW_SIZE
-        )
-    return DEFAULT_GRANULARITY
 
 
 def safe_timestamp(x: str) -> pd.Timestamp | None:
