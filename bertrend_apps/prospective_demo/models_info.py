@@ -235,7 +235,6 @@ def get_models_info(model_id: str) -> list:
     user_model_dir = get_user_models_path(st.session_state.username, model_id)
     if not user_model_dir.exists():
         return []
-    logger.debug(f"Reading user model names from: {user_model_dir}")
     matching_files = user_model_dir.glob(r"????-??-??")
     return sorted(
         [

@@ -669,7 +669,9 @@ class BERTrend:
 
         # Restore topic models using the selected serialization type
         topic_models = {}
-        for period_dir in models_path.iterdir():
+        for period_dir in models_path.glob(
+            r"????-??-??"
+        ):  # filter dir that are formatted YYYY-MM-DD
             if period_dir.is_dir():
                 topic_model = BERTopic.load(period_dir)
 

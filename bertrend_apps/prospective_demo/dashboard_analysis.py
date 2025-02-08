@@ -7,6 +7,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
+from bertrend.demos.demos_utils.icons import WARNING_ICON
 from bertrend.demos.weak_signals.visualizations_utils import (
     display_signal_categories_df,
 )
@@ -32,8 +33,16 @@ def dashboard_analysis():
         model_id = st.selectbox(
             "Sélection de la veille", options=sorted(st.session_state.user_feeds.keys())
         )
-        list_models = get_models_info(model_id)
     with col2:
+        list_models = get_models_info(model_id)
+        if not list_models:
+            st.warning(f"{WARNING_ICON} Pas de modèle disponible")
+            st.stop()
+        elif len(list_models) < 2:
+            st.warning(
+                f"{WARNING_ICON} 2 modèles minimum pour analyser les tendances !"
+            )
+            st.stop()
         reference_ts = st.select_slider(
             "Date d'analyse",
             options=list_models,
@@ -109,33 +118,41 @@ def display_detailed_analysis(
                 else {}
             )
 
+    signal_topics = {WEAK_SIGNALS: [], STRONG_SIGNALS: []}
     if WEAK_SIGNALS in interpretations:
-        signal_list = list(interpretations[WEAK_SIGNALS]["topic"]) + list(
-            interpretations[STRONG_SIGNALS]["topic"]
-        )
-        selected_signal = st.selectbox(
-            label="Sélection du sujet",
-            label_visibility="hidden",
-            options=signal_list,
-            format_func=lambda signal_id: f"[Sujet {'émergent' if signal_id in list(interpretations[WEAK_SIGNALS]['topic']) else 'fort'} {signal_id}]: {get_row(signal_id, interpretations)[LLM_TOPIC_DESCRIPTION_COLUMN]['title']}",
-        )
-        # Summary of the topic
-        desc = get_row(selected_signal, interpretations)
-        if selected_signal in list(interpretations[WEAK_SIGNALS]["topic"]):
-            color = "orange"
-        else:
-            color = "green"
-        st.subheader(f":{color}[**{desc[LLM_TOPIC_DESCRIPTION_COLUMN]['title']}**]")
-        st.write(desc[LLM_TOPIC_DESCRIPTION_COLUMN]["description"])
-        # Detailed description
-        st.html(desc["analysis"])
-
-
-def get_row(signal_id: int, interpretations: dict[str, pd.DataFrame]) -> str:
-    if signal_id in list(interpretations[WEAK_SIGNALS]["topic"]):
-        df = interpretations[WEAK_SIGNALS]
+        signal_topics[WEAK_SIGNALS] = list(interpretations[WEAK_SIGNALS]["topic"])
+    if STRONG_SIGNALS in interpretations:
+        signal_topics[STRONG_SIGNALS] = list(interpretations[STRONG_SIGNALS]["topic"])
+    signal_list = signal_topics[WEAK_SIGNALS] + signal_topics[STRONG_SIGNALS]
+    selected_signal = st.selectbox(
+        label="Sélection du sujet",
+        label_visibility="hidden",
+        options=signal_list,
+        format_func=lambda signal_id: f"[Sujet {'émergent' if signal_id in signal_topics[WEAK_SIGNALS] else 'fort'} "
+        f"{signal_id}]: {get_row(signal_id, interpretations[WEAK_SIGNALS] if signal_id in signal_topics[WEAK_SIGNALS] else interpretations[STRONG_SIGNALS])[LLM_TOPIC_DESCRIPTION_COLUMN]['title']}",
+    )
+    # Summary of the topic
+    desc = get_row(
+        selected_signal,
+        (
+            interpretations[WEAK_SIGNALS]
+            if selected_signal in signal_topics[WEAK_SIGNALS]
+            else interpretations[STRONG_SIGNALS]
+        ),
+    )
+    if selected_signal in list(signal_topics[WEAK_SIGNALS]):
+        color = "orange"
     else:
-        df = interpretations[STRONG_SIGNALS]
+        color = "green"
+    st.subheader(f":{color}[**{desc[LLM_TOPIC_DESCRIPTION_COLUMN]['title']}**]")
+    st.write(desc[LLM_TOPIC_DESCRIPTION_COLUMN]["description"])
+    # Detailed description
+    st.html(desc["analysis"])
+
+    st.session_state.signal_interpretations = interpretations
+
+
+def get_row(signal_id: int, df: pd.DataFrame) -> str:
     filtered_df = df[df["topic"] == signal_id]
     if not filtered_df.empty:
         return filtered_df.iloc[0]  # Return the Series (row)

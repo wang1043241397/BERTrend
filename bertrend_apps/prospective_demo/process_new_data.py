@@ -151,14 +151,22 @@ if __name__ == "__main__":
         output_path: Path,
         top_k: int = DEFAULT_TOP_K,
     ):
-        """Generate detailed analysis for the top k (using template)"""
+        """
+        Generate detailed analysis for the top k topics using parallel processing.
+
+        Args:
+            bertrend: BERTrend instance
+            reference_timestamp: Reference timestamp for analysis
+            df: Input DataFrame
+            df_name: Name of the DataFrame for output
+            output_path: Path to save the results
+            top_k: Number of top topics to analyze
+        """
 
         interpretation = []
-        for topic in (
-            df.head(top_k)
-            .astype(str)["Topic"]
-            .sort_values(by=["Latest_Popularity"], ascending=True)
-        ):
+        for topic in df.sort_values(by=["Latest_Popularity"], ascending=True).head(
+            top_k
+        )["Topic"]:
             summary, analysis, formatted_html = analyze_signal(
                 bertrend, topic, reference_timestamp
             )

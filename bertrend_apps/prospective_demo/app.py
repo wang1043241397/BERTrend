@@ -26,6 +26,7 @@ from bertrend_apps.prospective_demo.dashboard_analysis import dashboard_analysis
 from bertrend_apps.prospective_demo.feeds_config import configure_information_sources
 from bertrend_apps.prospective_demo.feeds_data import display_data_status
 from bertrend_apps.prospective_demo.models_info import models_monitoring
+from bertrend_apps.prospective_demo.report_generation import reporting
 
 # UI Settings
 # PAGE_TITLE = "BERTrend - Prospective Analysis demo"
@@ -93,7 +94,7 @@ def main():
         dashboard_analysis()
 
     with tab4:
-        pass
+        reporting()
 
 
 if __name__ == "__main__":
