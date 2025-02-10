@@ -15,7 +15,7 @@ st.title("Curebot - Exploration de sujets")
 with st.sidebar:
     st.header("BERTopic")
     with st.expander("Paramètres"):
-        st.write("TODO")
+        st.checkbox("Utiliser les tags", key="use_tags", value=False)
 
 # Create tabs
 tab1_content, tab2_content, tab3_content = st.tabs(

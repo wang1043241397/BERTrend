@@ -123,7 +123,9 @@ def get_embeddings(texts: list[str]) -> pd.DataFrame:
 
 @st.cache_data
 def fit_bertopic(
-    docs: list[str], embeddings: np.ndarray, zeroshot_topic_list: list[str]
+    docs: list[str],
+    embeddings: np.ndarray,
+    zeroshot_topic_list: list[str] | None = None,
 ) -> tuple[BERTopic, list[int]]:
     # Initialize topic model
     topic_model = BERTopicModel()

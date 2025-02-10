@@ -103,23 +103,29 @@ def train_model() -> None:
     dataset = st.session_state["df_split"][TEXT_COLUMN].tolist()
     st.session_state["embeddings"] = get_embeddings(dataset)
 
-    # Convert tags to string
-    st.session_state["df"]["Tags"] = st.session_state["df"]["Tags"].astype(str)
+    # If use_tags is True, get tags from dataframe
+    if st.session_state["use_tags"]:
+        # Convert tags to string
+        st.session_state["df"]["Tags"] = st.session_state["df"]["Tags"].astype(str)
 
-    # Get zeroshot_topic_list from tags
-    zeroshot_topic_list = (
-        st.session_state["df"]["Tags"]
-        .fillna("")
-        .str.findall(r"#\w+")
-        .explode()
-        .unique()
-    )
+        # Get zeroshot_topic_list from tags
+        zeroshot_topic_list = (
+            st.session_state["df"]["Tags"]
+            .fillna("")
+            .str.findall(r"#\w+")
+            .explode()
+            .unique()
+        )
 
-    zeroshot_topic_list = [
-        str(tag).replace("#", "").replace("_", " ")
-        for tag in zeroshot_topic_list
-        if tag
-    ]
+        # Remove # and _ from tags and convert to string
+        zeroshot_topic_list = [
+            str(tag).replace("#", "").replace("_", " ")
+            for tag in zeroshot_topic_list
+            if tag
+        ]
+    # Else, set zeroshot_topic_list to None
+    else:
+        zeroshot_topic_list = None
 
     # Train topic model
     bertopic, topics = fit_bertopic(
