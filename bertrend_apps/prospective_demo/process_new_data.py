@@ -165,7 +165,7 @@ if __name__ == "__main__":
         """
 
         interpretation = []
-        for topic in df.sort_values(by=["Latest_Popularity"], ascending=True).head(
+        for topic in df.sort_values(by=["Latest_Popularity"], ascending=False).head(
             top_k
         )["Topic"]:
             summary, analysis, formatted_html = analyze_signal(

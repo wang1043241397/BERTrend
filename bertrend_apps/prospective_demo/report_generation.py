@@ -18,6 +18,12 @@ STRONG_SIGNAL_NB = 5
 
 @st.fragment
 def reporting():
+    st.selectbox(
+        "Sélection de la veille",
+        options=sorted(st.session_state.user_feeds.keys()),
+        key="report_id",
+    )
+
     tab1, tab2 = st.tabs(
         [
             TOPIC_ICON + " Etape 1: Sélection des sujets à retenir",
@@ -32,19 +38,18 @@ def reporting():
 
 def choose_topics():
     st.subheader("Etape 1: Sélection des sujets à retenir")
+    model_id = st.session_state.report_id
     cols = st.columns(2)
     with cols[0]:
         st.write("#### :orange[Sujets émergents]")
         st.session_state.weak_topics_list = choose_from_df(
-            st.session_state.signal_interpretations[WEAK_SIGNALS]
+            st.session_state.signal_interpretations[model_id][WEAK_SIGNALS]
         )
-        st.write(st.session_state.weak_topics_list)
     with cols[1]:
         st.write("#### :green[Sujets forts]")
         st.session_state.strong_topics_list = choose_from_df(
-            st.session_state.signal_interpretations[STRONG_SIGNALS]
+            st.session_state.signal_interpretations[model_id][STRONG_SIGNALS]
         )
-        st.write(st.session_state.strong_topics_list)
 
 
 def choose_from_df(df: pd.DataFrame):

@@ -105,8 +105,8 @@ def display_signal_categories_df(
         st.subheader(":grey[Noise]")
         if not noise_topics_df.empty:
             st.dataframe(
-                noise_topics_df.astype(str)[columns].sort_values(
-                    by=["Topic", "Latest_Popularity"], ascending=[False, False]
+                noise_topics_df[columns].sort_values(
+                    by=["Latest_Popularity"], ascending=False
                 ),
                 hide_index=True,
                 column_order=column_order,
@@ -121,8 +121,8 @@ def display_signal_categories_df(
         st.subheader(":orange[Weak Signals]")
         if not weak_signal_topics_df.empty:
             st.dataframe(
-                weak_signal_topics_df.astype(str)[columns].sort_values(
-                    by=["Latest_Popularity"], ascending=True
+                weak_signal_topics_df[columns].sort_values(
+                    by=["Latest_Popularity"], ascending=False
                 ),
                 hide_index=True,
                 column_order=column_order,
@@ -138,9 +138,9 @@ def display_signal_categories_df(
         st.subheader(":green[Strong Signals]")
         if not strong_signal_topics_df.empty:
             st.dataframe(
-                strong_signal_topics_df.astype(str)[columns].sort_values(
-                    by=["Topic", "Latest_Popularity"],
-                    ascending=[False, False],
+                strong_signal_topics_df[columns].sort_values(
+                    by=["Latest_Popularity"],
+                    ascending=False,
                 ),
                 hide_index=True,
                 column_order=column_order,

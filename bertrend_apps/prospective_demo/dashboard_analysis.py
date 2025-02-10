@@ -27,6 +27,7 @@ COLS_RATIO = [2 / 7, 5 / 7]
 @st.fragment()
 def dashboard_analysis():
     """Dashboard to analyze information monitoring results"""
+    st.session_state.signal_interpretations = {}
 
     col1, col2 = st.columns(COLS_RATIO)
     with col1:
@@ -92,12 +93,12 @@ def dashboard_analysis():
     with cols[1]:
         # Detailed analysis
         st.subheader("Analyse détaillée par sujet")
-        display_detailed_analysis(model_interpretation_path, dfs_topics)
+        display_detailed_analysis(model_id, model_interpretation_path, dfs_topics)
 
 
 @st.fragment()
 def display_detailed_analysis(
-    model_interpretation_path: Path, dfs_topics: dict[str, pd.DataFrame]
+    model_id: str, model_interpretation_path: Path, dfs_topics: dict[str, pd.DataFrame]
 ):
     # Retrieve previously computed interpretation
     interpretations = {}
@@ -149,7 +150,7 @@ def display_detailed_analysis(
     # Detailed description
     st.html(desc["analysis"])
 
-    st.session_state.signal_interpretations = interpretations
+    st.session_state.signal_interpretations[model_id] = interpretations
 
 
 def get_row(signal_id: int, df: pd.DataFrame) -> str:
