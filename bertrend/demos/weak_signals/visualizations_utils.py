@@ -104,10 +104,12 @@ def display_signal_categories_df(
     with st.expander(f":grey[{NOISE_ICON} Noise]", expanded=True):
         st.subheader(":grey[Noise]")
         if not noise_topics_df.empty:
+            displayed_df = noise_topics_df[columns].sort_values(
+                by=["Latest_Popularity"], ascending=False
+            )
+            displayed_df["Documents"] = displayed_df["Documents"].astype(str)
             st.dataframe(
-                noise_topics_df[columns].sort_values(
-                    by=["Latest_Popularity"], ascending=False
-                ),
+                displayed_df,
                 hide_index=True,
                 column_order=column_order,
             )
@@ -120,11 +122,13 @@ def display_signal_categories_df(
     with st.expander(f":orange[{WEAK_SIGNAL_ICON} Weak Signals]", expanded=True):
         st.subheader(":orange[Weak Signals]")
         if not weak_signal_topics_df.empty:
+            displayed_df = weak_signal_topics_df[columns].sort_values(
+                by=["Latest_Popularity"], ascending=False
+            )
+            displayed_df["Documents"] = displayed_df["Documents"].astype(str)
             st.dataframe(
-                weak_signal_topics_df[columns].sort_values(
-                    by=["Latest_Popularity"], ascending=False
-                ),
-                hide_index=True,
+                displayed_df,
+                # hide_index=True,
                 column_order=column_order,
             )
 
@@ -137,11 +141,12 @@ def display_signal_categories_df(
     with st.expander(f":green[{STRONG_SIGNAL_ICON} Strong Signals]", expanded=True):
         st.subheader(":green[Strong Signals]")
         if not strong_signal_topics_df.empty:
+            displayed_df = strong_signal_topics_df[columns].sort_values(
+                by=["Latest_Popularity"], ascending=False
+            )
+            displayed_df["Documents"] = displayed_df["Documents"].astype(str)
             st.dataframe(
-                strong_signal_topics_df[columns].sort_values(
-                    by=["Latest_Popularity"],
-                    ascending=False,
-                ),
+                displayed_df,
                 hide_index=True,
                 column_order=column_order,
             )

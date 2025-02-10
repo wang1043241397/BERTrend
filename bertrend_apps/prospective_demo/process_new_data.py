@@ -13,7 +13,6 @@ from loguru import logger
 from bertrend import load_toml_config, FEED_BASE_PATH
 from bertrend.BERTrend import train_new_data, BERTrend
 from bertrend.services.embedding_service import EmbeddingService
-from bertrend.topic_analysis.topic_description import generate_topic_description
 from bertrend.trend_analysis.weak_signals import analyze_signal
 from bertrend.utils.data_loading import load_data, split_data
 from bertrend_apps.prospective_demo import (
@@ -27,6 +26,7 @@ from bertrend_apps.prospective_demo import (
     DEFAULT_ANALYSIS_CFG,
     get_model_cfg_path,
 )
+from bertrend_apps.prospective_demo.llm_utils import generate_bertrend_topic_description
 
 DEFAULT_TOP_K = 5
 
@@ -125,13 +125,14 @@ if __name__ == "__main__":
         ):
             if not df.empty:
                 # enrich signal description with LLM-based topic description
-                df[LLM_TOPIC_DESCRIPTION_COLUMN] = df["Topic"].apply(
-                    lambda topic: generate_topic_description(
-                        topic_model=bertrend.topic_models[reference_timestamp],
-                        topic_number=topic,
-                        filtered_docs=filtered_df,
+                df[LLM_TOPIC_DESCRIPTION_COLUMN] = df.apply(
+                    lambda row: generate_bertrend_topic_description(
+                        topic_words=row["Representation"],
+                        topic_number=row["Topic"],
+                        texts=row["Documents"],
                         language_code=language_code,
-                    )
+                    ),
+                    axis=1,
                 )
                 df.to_parquet(f"{interpretation_path}/{df_name}.parquet")
 

@@ -27,6 +27,7 @@ from bertrend_apps.prospective_demo.feeds_config import configure_information_so
 from bertrend_apps.prospective_demo.feeds_data import display_data_status
 from bertrend_apps.prospective_demo.models_info import models_monitoring
 from bertrend_apps.prospective_demo.report_generation import reporting
+from bertrend_apps.prospective_demo.signal_analysis import signal_analysis
 
 # UI Settings
 # PAGE_TITLE = "BERTrend - Prospective Analysis demo"
@@ -65,10 +66,11 @@ def main():
         st.header(SETTINGS_ICON + " Settings and Controls")
 
     # Main content
-    tab1, tab2, tab3, tab4 = st.tabs(
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(
         [
             NEWSLETTER_ICON + " Mes veilles",
             MODELS_ICON + " Mes modèles",
+            TREND_ICON + " Mes tendances",
             ANALYSIS_ICON + " Mes analyses",
             NEWSLETTER_ICON + " Génération de rapports",
         ]
@@ -91,9 +93,12 @@ def main():
             models_monitoring()
 
     with tab3:
-        dashboard_analysis()
+        signal_analysis()
 
     with tab4:
+        dashboard_analysis()
+
+    with tab5:
         reporting()
 
 

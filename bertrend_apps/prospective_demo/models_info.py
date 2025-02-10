@@ -87,11 +87,11 @@ def models_monitoring():
 @st.dialog("Paramètres")
 def edit_model_parameters(row_dict: dict):
     model_id = row_dict["id"]
-    st.write(f"Paramètres des modèles pour la veille {model_id}")
+    st.write(f"**Paramètres des modèles pour la veille {model_id}**")
 
     new_granularity = st.slider(
         "Fréquence de mise à jour des modèles (en jours)",
-        min_value=2,
+        min_value=1,
         max_value=30,
         value=st.session_state.model_analysis_cfg[model_id]["model_config"][
             "granularity"
@@ -115,7 +115,7 @@ def edit_model_parameters(row_dict: dict):
         f"types de signaux (faibles, forts)",
     )
 
-    st.write(f"Paramètres d'analyse de la veille {model_id}: éléments à inclure")
+    st.write(f"**Paramètres d'analyse de la veille {model_id}: éléments à inclure**")
     topic_evolution = st.checkbox(
         "Evolution du sujet",
         value=st.session_state.model_analysis_cfg[model_id]["analysis_config"][
@@ -237,7 +237,7 @@ def toggle_icon(df: pd.DataFrame, index: int) -> str:
 def check_if_learning_active_for_user(model_id: str, user: str):
     """Checks if a given scrapping feed is active (registered in the crontab"""
     if user:
-        return check_cron_job(rf"process_new_data.*{user}.*{model_id}")
+        return check_cron_job(rf"process_new_data.*{user}.*{model_id}.*>")
     else:
         return False
 
@@ -245,7 +245,7 @@ def check_if_learning_active_for_user(model_id: str, user: str):
 def remove_scheduled_training_for_user(model_id: str, user: str):
     """Removes from the crontab the training job matching the provided model_id"""
     if user:
-        return remove_from_crontab(rf"process_new_data.*{user}.*{model_id}")
+        return remove_from_crontab(rf"process_new_data.*{user}.*{model_id}.*>")
 
 
 def schedule_training_for_user(model_id: str, user: str):
