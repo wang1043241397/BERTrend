@@ -18,11 +18,11 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from loguru import logger
 
-from bertrend import BASE_DATA_PATH
+from bertrend import BASE_PATH
 
 SCOPES = ["https://mail.google.com/"]  # full access to mail API
 FROM = "wattelse.ai@gmail.com"
-TOKEN_PATH = BASE_DATA_PATH / "gmail_token.json"
+TOKEN_PATH = BASE_PATH / "gmail_token.json"
 DEFAULT_GMAIL_CREDENTIALS_PATH = (
     Path(__file__).parent.parent / "config" / "gmail_credentials.json"
 )

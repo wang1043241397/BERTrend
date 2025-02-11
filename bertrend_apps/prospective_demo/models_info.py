@@ -253,7 +253,7 @@ def schedule_training_for_user(model_id: str, user: str):
     schedule = generate_crontab_expression(
         st.session_state.model_analysis_cfg[model_id]["model_config"]["granularity"]
     )
-    logpath = BERTREND_LOG_PATH / user / model_id
+    logpath = BERTREND_LOG_PATH / "users" / user
     logpath.mkdir(parents=True, exist_ok=True)
     command = (
         f"{sys.prefix}/bin/python -m bertrend_apps.prospective_demo.process_new_data {user} {model_id} "

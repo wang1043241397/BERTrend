@@ -32,7 +32,7 @@ from bertrend_apps.data_provider import URL_PATTERN
 from bertrend_apps.prospective_demo.feeds_common import (
     read_user_feeds,
 )
-from bertrend_apps.prospective_demo import USER_FEEDS_BASE_PATH
+from bertrend_apps.prospective_demo import CONFIG_FEEDS_BASE_PATH
 from bertrend_apps.prospective_demo.models_info import (
     remove_scheduled_training_for_user,
 )
@@ -113,7 +113,9 @@ def edit_feed_monitoring(config: dict | None = None):
         if not config:
             config = {}
         config["id"] = "feed_" + chosen_id
-        config["feed_dir_path"] = st.session_state.username + "/feed_" + chosen_id
+        config["feed_dir_path"] = (
+            "users/" + st.session_state.username + "/feed_" + chosen_id
+        )
         config["query"] = query
         config["provider"] = provider
         if not config.get("max_results"):
@@ -144,13 +146,13 @@ def edit_feed_monitoring(config: dict | None = None):
 def save_feed_config(chosen_id, feed_config: dict):
     """Save the feed configuration to disk as a TOML file."""
     feed_path = (
-        USER_FEEDS_BASE_PATH / st.session_state.username / f"{chosen_id}_feed.toml"
+        CONFIG_FEEDS_BASE_PATH / st.session_state.username / f"{chosen_id}_feed.toml"
     )
     # Save the dictionary to a TOML file
     with open(feed_path, "w") as toml_file:
         toml.dump({"data-feed": feed_config}, toml_file)
     logger.debug(f"Saved feed config {feed_config} to {feed_path}")
-    schedule_scrapping(feed_path)
+    schedule_scrapping(feed_path, user=st.session_state.username)
     st.rerun()
 
 
@@ -216,7 +218,9 @@ def toggle_feed(cfg: dict):
             st.toast(f"Le flux **{feed_id}** est déactivé !", icon=INFO_ICON)
             logger.info(f"Flux {feed_id} désactivé !")
     else:
-        schedule_scrapping(st.session_state.feed_files[feed_id])
+        schedule_scrapping(
+            st.session_state.feed_files[feed_id], user=st.session_state.username
+        )
         st.toast(f"Le flux **{feed_id}** est activé !", icon=WARNING_ICON)
         logger.info(f"Flux {feed_id} activé !")
     time.sleep(0.2)

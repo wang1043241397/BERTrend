@@ -7,12 +7,12 @@ from pathlib import Path
 from loguru import logger
 
 from bertrend import FEED_BASE_PATH, load_toml_config
-from bertrend_apps.prospective_demo import USER_FEEDS_BASE_PATH
+from bertrend_apps.prospective_demo import CONFIG_FEEDS_BASE_PATH
 
 
 def read_user_feeds(username: str) -> tuple[dict[str, dict], dict[str, Path]]:
     """Read user feed config files"""
-    user_feed_dir = USER_FEEDS_BASE_PATH / username
+    user_feed_dir = CONFIG_FEEDS_BASE_PATH / username
     user_feed_dir.mkdir(parents=True, exist_ok=True)
     logger.debug(f"Reading user feeds from: {user_feed_dir}")
     matching_files = user_feed_dir.rglob("*_feed.toml")

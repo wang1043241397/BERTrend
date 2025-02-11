@@ -72,12 +72,14 @@ def remove_from_crontab(pattern: str) -> bool:
         return False
 
 
-def schedule_scrapping(feed_cfg: Path):
+def schedule_scrapping(feed_cfg: Path, user: str = None):
     """Schedule data scrapping on the basis of a feed configuration file"""
     data_feed_cfg = load_toml_config(feed_cfg)
     schedule = data_feed_cfg["data-feed"]["update_frequency"]
     id = data_feed_cfg["data-feed"]["id"]
-    command = f"{sys.prefix}/bin/python -m bertrend_apps.data_provider scrape-feed {feed_cfg.resolve()} > {BERTREND_LOG_PATH}/cron_feed_{id}.log 2>&1"
+    log_path = BERTREND_LOG_PATH if not user else BERTREND_LOG_PATH / "users" / user
+    log_path.mkdir(parents=True, exist_ok=True)
+    command = f"{sys.prefix}/bin/python -m bertrend_apps.data_provider scrape-feed {feed_cfg.resolve()} > {log_path}/cron_feed_{id}.log 2>&1"
     add_job_to_crontab(schedule, command, "")
 
 
@@ -98,16 +100,14 @@ def schedule_newsletter(
 def check_if_scrapping_active_for_user(feed_id: str, user: str = None) -> bool:
     """Checks if a given scrapping feed is active (registered in the crontab"""
     if user:
-        return check_cron_job(rf"scrape-feed.*/feeds/users/{user}/{feed_id}_feed.toml")
+        return check_cron_job(rf"scrape-feed.*/users/{user}/{feed_id}_feed.toml")
     else:
-        return check_cron_job(rf"scrape-feed.*/feeds/{feed_id}_feed.toml")
+        return check_cron_job(rf"scrape-feed.*/{feed_id}_feed.toml")
 
 
 def remove_scrapping_for_user(feed_id: str, user: str = None):
     """Removes from the crontab the job matching the provided feed_id"""
     if user:
-        return remove_from_crontab(
-            rf"scrape-feed.*/feeds/users/{user}/{feed_id}_feed.toml"
-        )
+        return remove_from_crontab(rf"scrape-feed.*/users/{user}/{feed_id}_feed.toml")
     else:
-        return remove_from_crontab(rf"scrape-feed.*/feeds/{feed_id}_feed.toml")
+        return remove_from_crontab(rf"scrape-feed.*/{feed_id}_feed.toml")

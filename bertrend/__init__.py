@@ -40,18 +40,13 @@ BASE_PATH = (
 )
 
 # Base dirs
-BASE_DATA_PATH = BASE_PATH / "data"
-BASE_CACHE_PATH = BASE_PATH / "cache"
-BASE_OUTPUT_PATH = BASE_PATH / "output"
+DATA_PATH = BASE_PATH / "data"
+CACHE_PATH = BASE_PATH / "cache"
+OUTPUT_PATH = BASE_PATH / "output"
+CONFIG_PATH = BASE_PATH / "config"
 
-FEED_BASE_PATH = BASE_DATA_PATH / "bertrend" / "feeds"
-BERTREND_LOG_PATH = BASE_PATH / "logs" / "bertrend"
-BERTREND_LOG_PATH.mkdir(parents=True, exist_ok=True)
-
-# Define directories
-DATA_PATH = BASE_DATA_PATH / "bertrend"
-OUTPUT_PATH = BASE_OUTPUT_PATH / "bertrend"
-CACHE_PATH = BASE_CACHE_PATH / "bertrend"
+FEED_BASE_PATH = DATA_PATH / "feeds"
+BERTREND_LOG_PATH = BASE_PATH / "logs"
 
 # Weak signals
 MODELS_DIR = CACHE_PATH / "models"
@@ -62,3 +57,6 @@ SIGNAL_EVOLUTION_DATA_DIR = CACHE_PATH / "signal_evolution_data"
 DATA_PATH.mkdir(parents=True, exist_ok=True)
 OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
 CACHE_PATH.mkdir(parents=True, exist_ok=True)
+CONFIG_PATH.mkdir(parents=True, exist_ok=True)
+BERTREND_LOG_PATH.mkdir(parents=True, exist_ok=True)
+MODELS_DIR.mkdir(parents=True, exist_ok=True)
