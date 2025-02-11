@@ -4,22 +4,16 @@ from bertopic import BERTopic
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from loguru import logger
 import torch
 
 import streamlit as st
 from streamlit.runtime.uploaded_file_manager import UploadedFile
-from tempfile import TemporaryDirectory
 from sentence_transformers import SentenceTransformer
 import plotly.graph_objects as go
 from urllib.parse import urlparse
 
 from bertrend.BERTopicModel import BERTopicModel
 from bertrend.llm_utils.openai_client import OpenAI_Client
-from bertrend_apps.data_provider.curebot_provider import CurebotProvider
-from bertrend.utils.data_loading import (
-    load_data,
-)
 from bertrend_apps.exploration.curebot.prompts import (
     TOPIC_DESCRIPTION_SYSTEM_PROMPT,
     TOPIC_SUMMARY_SYSTEM_PROMPT,
@@ -97,27 +91,6 @@ def chunk_df(
     return df.copy()
 
 
-def split_text_to_chunks(row: pd.Series, chunk_size: int, overlap: int):
-    # Split text into words
-    words = row[TEXT_COLUMN].split()
-
-    # If text is shorter than chunk size, return as is
-    if len(words) <= chunk_size:
-        new_row = row.copy()
-        new_row[TEXT_COLUMN] = " ".join(words)
-        return [new_row]
-
-    # Create chunks with overlap
-    chunks = []
-    for start in range(0, len(words), chunk_size - overlap):
-        chunk_words = words[start : start + chunk_size]
-        new_row = row.copy()
-        new_row[TEXT_COLUMN] = " ".join(chunk_words)
-        chunks.append(new_row)
-
-    return chunks
-
-
 @st.cache_data
 def get_embeddings(texts: list[str]) -> np.ndarray:
     """Get embeddings for a list of texts."""
@@ -130,6 +103,9 @@ def fit_bertopic(
     embeddings: np.ndarray,
     zeroshot_topic_list: list[str] | None = None,
 ) -> tuple[BERTopic, list[int]]:
+    """
+    Fit BERTopic model on a list of documents and their embeddings.
+    """
     # Initialize topic model
     topic_model = BERTopicModel()
 
@@ -173,54 +149,6 @@ def get_improved_topic_description(
         improved_descriptions.append(json.loads(response)["titre"])
 
     return improved_descriptions
-
-
-@st.cache_data
-def parse_data_from_files(files: list[UploadedFile]) -> pd.DataFrame:
-    """Read a list of Excel files and return a single dataframe containing the data"""
-    dataframes = []
-
-    with TemporaryDirectory() as tmpdir:
-        for f in files:
-            with open(tmpdir + "/" + f.name, "wb") as tmp_file:
-                tmp_file.write(f.getvalue())
-                print(tmp_file.name)
-
-            if tmp_file is not None:
-                with st.spinner(f"Analyse des articles de: {f.name}"):
-                    provider = CurebotProvider(curebot_export_file=Path(tmp_file.name))
-                    articles = provider.get_articles()
-                    articles_path = Path(tmpdir) / (f.name + ".jsonl")
-                    provider.store_articles(articles, articles_path)
-                    df = (
-                        load_data(articles_path)
-                        .sort_values(by=TIMESTAMP_COLUMN, ascending=False)
-                        .reset_index(drop=True)
-                        .reset_index()
-                    )
-                    dataframes.append(df)
-
-        # Concat all dataframes
-        df_concat = pd.concat(dataframes, ignore_index=True)
-        df_concat = df_concat.drop_duplicates(subset=URL_COLUMN, keep="first")
-        return df_concat
-
-
-@st.cache_data
-def parse_data_from_feed(feed_url):
-    """Return a single dataframe containing the data obtained from the feed"""
-    with TemporaryDirectory() as tmpdir:
-        with st.spinner(f"Analyse des articles de: {feed_url}"):
-            provider = CurebotProvider(feed_url=feed_url)
-            articles = provider.get_articles()
-            articles_path = Path(tmpdir) / "feed.jsonl"
-            provider.store_articles(articles, articles_path)
-            return (
-                load_data(articles_path)
-                .sort_values(by=TIMESTAMP_COLUMN, ascending=False)
-                .reset_index(drop=True)
-                .reset_index()
-            )
 
 
 @st.cache_data
