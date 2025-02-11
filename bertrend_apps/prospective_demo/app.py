@@ -27,7 +27,7 @@ from bertrend_apps.prospective_demo.feeds_config import configure_information_so
 from bertrend_apps.prospective_demo.feeds_data import display_data_status
 from bertrend_apps.prospective_demo.models_info import models_monitoring
 from bertrend_apps.prospective_demo.report_generation import reporting
-from bertrend_apps.prospective_demo.signal_analysis import signal_analysis
+from bertrend_apps.prospective_demo.dashboard_signals import signal_analysis
 
 # UI Settings
 # PAGE_TITLE = "BERTrend - Prospective Analysis demo"

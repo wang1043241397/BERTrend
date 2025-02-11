@@ -136,7 +136,9 @@ if __name__ == "__main__":
                     ),
                     axis=1,
                 )
-                df.to_parquet(f"{interpretation_path}/{df_name}.parquet")
+                output_path = interpretation_path / f"{df_name}.parquet"
+                df.to_parquet(output_path)
+                logger.success(f"{df_name} saved to: {output_path}")
 
                 # Obtain detailed LLM-based interpretion for signals
                 generate_llm_interpretation(
