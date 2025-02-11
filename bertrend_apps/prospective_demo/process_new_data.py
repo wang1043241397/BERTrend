@@ -23,8 +23,10 @@ from bertrend_apps.prospective_demo import (
     WEAK_SIGNALS,
     STRONG_SIGNALS,
     LLM_TOPIC_DESCRIPTION_COLUMN,
+    LLM_TOPIC_TITLE_COLUMN,
     DEFAULT_ANALYSIS_CFG,
     get_model_cfg_path,
+    URLS_COLUMN,
 )
 from bertrend_apps.prospective_demo.llm_utils import generate_bertrend_topic_description
 
@@ -127,7 +129,7 @@ if __name__ == "__main__":
         ):
             if not df.empty:
                 # enrich signal description with LLM-based topic description
-                df[LLM_TOPIC_DESCRIPTION_COLUMN] = df.apply(
+                df["TEMP_LLM"] = df.apply(
                     lambda row: generate_bertrend_topic_description(
                         topic_words=row["Representation"],
                         topic_number=row["Topic"],
@@ -136,6 +138,26 @@ if __name__ == "__main__":
                     ),
                     axis=1,
                 )
+
+                df[LLM_TOPIC_TITLE_COLUMN] = df["TEMP_LLM"].apply(
+                    lambda x: x.get("title") if isinstance(x, dict) else None
+                )
+                df[[LLM_TOPIC_TITLE_COLUMN, LLM_TOPIC_DESCRIPTION_COLUMN]] = (
+                    pd.json_normalize(df["TEMP_LLM"])[["title", "description"]]
+                )
+                df.drop("TEMP_LLM", axis=1, inplace=True)
+
+                # Add documents URL
+                df = pd.merge(
+                    df,
+                    bertrend.merged_df[["Topic", URLS_COLUMN]],
+                    on="Topic",
+                    how="left",
+                )
+                df[URLS_COLUMN] = df[URLS_COLUMN].apply(
+                    lambda x: list(set(x))
+                )  # Removes duplicates within each list
+
                 output_path = interpretation_path / f"{df_name}.parquet"
                 df.to_parquet(output_path)
                 logger.success(f"{df_name} saved to: {output_path}")

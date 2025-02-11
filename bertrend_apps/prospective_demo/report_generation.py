@@ -10,19 +10,16 @@ from bertrend_apps.prospective_demo import (
     WEAK_SIGNALS,
     STRONG_SIGNALS,
     LLM_TOPIC_DESCRIPTION_COLUMN,
+    LLM_TOPIC_TITLE_COLUMN,
 )
+from bertrend_apps.prospective_demo.dashboard_common import choose_id_and_ts
 
 WEAK_SIGNAL_NB = 3
 STRONG_SIGNAL_NB = 5
 
 
-@st.fragment
 def reporting():
-    st.selectbox(
-        "Sélection de la veille",
-        options=sorted(st.session_state.user_feeds.keys()),
-        key="report_id",
-    )
+    choose_id_and_ts()
 
     tab1, tab2 = st.tabs(
         [
@@ -38,7 +35,7 @@ def reporting():
 
 def choose_topics():
     st.subheader("Etape 1: Sélection des sujets à retenir")
-    model_id = st.session_state.report_id
+    model_id = st.session_state.model_id
     cols = st.columns(2)
     with cols[0]:
         st.write("#### :orange[Sujets émergents]")
@@ -54,10 +51,8 @@ def choose_topics():
 
 def choose_from_df(df: pd.DataFrame):
     df["A retenir"] = True
-    df["Sujet"] = df[LLM_TOPIC_DESCRIPTION_COLUMN].apply(lambda r: r["title"])
-    df["Description"] = df[LLM_TOPIC_DESCRIPTION_COLUMN].apply(
-        lambda r: r["description"]
-    )
+    df["Sujet"] = df[LLM_TOPIC_TITLE_COLUMN]
+    df["Description"] = df[LLM_TOPIC_DESCRIPTION_COLUMN]
     columns = ["Topic", "A retenir", "Sujet", "Description"]
     pd.DataFrame(
         [

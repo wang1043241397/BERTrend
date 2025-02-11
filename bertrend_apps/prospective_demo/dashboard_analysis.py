@@ -7,17 +7,11 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from bertrend.demos.demos_utils.icons import WARNING_ICON
-from bertrend.demos.weak_signals.visualizations_utils import (
-    display_signal_categories_df,
-)
 from bertrend_apps.prospective_demo import (
-    INTERPRETATION_PATH,
-    get_user_models_path,
     WEAK_SIGNALS,
     STRONG_SIGNALS,
-    NOISE,
     LLM_TOPIC_DESCRIPTION_COLUMN,
+    LLM_TOPIC_TITLE_COLUMN,
     get_model_interpretation_path,
 )
 from bertrend_apps.prospective_demo.dashboard_common import (
@@ -82,7 +76,7 @@ def display_detailed_analysis(
         label_visibility="hidden",
         options=signal_list,
         format_func=lambda signal_id: f"[Sujet {'émergent' if signal_id in signal_topics[WEAK_SIGNALS] else 'fort'} "
-        f"{signal_id}]: {get_row(signal_id, interpretations[WEAK_SIGNALS] if signal_id in signal_topics[WEAK_SIGNALS] else interpretations[STRONG_SIGNALS])[LLM_TOPIC_DESCRIPTION_COLUMN]['title']}",
+        f"{signal_id}]: {get_row(signal_id, interpretations[WEAK_SIGNALS] if signal_id in signal_topics[WEAK_SIGNALS] else interpretations[STRONG_SIGNALS])[LLM_TOPIC_TITLE_COLUMN]}",
     )
     # Summary of the topic
     desc = get_row(
@@ -97,8 +91,8 @@ def display_detailed_analysis(
         color = "orange"
     else:
         color = "green"
-    st.subheader(f":{color}[**{desc[LLM_TOPIC_DESCRIPTION_COLUMN]['title']}**]")
-    st.write(desc[LLM_TOPIC_DESCRIPTION_COLUMN]["description"])
+    st.subheader(f":{color}[**{desc[LLM_TOPIC_TITLE_COLUMN]}**]")
+    st.write(desc[LLM_TOPIC_DESCRIPTION_COLUMN])
     # Detailed description
     st.html(desc["analysis"])
 
