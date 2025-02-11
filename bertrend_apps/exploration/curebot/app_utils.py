@@ -41,7 +41,7 @@ EMBEDDING_MODEL = SentenceTransformer(
 )
 
 
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def concat_data_from_files(files: list[UploadedFile]) -> pd.DataFrame:
     """
     Concatenate data from multiple Excel files into a single DataFrame.
@@ -54,7 +54,7 @@ def concat_data_from_files(files: list[UploadedFile]) -> pd.DataFrame:
     return df
 
 
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def chunk_df(
     df: pd.DataFrame, chunk_size: int = 100, overlap: int = 20
 ) -> pd.DataFrame:
@@ -91,23 +91,26 @@ def chunk_df(
     return df.copy()
 
 
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def get_embeddings(texts: list[str]) -> np.ndarray:
     """Get embeddings for a list of texts."""
     return EMBEDDING_MODEL.encode(texts)
 
 
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def fit_bertopic(
     docs: list[str],
     embeddings: np.ndarray,
+    min_articles_per_topic: int,
     zeroshot_topic_list: list[str] | None = None,
 ) -> tuple[BERTopic, list[int]]:
     """
     Fit BERTopic model on a list of documents and their embeddings.
     """
+    # Override default parameters
+    bertopic_config = {"hdbscan_model": {"min_cluster_size": min_articles_per_topic}}
     # Initialize topic model
-    topic_model = BERTopicModel()
+    topic_model = BERTopicModel(config=bertopic_config)
 
     # Train topic model
     topic_model_output = topic_model.fit(
@@ -121,7 +124,7 @@ def fit_bertopic(
     return topic_model_output.topic_model, topic_model_output.topics
 
 
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def get_improved_topic_description(
     df: pd.DataFrame, _topics_info: pd.DataFrame
 ) -> list[str]:
@@ -151,7 +154,7 @@ def get_improved_topic_description(
     return improved_descriptions
 
 
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def create_newsletter(
     df: pd.DataFrame,
     topics_info: pd.DataFrame,

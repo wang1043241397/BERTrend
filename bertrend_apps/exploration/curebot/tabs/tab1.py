@@ -19,7 +19,12 @@ def show() -> None:
 
     # Load data into dataframe
     if st.session_state.get("uploaded_files"):
-        preprocess_data()
+        try:
+            preprocess_data()
+        except Exception as e:
+            st.error(
+                f"Erreur lors du chargement des données. Vérifiez que vos données respectent le format Curebot attendu."
+            )
 
     # If data is loaded
     if "df" in st.session_state:
@@ -121,7 +126,12 @@ def train_model() -> None:
         zeroshot_topic_list = None
 
     # Train topic model
-    bertopic, topics = fit_bertopic(texts_list, embeddings, zeroshot_topic_list)
+    bertopic, topics = fit_bertopic(
+        texts_list,
+        embeddings,
+        st.session_state["min_articles_per_topic"],
+        zeroshot_topic_list=zeroshot_topic_list,
+    )
 
     # Set session_state
     st.session_state["topic_model"] = bertopic

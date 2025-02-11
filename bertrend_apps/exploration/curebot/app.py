@@ -13,15 +13,20 @@ st.title("Curebot - Exploration de sujets")
 
 # Set sidebar
 with st.sidebar:
-    st.header("BERTopic")
     with st.expander("Paramètres"):
-        st.checkbox("Utiliser les tags", key="use_tags", value=False)
-        st.slider(
+        st.checkbox(
+            "Utiliser les tags",
+            key="use_tags",
+            value=False,
+            help="Utiliser les tags Curebot pour orienter la recherche de sujets.",
+        )
+        st.number_input(
             "Nombre d'articles minimum par sujet",
-            1,
+            2,
             50,
-            10,
+            5,
             key="min_articles_per_topic",
+            help="Permet d'influencer le nombre total de sujets trouvés par le modèle. Plus ce nombre est élevé, moins il y aura de sujets.",
         )
 
 # Create tabs
