@@ -1,3 +1,4 @@
+import tomllib
 import json
 from bertopic import BERTopic
 import numpy as np
@@ -18,42 +19,44 @@ from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend_apps.data_provider.curebot_provider import CurebotProvider
 from bertrend.utils.data_loading import (
     load_data,
-    TIMESTAMP_COLUMN,
-    enhanced_split_df_by_paragraphs,
-    clean_dataset,
 )
-from bertrend_apps.exploration.curebot.prompts import TOPIC_DESCRIPTION_SYSTEM_PROMPT
+from bertrend_apps.exploration.curebot.prompts import (
+    TOPIC_DESCRIPTION_SYSTEM_PROMPT,
+    TOPIC_SUMMARY_SYSTEM_PROMPT,
+)
 
-URL_COLUMN = "url"
-TEXT_COLUMN = "text"
-TITLE_COLUMN = "Titre de la ressource"
+# Get configuration file
+CONFIG = tomllib.load(open(Path(__file__).parent / "config.toml", "rb"))
 
-MIN_TEXT_LENGTH = 150
-EMBEDDING_MODEL_NAME = "dangvantuan/french-document-embedding"
+# Set curebot column name
+URL_COLUMN = CONFIG["data"]["url_column"]
+TEXT_COLUMN = CONFIG["data"]["text_column"]
+TITLE_COLUMN = CONFIG["data"]["title_column"]
+SOURCE_COLUMN = CONFIG["data"]["source_column"]
+TIMESTAMP_COLUMN = CONFIG["data"]["timestamp_column"]
+TAGS_COLUMN = CONFIG["data"]["tags_column"]
+
+# Newsletter
+NEWSLETTER_TEMPLATE = CONFIG["newsletter"]["template"]
+
+# Load embdding model
 EMBEDDING_MODEL = SentenceTransformer(
-    EMBEDDING_MODEL_NAME,
+    CONFIG["embedding"]["model_name"],
     model_kwargs={"torch_dtype": torch.float16},
     trust_remote_code=True,
 )
-TOP_N_WORDS = 5
-
-PLOTLY_BUTTON_SAVE_CONFIG = {
-    "toImageButtonOptions": {
-        "format": "svg",
-        # 'height': 500,
-        # 'width': 1500,
-        "scale": 1,
-    }
-}
 
 
 @st.cache_data
 def concat_data_from_files(files: list[UploadedFile]) -> pd.DataFrame:
+    """
+    Concatenate data from multiple Excel files into a single DataFrame.
+    """
     df_list = []
     for file in files:
         df_list.append(pd.read_excel(file))
     df = pd.concat(df_list, ignore_index=True)
-    df = df.drop_duplicates(subset=[TITLE_COLUMN, TEXT_COLUMN]).reset_index(drop=True)
+
     return df
 
 
@@ -116,7 +119,7 @@ def split_text_to_chunks(row: pd.Series, chunk_size: int, overlap: int):
 
 
 @st.cache_data
-def get_embeddings(texts: list[str]) -> pd.DataFrame:
+def get_embeddings(texts: list[str]) -> np.ndarray:
     """Get embeddings for a list of texts."""
     return EMBEDDING_MODEL.encode(texts)
 
@@ -221,33 +224,89 @@ def parse_data_from_feed(feed_url):
 
 
 @st.cache_data
-def update_topics_per_document(
-    df: pd.DataFrame, df_split: pd.DataFrame, topics: list[int]
+def create_newsletter(
+    df: pd.DataFrame,
+    topics_info: pd.DataFrame,
+    nb_topics: int,
+    nb_articles_per_topic: int,
 ):
     """
-    Function called after BERTopic is trained on split data.
-    Find most frequent topic per document and return the updated dataframe.
-    Args:
-        df (pd.DataFrame): Original dataframe.
-        df_split (pd.DataFrame): Split dataframe.
-        topics (list[int]): List of topics for each split document.
-    Returns:
-        pd.DataFrame: Updated dataframe with topics per document.
+    Create newsletter dict from containing the newsletter content in the following format:
+    {
+        "title": "Newsletter",
+        "min_timestamp": "Monday 01 January 2025",
+        "max_timestamp": "Sunday 07 January 2025",
+        "topics": [
+            {
+                "title": "Topic 1",
+                "keywords": "#keyword1 #keyword2 #keyword3",
+                "summary": "Summary of topic 1"
+                "articles": [
+                    {
+                        "title": "Article 1",
+                        "url": "https://www.article1.com",
+                        "timestamp": "Monday 01 January 2023",
+                        "source": "Source 1"
+                    },
+                    ...
+                ]
+            },
+            ...
+        ]
+    }
     """
-    # Update split dataframe with topics
-    df_split["topics"] = topics
+    # Create newsletter dict that stores the newsletter content
+    newsletter_dict = {"title": "Newsletter"}
 
-    # Group by URL (serves as a document ID) and get the most frequent topic per document
-    df_topic = (
-        df_split.groupby(URL_COLUMN)["topics"]
-        .agg(lambda x: x.value_counts().idxmax())  # Get the most frequent topic
-        .reset_index()
+    # Get min and max date of the articles in the dataframe
+    newsletter_dict["min_timestamp"] = (
+        df[TIMESTAMP_COLUMN].min().strftime("%A %d %B %Y")
+    )
+    newsletter_dict["max_timestamp"] = (
+        df[TIMESTAMP_COLUMN].max().strftime("%A %d %B %Y")
     )
 
-    # Update original dataframe with topics
-    df = df.merge(df_topic, on=URL_COLUMN, how="left")
+    newsletter_dict["topics"] = []
+    for i in range(nb_topics):
+        # Dict to store topic info
+        topic_dict = {}
 
-    return df
+        # Get title and key words
+        topic_dict["title"] = topics_info.iloc[i]["llm_description"]
+        topic_dict["keywords"] = (
+            "#" + " #".join(topics_info.iloc[i]["Representation"]).strip()
+        )
+
+        # Filter df to get articles for the topic
+        topic_df = df[df["topics"] == i]
+
+        # Get first `newsletter_nb_articles_per_topic` articles for the topic
+        topic_df = topic_df.head(min(nb_articles_per_topic, len(topic_df)))
+
+        # Get a summary of the topic
+        user_prompt = "\n\n".join(
+            topic_df.apply(
+                lambda row: f"Titre : {row[TITLE_COLUMN]}\nArticle : {row[TEXT_COLUMN][0:2000]}...",
+                axis=1,
+            )
+        )
+        llm_client = OpenAI_Client()
+        response = llm_client.generate(
+            user_prompt=user_prompt,
+            system_prompt=TOPIC_SUMMARY_SYSTEM_PROMPT,
+            response_format={"type": "json_object"},
+        )
+        topic_dict["summary"] = json.loads(response)["résumé"]
+        topic_dict["articles"] = []
+        for _, row in topic_df.iterrows():
+            article_dict = {}
+            article_dict["title"] = row[TITLE_COLUMN]
+            article_dict["url"] = row[URL_COLUMN]
+            article_dict["timestamp"] = row[TIMESTAMP_COLUMN].strftime("%A %d %B %Y")
+            article_dict["source"] = row[SOURCE_COLUMN]
+            topic_dict["articles"].append(article_dict)
+        newsletter_dict["topics"].append(topic_dict)
+    return newsletter_dict
 
 
 def display_source_distribution(
@@ -284,7 +343,7 @@ def display_source_distribution(
         showlegend=False, height=600, width=500, margin=dict(t=0, b=0, l=0, r=0)
     )
 
-    st.plotly_chart(fig, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True)
 
 
 def get_website_name(url):
@@ -304,13 +363,17 @@ def display_representative_documents(filtered_df: pd.DataFrame):
     """Display representative documents for the selected topic."""
     with st.container(border=False, height=600):
         for _, doc in filtered_df.iterrows():
-            website_name = get_website_name(doc.url)
-            date = doc.timestamp.strftime("%A %d %b %Y %H:%M:%S")
-            snippet = doc.text[:200] + "..." if len(doc.text) > 150 else doc.text
+            website_name = get_website_name(doc[URL_COLUMN])
+            date = doc[TIMESTAMP_COLUMN].strftime("%A %d %b %Y %H:%M:%S")
+            snippet = (
+                doc[TEXT_COLUMN][:200] + "..."
+                if len(doc[TEXT_COLUMN]) > 200
+                else doc[TEXT_COLUMN]
+            )
 
             content = f"""**{doc[TITLE_COLUMN]}**\n\n{date} | {'Unknown Source' if website_name == 'Unknown Source' else website_name}\n\n{snippet}"""
 
             if website_name != "Unknown Source":
-                st.link_button(content, doc.url)
+                st.link_button(content, doc[URL_COLUMN])
             else:
                 st.markdown(content)

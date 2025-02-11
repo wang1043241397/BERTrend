@@ -16,6 +16,13 @@ with st.sidebar:
     st.header("BERTopic")
     with st.expander("Paramètres"):
         st.checkbox("Utiliser les tags", key="use_tags", value=False)
+        st.slider(
+            "Nombre d'articles minimum par sujet",
+            1,
+            50,
+            10,
+            key="min_articles_per_topic",
+        )
 
 # Create tabs
 tab1_content, tab2_content, tab3_content = st.tabs(

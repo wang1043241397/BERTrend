@@ -28,7 +28,7 @@ def show_topic_list():
         - "selected_topic_number": topic number, this topic is displayed in results tab.
     """
     with st.sidebar:
-        with st.expander("Sujets détectés"):
+        with st.expander("Sujets détectés", expanded=True):
             # Topics list
             for _, topic in st.session_state["topics_info"].iterrows():
                 # Display button for each topic
@@ -72,7 +72,7 @@ def display_topic_info(topic_number: int):
     # Multi-select for sources
     selected_sources = st.multiselect(
         "Sélectionner les sources à afficher :",
-        options=["All"] + list(sources),
+        options=["All"] + sorted(list(sources)),
         default=["All"],
     )
 

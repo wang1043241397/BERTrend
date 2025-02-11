@@ -125,23 +125,6 @@ def train_model():
     )
 
 
-def create_newsletter():
-    with st.spinner("Création de la newsletters..."):
-        st.session_state["newsletters"], _, _ = generate_newsletter(
-            topic_model=st.session_state["topic_model"],
-            df=st.session_state["df"],
-            df_split=st.session_state["df_split"],
-            topics=st.session_state["topics"],
-            top_n_topics=st.session_state["newsletter_nb_topics"],
-            top_n_docs=st.session_state["newsletter_nb_docs"],
-            improve_topic_description=True,
-            summarizer_class=GPTSummarizer,
-            summary_mode="topic",
-            openai_model_name=st.session_state["openai_model_name"],
-            nb_sentences=st.session_state["nb_sentences"],
-        )
-
-
 @st.experimental_dialog("Newsletter preview", width="large")
 def preview_newsletter():
     content = md2html(st.session_state["final_newsletter"], css_style=css_style)
