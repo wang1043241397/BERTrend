@@ -1,4 +1,3 @@
-import pandas as pd
 import streamlit as st
 
 from bertrend_apps.exploration.curebot.app_utils import (

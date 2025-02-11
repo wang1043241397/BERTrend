@@ -5,7 +5,6 @@ from bertrend_apps.exploration.curebot.app_utils import (
     NEWSLETTER_TEMPLATE,
     create_newsletter,
 )
-from bertrend_apps.exploration.curebot.prompts import TOPIC_SUMMARY_SYSTEM_PROMPT
 
 # Set french locale
 locale.setlocale(locale.LC_ALL, "fr_FR.UTF-8")
