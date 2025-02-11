@@ -36,6 +36,7 @@ from bertrend.config.parameters import (
     SIGNAL_CLASSIF_LOWER_BOUND,
     SIGNAL_CLASSIF_UPPER_BOUND,
     BERTREND_FILE,
+    LANGUAGES,
 )
 from bertrend.services.embedding_service import EmbeddingService
 from bertrend.trend_analysis.weak_signals import (
@@ -753,6 +754,8 @@ def train_new_data(
     new_data: pd.DataFrame,
     bertrend_models_path: Path,
     embedding_service: EmbeddingService,
+    granularity: int,
+    language: str,
 ) -> BERTrend:
     """Helper function for processing new data (incremental trend analysis:
     - loads a previous saved BERTrend model
@@ -772,7 +775,14 @@ def train_new_data(
         bertrend = BERTrend.restore_models(bertrend_models_path)
     except:
         logger.warning("Cannot restore previous models, creating new one")
-        bertrend = BERTrend(topic_model=BERTopicModel())
+        # overrides default params
+        if language and language in LANGUAGES:
+            bertrend = BERTrend(
+                topic_model=BERTopicModel({"global": {"language": language}})
+            )
+        else:
+            bertrend = BERTrend(topic_model=BERTopicModel())
+        bertrend.config["granularity"] = granularity
 
     # Embed new data
     embeddings, token_strings, token_embeddings = embedding_service.embed(

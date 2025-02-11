@@ -205,7 +205,7 @@ if __name__ == "__main__":
         embedding_model: str,
         embeddings: ndarray,
     ) -> tuple[list, BERTopic]:
-        topic_model = BERTopicModel.from_config(config_file)
+        topic_model = BERTopicModel(config_file)
         output = topic_model.fit(
             docs=dataset[TEXT_COLUMN],
             embedding_model=embedding_model,

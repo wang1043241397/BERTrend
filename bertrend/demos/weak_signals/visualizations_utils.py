@@ -101,24 +101,6 @@ def display_signal_categories_df(
     if column_order is None:
         column_order = columns
 
-    with st.expander(f":grey[{NOISE_ICON} Noise]", expanded=True):
-        st.subheader(":grey[Noise]")
-        if not noise_topics_df.empty:
-            displayed_df = noise_topics_df[columns].sort_values(
-                by=["Latest_Popularity"], ascending=False
-            )
-            displayed_df["Documents"] = displayed_df["Documents"].astype(str)
-            st.dataframe(
-                displayed_df,
-                hide_index=True,
-                column_order=column_order,
-            )
-        else:
-            st.info(
-                f"No noisy signals were detected at timestamp {window_end}.",
-                icon=INFO_ICON,
-            )
-
     with st.expander(f":orange[{WEAK_SIGNAL_ICON} Weak Signals]", expanded=True):
         st.subheader(":orange[Weak Signals]")
         if not weak_signal_topics_df.empty:
@@ -153,6 +135,24 @@ def display_signal_categories_df(
         else:
             st.info(
                 f"No strong signals were detected at timestamp {window_end}.",
+                icon=INFO_ICON,
+            )
+
+    with st.expander(f":grey[{NOISE_ICON} Noise]", expanded=True):
+        st.subheader(":grey[Noise]")
+        if not noise_topics_df.empty:
+            displayed_df = noise_topics_df[columns].sort_values(
+                by=["Latest_Popularity"], ascending=False
+            )
+            displayed_df["Documents"] = displayed_df["Documents"].astype(str)
+            st.dataframe(
+                displayed_df,
+                hide_index=True,
+                column_order=column_order,
+            )
+        else:
+            st.info(
+                f"No noisy signals were detected at timestamp {window_end}.",
                 icon=INFO_ICON,
             )
 

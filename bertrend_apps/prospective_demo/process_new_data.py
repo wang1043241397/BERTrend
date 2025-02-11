@@ -98,6 +98,8 @@ if __name__ == "__main__":
             filtered_df,
             bertrend_models_path=bertrend_models_path,
             embedding_service=embedding_service,
+            language=language,
+            granularity=granularity,
         )
 
         if not bertrend._are_models_merged:

@@ -68,10 +68,10 @@ def main():
     # Main content
     tab1, tab2, tab3, tab4, tab5 = st.tabs(
         [
-            NEWSLETTER_ICON + " Mes veilles",
-            MODELS_ICON + " Mes modèles",
-            TREND_ICON + " Mes tendances",
-            ANALYSIS_ICON + " Mes analyses",
+            NEWSLETTER_ICON + " Veilles",
+            MODELS_ICON + " Modèles",
+            TREND_ICON + " Tendances",
+            ANALYSIS_ICON + " Analyses",
             NEWSLETTER_ICON + " Génération de rapports",
         ]
     )
