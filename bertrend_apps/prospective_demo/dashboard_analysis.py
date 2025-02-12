@@ -7,6 +7,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
+from bertrend.demos.demos_utils.icons import ERROR_ICON
 from bertrend_apps.prospective_demo import (
     WEAK_SIGNALS,
     STRONG_SIGNALS,
@@ -84,9 +85,16 @@ def display_detailed_analysis(
         (
             interpretations[WEAK_SIGNALS]
             if selected_signal in signal_topics[WEAK_SIGNALS]
-            else interpretations[STRONG_SIGNALS]
+            else (
+                interpretations[STRONG_SIGNALS]
+                if selected_signal in signal_topics[STRONG_SIGNALS]
+                else None
+            )
         ),
     )
+    if desc is None:
+        st.error(f"{ERROR_ICON} Rien à afficher")
+        return
     if selected_signal in list(signal_topics[WEAK_SIGNALS]):
         color = "orange"
     else:
@@ -99,7 +107,9 @@ def display_detailed_analysis(
     st.session_state.signal_interpretations[model_id] = interpretations
 
 
-def get_row(signal_id: int, df: pd.DataFrame) -> str:
+def get_row(signal_id: int, df: pd.DataFrame) -> str | None:
+    if df is None:
+        return None
     filtered_df = df[df["topic"] == signal_id]
     if not filtered_df.empty:
         return filtered_df.iloc[0]  # Return the Series (row)

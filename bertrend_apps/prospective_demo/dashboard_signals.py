@@ -27,9 +27,6 @@ COLS_RATIO = [4 / 7, 3 / 7]
 
 
 def signal_analysis():
-    st.write(
-        "Ici mettre seulement les tableaux weak / strong + les liens vers les articles"
-    )
     # ID and timestamp selection
     choose_id_and_ts()
     model_id = st.session_state.model_id

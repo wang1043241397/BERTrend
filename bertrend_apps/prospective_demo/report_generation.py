@@ -5,7 +5,12 @@
 import pandas as pd
 import streamlit as st
 
-from bertrend.demos.demos_utils.icons import NEWSLETTER_ICON, TOPIC_ICON
+from bertrend.demos.demos_utils.icons import (
+    NEWSLETTER_ICON,
+    TOPIC_ICON,
+    WARNING_ICON,
+    ERROR_ICON,
+)
 from bertrend_apps.prospective_demo import (
     WEAK_SIGNALS,
     STRONG_SIGNALS,
@@ -29,6 +34,8 @@ def reporting():
     )
     with tab1:
         choose_topics()
+    with tab2:
+        configure_export()
 
     # generate_newsletter()
 
@@ -36,17 +43,26 @@ def reporting():
 def choose_topics():
     st.subheader("Etape 1: Sélection des sujets à retenir")
     model_id = st.session_state.model_id
+    if model_id not in st.session_state.signal_interpretations:
+        st.error(f"{ERROR_ICON} Pas de données")
+        st.stop()
     cols = st.columns(2)
     with cols[0]:
         st.write("#### :orange[Sujets émergents]")
-        st.session_state.weak_topics_list = choose_from_df(
-            st.session_state.signal_interpretations[model_id][WEAK_SIGNALS]
-        )
+        if WEAK_SIGNALS not in st.session_state.signal_interpretations[model_id]:
+            st.error(f"{ERROR_ICON} Pas de données")
+        else:
+            st.session_state.weak_topics_list = choose_from_df(
+                st.session_state.signal_interpretations[model_id][WEAK_SIGNALS]
+            )
     with cols[1]:
         st.write("#### :green[Sujets forts]")
-        st.session_state.strong_topics_list = choose_from_df(
-            st.session_state.signal_interpretations[model_id][STRONG_SIGNALS]
-        )
+        if STRONG_SIGNALS not in st.session_state.signal_interpretations[model_id]:
+            st.error(f"{ERROR_ICON} Pas de données")
+        else:
+            st.session_state.strong_topics_list = choose_from_df(
+                st.session_state.signal_interpretations[model_id][STRONG_SIGNALS]
+            )
 
 
 def choose_from_df(df: pd.DataFrame):
@@ -64,3 +80,13 @@ def choose_from_df(df: pd.DataFrame):
     edited_df = st.data_editor(df[columns], num_rows="dynamic", column_order=columns)
     selection = edited_df[edited_df["A retenir"] == True]["Topic"].tolist()
     return selection
+
+
+def configure_export():
+    st.subheader("Etape 2: Configuration de l'export")
+
+    st.button("Générer", type="primary", on_click=generate_report)
+
+
+def generate_report():
+    st.subheader("Etape 3: Génération du rapport")
