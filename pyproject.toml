@@ -73,6 +73,7 @@ google-api-python-client = { version = "^2.148.0", optional = true }
 #google-auth-httplib2 = { version = "^0.2.0", optional = true } #required?
 google-auth-oauthlib = { version = "^1.2.1", optional = true }
 goose3 = { version = "^3.1.19", optional = true }
+html2docx = { version = "^1.6.0", optional = true}
 newscatcherapi = { version = "^0.7.3", optional = true }
 newspaper4k = { version = "^0.9.3.1", optional = true }
 pygooglenews = {git = "https://github.com/picaultj/pygooglenews.git", rev = "master", optional = true}
@@ -81,7 +82,7 @@ pygooglenews = {git = "https://github.com/picaultj/pygooglenews.git", rev = "mas
 [tool.poetry.extras]
 tests = ["pytest", "coverage"]
 apps = ["arxiv", "feedparser", "googlenewsdecoder", "google-api-python-client", "google-auth-httplib2",
-        "google-auth-oauthlib", "goose3", "newscatcherapi", "newspaper4k", "pygooglenews"]
+        "google-auth-oauthlib", "goose3", "html2docx", "newscatcherapi", "newspaper4k", "pygooglenews"]
 
 
 [build-system]
