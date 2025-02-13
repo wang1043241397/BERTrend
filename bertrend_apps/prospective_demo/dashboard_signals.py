@@ -132,9 +132,7 @@ def explore_topic_sources(dfs_topics):
         display_topic_links(
             title=f":{color}[**{row[LLM_TOPIC_TITLE_COLUMN].values[0]}**]",
             desc=row[LLM_TOPIC_DESCRIPTION_COLUMN].values[0],
-            df=list(
-                dfs_topics[WEAK_SIGNALS].query(f"Topic == {topic_id}")[URLS_COLUMN]
-            )[0],
+            df=list(selected_df.query(f"Topic == {topic_id}")[URLS_COLUMN])[0],
         )
 
 
