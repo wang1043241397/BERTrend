@@ -2,10 +2,11 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
+from pathlib import Path
 
 
 def generate_html_report(
-    template_path: str, report_title: str, data_list: list[dict]
+    template_path: Path | str, report_title: str, data_list: list[dict]
 ) -> str:
     """
     Generate HTML report with single title and multiple topic containers.

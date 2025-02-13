@@ -2,7 +2,6 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
-import os
 import tempfile
 import re
 
@@ -10,7 +9,8 @@ import pandas as pd
 import streamlit as st
 from pathlib import Path
 
-from html2docx import html2docx
+from google.auth.exceptions import RefreshError
+from loguru import logger
 
 from bertrend.demos.demos_utils.icons import (
     NEWSLETTER_ICON,
@@ -19,6 +19,7 @@ from bertrend.demos.demos_utils.icons import (
     DOWNLOAD_ICON,
     EMAIL_ICON,
 )
+from bertrend_apps.common.mail_utils import get_credentials, send_email
 from bertrend_apps.prospective_demo import (
     WEAK_SIGNALS,
     STRONG_SIGNALS,
@@ -146,14 +147,11 @@ def generate_report(weak_signals: pd.DataFrame, strong_signals: pd.DataFrame):
     # Save report to temp file
     temp_report_path = create_temp_report(output_html)  # Create the file in temp dir
 
-    cols = st.columns([1, 1, 3])
+    cols = st.columns([2, 3])
     with cols[0]:
         download(temp_report_path, model_id)
     with cols[1]:
-        # download_docx(temp_report_path, model_id)
-        pass
-    with cols[2]:
-        email(temp_report_path)  #
+        email(temp_report_path, mail_title=f"Rapport veille {model_id}")  #
 
 
 def create_temp_report(html_content) -> Path:
@@ -175,75 +173,42 @@ def download(temp_path: Path, model_id: str):
         )
 
 
-def download_docx(temp_path: Path, model_id: str):
-    docx = convert_html_to_docx(temp_path)
-    with open(docx, "r", encoding="utf-8") as file:
-        st.download_button(
-            label=f"{DOWNLOAD_ICON} Télécharger (docx)",
-            type="primary",
-            data=file.read(),
-            file_name=f"rapport_{model_id}.html",
-            mime="text/html",
-        )
-    os.remove(docx)
-
-
 def is_valid_email(email: str) -> bool:
     """Checks if an email address is valid using a regular expression."""
     regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     return re.match(regex, email) is not None
 
 
-def email(temp_path: Path) -> None:
+def email(temp_path: Path, mail_title: str) -> None:
     col1, col2 = st.columns([0.6, 0.4])
     with col1:
-        user_email = st.text_input("@", label_visibility="hidden")
+        user_email = st.text_input("@", label_visibility="collapsed")
 
     with col2:
         if st.button(f"{EMAIL_ICON} Envoyer", type="primary"):
             if not user_email:
                 return
-
             if not is_valid_email(user_email):
                 st.error(f"{ERROR_ICON} Adresse mail incorrecte")
                 return
 
             try:
-                # TODO
-
-                # Implement your email sending logic here.  Use the temp_path and user_email.
-                # Example (replace with your actual email code, handling attachments):
-                # import smtplib
-
-                #     server.sendmail(sender_email, user_email, message.as_string())
+                # Send newsletter by email
+                # string to list conversion for recipients
+                recipients = [user_email]
+                try:
+                    if recipients:
+                        credentials = get_credentials()
+                        with open(temp_path, "r") as file:
+                            # Read the entire contents of the file into a string
+                            content = file.read()
+                        send_email(credentials, mail_title, recipients, content, "html")
+                except RefreshError as re:
+                    logger.error(
+                        f"Problem with token for email, please regenerate it: {re}"
+                    )
 
                 st.success("Email sent successfully!")
 
             except Exception as e:
                 st.error(f"Error sending email: {e}")
-
-
-def convert_html_to_docx(html_path: Path, output_path=None):
-    """
-    Convert HTML file to DOCX format.
-
-    Args:
-        html_path (Path): Path to the input HTML file
-        output_path (str, optional): Path for the output DOCX file.
-            If not provided, will use the same name as HTML file with .docx extension
-
-    Returns:
-        str: Path to the created DOCX file
-    """
-    # Read HTML file
-    with open(html_path, "r", encoding="utf-8") as file:
-        html_content = file.read()
-
-    # If no output path specified, create one based on input file
-    if output_path is None:
-        output_path = str(Path(html_path).with_suffix(".docx"))
-
-    # Convert HTML to DOCX
-    html2docx(html_content, output_path)
-
-    return output_path
