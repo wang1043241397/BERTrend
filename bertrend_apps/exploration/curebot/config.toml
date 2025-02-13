@@ -9,6 +9,9 @@ source_column = "Domaine de la ressource"
 timestamp_column = "Date de trouvaille"
 tags_column = "Tags"
 
+[topics]
+top_n_words = 5
+
 [newsletter]
 template = """
 # {{ title }}

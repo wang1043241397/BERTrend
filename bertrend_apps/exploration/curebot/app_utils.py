@@ -30,6 +30,9 @@ SOURCE_COLUMN = CONFIG["data"]["source_column"]
 TIMESTAMP_COLUMN = CONFIG["data"]["timestamp_column"]
 TAGS_COLUMN = CONFIG["data"]["tags_column"]
 
+# Topics config
+TOP_N_WORDS = CONFIG["topics"]["top_n_words"]
+
 # Newsletter
 NEWSLETTER_TEMPLATE = CONFIG["newsletter"]["template"]
 

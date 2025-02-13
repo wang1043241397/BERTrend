@@ -6,6 +6,7 @@ from bertrend_apps.exploration.curebot.app_utils import (
     TEXT_COLUMN,
     TIMESTAMP_COLUMN,
     TITLE_COLUMN,
+    TOP_N_WORDS,
     concat_data_from_files,
     fit_bertopic,
     get_embeddings,
@@ -138,6 +139,10 @@ def train_model() -> None:
     st.session_state["topics"] = topics
 
     topic_info = bertopic.get_topic_info()
+    topic_info["Representation"] = topic_info["Representation"].apply(
+        lambda x: x[:TOP_N_WORDS]
+    )
+
     st.session_state["topics_info"] = topic_info[
         topic_info["Topic"] != -1
     ]  # exclude -1 topic from topic list
