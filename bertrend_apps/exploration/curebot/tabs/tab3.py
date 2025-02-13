@@ -1,6 +1,8 @@
 import locale
+from pathlib import Path
 import jinja2
 import streamlit as st
+from bertrend.llm_utils.newsletter_features import md2html
 from bertrend_apps.exploration.curebot.app_utils import (
     NEWSLETTER_TEMPLATE,
     create_newsletter,
@@ -8,6 +10,11 @@ from bertrend_apps.exploration.curebot.app_utils import (
 
 # Set french locale
 locale.setlocale(locale.LC_ALL, "fr_FR.UTF-8")
+
+CSS_STYLE = (
+    Path(__file__).parent.parent.parent.parent.parent
+    / "bertrend/llm_utils/newsletter.css"
+)
 
 
 def show() -> None:
@@ -17,15 +24,44 @@ def show() -> None:
         # Show newsletter parameters
         newsletter_parameters()
 
-        # Show newsletter creation button
-        if st.button("Créer la newsletter"):
-            with st.spinner("Création de la newsletter..."):
-                get_newsletter()
+        # Columns for buttons
+        col1, col2, col3 = st.columns([1, 1, 1])
 
-        # If newsletter is created, show it and add downlaod button
-        if "newsletter" in st.session_state:
-            template = jinja2.Template(NEWSLETTER_TEMPLATE)
-            st.write(template.render(st.session_state["newsletter"]))
+        # Show newsletter creation button
+        with col1:
+            if st.button("Créer la newsletter"):
+                with st.spinner("Création de la newsletter..."):
+                    get_newsletter()
+
+        # Show newsletter edition button
+        with col2:
+            st.button(
+                "Éditer",
+                on_click=edit_newsletter,
+                disabled=not "newsletter_text" in st.session_state,
+            )
+
+        # Show newsletter download button
+        with col3:
+            # If newsletter created, set it as data to download
+            if "newsletter_text" in st.session_state:
+                data = md2html(st.session_state["newsletter_text"], css_style=CSS_STYLE)
+            # Else, set data to empty string
+            else:
+                data = ""
+
+            # Download button
+            st.download_button(
+                "Télécharger",
+                file_name="newsletters.html",
+                mime="text/html",
+                data=data,
+                disabled=not "newsletter_text" in st.session_state,
+            )
+
+        # Show newsletter
+        if "newsletter_text" in st.session_state:
+            st.write(st.session_state["newsletter_text"], unsafe_allow_html=True)
 
 
 def newsletter_parameters() -> None:
@@ -59,11 +95,31 @@ def get_newsletter() -> None:
     """
     Create a newsletter based on the selected topics and articles.
     Sets in sessions_state:
-    - newsletter: a dictionary containing the newsletter data
+    - newsletter_dict: a dictionary containing the newsletter data
+    - newsletter_text: the newsletter text
     """
-    st.session_state["newsletter"] = create_newsletter(
+    # Newsletter dict
+    st.session_state["newsletter_dict"] = create_newsletter(
         st.session_state["df"],
         st.session_state["topics_info"],
         st.session_state["newsletter_nb_topics"],
         st.session_state["newsletter_nb_articles_per_topic"],
     )
+
+    # Newsletter text
+    template = jinja2.Template(NEWSLETTER_TEMPLATE)
+    st.session_state["newsletter_text"] = template.render(
+        st.session_state["newsletter_dict"]
+    )
+
+
+@st.dialog("Éditer la newsletter", width="large")
+def edit_newsletter() -> None:
+    edited_newsltter = st.text_area(
+        "",
+        value=st.session_state["newsletter_text"],
+        height=500,
+    )
+    st.session_state["newsletter_text"] = edited_newsltter
+    if st.button("Enregistrer", type="primary"):
+        st.rerun()

@@ -23,7 +23,7 @@ template = """
 {{ topic.summary }}
 
 {% for article in topic.articles %}
-[{{ article.title }}]({{ article.url }}) - **{{ article.source }}** - *{{ article.timestamp }}*
+* [{{ article.title }}]({{ article.url }}) - **{{ article.source }}** - *{{ article.timestamp }}*
 
 {% endfor %}
 {% endfor %}
