@@ -90,9 +90,12 @@ def signal_analysis():
         )
 
     with col2:
+        st.info(
+            "TODO <Place disponible pour d'autres infos...>"
+            "En particulier, rajouter la courbe d'évolution des sujets"
+            "en se limitant à ceux présentés dans les tableaux weak/strong/noise"
+        )
         explore_topic_sources(dfs_topics)
-
-        st.write("<Place disponible pour d'autres infos...>")
 
 
 @st.fragment
