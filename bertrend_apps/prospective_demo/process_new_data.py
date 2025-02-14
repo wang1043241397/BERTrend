@@ -158,6 +158,13 @@ if __name__ == "__main__":
                     lambda x: list(set(x))
                 )  # Removes duplicates within each list
 
+                # FIXME: for some unknown reasons, a few elements in the Documents column are not a str but a
+                #  timestamp (the identifier of current model); this generates errors when trying to serialize the
+                #  df to parquet. The code snippet below is a workaround to avoid this issue.
+                df["Documents"] = df["Documents"].apply(
+                    lambda l: [x if isinstance(x, str) else "" for x in l]
+                )
+
                 output_path = interpretation_path / f"{df_name}.parquet"
                 df.to_parquet(output_path)
                 logger.success(f"{df_name} saved to: {output_path}")
