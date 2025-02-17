@@ -29,6 +29,14 @@ def get_df_topics(model_interpretation_path=None) -> dict[str, pd.DataFrame]:
 
 def update_key(key: str, new_value: Any):
     st.session_state[key] = new_value
+    # reset ts value in order to avoid errors if a previous ts value is not available for the new key value
+
+
+def update_key_and_ts(key: str, new_value: Any):
+    update_key(key, new_value)
+    # reset ts value in order to avoid errors if a previous ts value is not available for the new key value
+    if "reference_ts" in st.session_state:
+        del st.session_state["reference_ts"]
 
 
 def choose_id_and_ts():
@@ -43,7 +51,9 @@ def choose_id_and_ts():
             options=options,
             index=options.index(st.session_state.model_id),
             key=model_id_key,  # to avoid pb of unicity if displayed on several places
-            on_change=lambda: update_key("model_id", st.session_state[model_id_key]),
+            on_change=lambda: update_key_and_ts(
+                "model_id", st.session_state[model_id_key]
+            ),
         )
     with col2:
         list_models = get_models_info(model_id)
@@ -58,7 +68,7 @@ def choose_id_and_ts():
         if "reference_ts" not in st.session_state:
             st.session_state.reference_ts = list_models[-1]
         ts_key = uuid.uuid4()
-        reference_ts = st.select_slider(
+        st.select_slider(
             "Date d'analyse",
             options=list_models,
             value=st.session_state.reference_ts,

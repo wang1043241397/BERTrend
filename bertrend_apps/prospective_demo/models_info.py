@@ -222,7 +222,7 @@ def handle_regenerate_models(row_dict: dict):
     with col1:
         if yes_btn := st.button("Oui", type="primary"):
             # Delete previously stored model
-            # delete_cached_models(model_id)
+            delete_cached_models(model_id)
             logger.info(f"Modèles en cache supprimés pour la veille {model_id} !")
 
             # Regenerate new models
