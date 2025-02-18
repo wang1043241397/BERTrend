@@ -2,6 +2,7 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
+import copy
 import os
 import pickle
 
@@ -628,14 +629,15 @@ class BERTrend:
             topic_model.doc_info_df.to_pickle(model_dir / DOC_INFO_DF_FILE)
             topic_model.topic_info_df.to_pickle(model_dir / TOPIC_INFO_DF_FILE)
 
+
         # Serialize BERTrend (excluding topic models for separate reuse if needed)
-        # topic_models_bak = copy.deepcopy(self.topic_models)
-        # FIXME: the commented code introduced a too-heavy memory overhead, to be improved; the idea is to serialize
+        topic_models_bak = copy.deepcopy(self.topic_models)
+        # FIXME: the code above introduced a too-heavy memory overhead, to be improved; the idea is to serialize
         # the topics models separetely from the rest of the BERTrend object
-        # self.topic_models = None
+        self.topic_models = None
         with open(models_path / BERTREND_FILE, "wb") as f:
             dill.dump(self, f)
-        # self.topic_models = topic_models_bak
+        self.topic_models = topic_models_bak
 
         logger.info(f"Models saved to: {models_path}")
 
