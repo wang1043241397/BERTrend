@@ -629,7 +629,6 @@ class BERTrend:
             topic_model.doc_info_df.to_pickle(model_dir / DOC_INFO_DF_FILE)
             topic_model.topic_info_df.to_pickle(model_dir / TOPIC_INFO_DF_FILE)
 
-
         # Serialize BERTrend (excluding topic models for separate reuse if needed)
         topic_models_bak = copy.deepcopy(self.topic_models)
         # FIXME: the code above introduced a too-heavy memory overhead, to be improved; the idea is to serialize
