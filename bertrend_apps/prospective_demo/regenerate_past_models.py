@@ -5,7 +5,7 @@
 from loguru import logger
 
 from bertrend.BERTopicModel import BERTopicModel
-from bertrend.BERTrend import train_new_data, BERTrend
+from bertrend.BERTrend import BERTrend
 from bertrend.services.embedding_service import EmbeddingService
 from bertrend.utils.data_loading import split_data, group_by_days, TEXT_COLUMN
 from bertrend_apps.prospective_demo import get_user_models_path

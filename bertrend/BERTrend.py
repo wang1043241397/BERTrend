@@ -2,7 +2,6 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
-import copy
 import os
 import pickle
 
@@ -22,7 +21,6 @@ from tqdm import tqdm
 
 from bertrend import (
     MODELS_DIR,
-    CACHE_PATH,
     BERTREND_DEFAULT_CONFIG_PATH,
     load_toml_config,
     SIGNAL_EVOLUTION_DATA_DIR,

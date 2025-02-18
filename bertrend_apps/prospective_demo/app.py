@@ -12,13 +12,8 @@ from bertrend.demos.demos_utils.icons import (
     ANALYSIS_ICON,
     NEWSLETTER_ICON,
     SERVER_STORAGE_ICON,
-    TOPIC_ICON,
     TREND_ICON,
     MODELS_ICON,
-)
-from bertrend.demos.demos_utils.parameters_component import (
-    display_bertopic_hyperparameters,
-    display_bertrend_hyperparameters,
 )
 from bertrend.demos.demos_utils.state_utils import SessionStateManager
 from bertrend_apps.prospective_demo.authentication import check_password
