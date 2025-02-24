@@ -1,4 +1,5 @@
 import pandas as pd
+from loguru import logger
 import streamlit as st
 
 from bertrend_apps.exploration.curebot.app_utils import (
@@ -23,6 +24,7 @@ def show() -> None:
         try:
             preprocess_data()
         except Exception as e:
+            logger.error(e)
             st.error(
                 f"Erreur lors du chargement des données. Vérifiez que vos données respectent le format Curebot attendu."
             )
