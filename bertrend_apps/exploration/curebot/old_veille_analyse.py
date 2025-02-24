@@ -4,7 +4,6 @@
 #  This file is part of BERTrend.
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import List
 
 import inspect
 import pandas as pd
@@ -43,7 +42,7 @@ if "st.session_state.topic_expanded" not in st.session_state:
 
 
 @st.cache_data
-def parse_data_from_files(files: List[UploadedFile]) -> pd.DataFrame:
+def parse_data_from_files(files: list[UploadedFile]) -> pd.DataFrame:
     """Read a list of Excel files and return a single dataframe containing the data"""
     dataframes = []
 
@@ -124,23 +123,6 @@ def train_model():
         use_cache=False,
         top_n_words=TOP_N_WORDS,
     )
-
-
-def create_newsletter():
-    with st.spinner("Création de la newsletters..."):
-        st.session_state["newsletters"], _, _ = generate_newsletter(
-            topic_model=st.session_state["topic_model"],
-            df=st.session_state["df"],
-            df_split=st.session_state["df_split"],
-            topics=st.session_state["topics"],
-            top_n_topics=st.session_state["newsletter_nb_topics"],
-            top_n_docs=st.session_state["newsletter_nb_docs"],
-            improve_topic_description=True,
-            summarizer_class=GPTSummarizer,
-            summary_mode="topic",
-            openai_model_name=st.session_state["openai_model_name"],
-            nb_sentences=st.session_state["nb_sentences"],
-        )
 
 
 @st.experimental_dialog("Newsletter preview", width="large")

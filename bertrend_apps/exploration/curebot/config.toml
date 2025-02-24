@@ -1,0 +1,33 @@
+[embedding]
+model_name = "dangvantuan/french-document-embedding"
+
+[data]
+title_column = "Titre de la ressource"
+text_column  = "Contenu de la ressource"
+url_column = "URL de la ressource"
+source_column = "Domaine de la ressource"
+timestamp_column = "Date de trouvaille"
+tags_column = "Tags"
+
+[topics]
+top_n_words = 5
+
+[newsletter]
+template = """
+# {{ title }}
+
+*Du {{ min_timestamp }} au {{ max_timestamp }}.*
+
+{% for topic in topics %}
+## {{ topic.title }}
+
+**{{ topic.keywords }}**
+
+{{ topic.summary }}
+
+{% for article in topic.articles %}
+* [{{ article.title }}]({{ article.url }}) - **{{ article.source }}** - *{{ article.timestamp }}*
+
+{% endfor %}
+{% endfor %}
+"""

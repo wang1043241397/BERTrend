@@ -204,7 +204,6 @@ def test_topic_model_initialization_custom_values():
 
 def test_initialize_models_called(topic_model):
     """Test that internal models are initialized properly."""
-    assert hasattr(topic_model, "config_file")
     assert hasattr(topic_model, "config")
 
 

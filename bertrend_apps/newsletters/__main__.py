@@ -6,7 +6,6 @@ import ast
 import glob
 import os
 from pydoc import locate
-from typing import List, Tuple
 
 import pandas as pd
 import typer
@@ -205,8 +204,8 @@ if __name__ == "__main__":
         dataset: pd.DataFrame,
         embedding_model: str,
         embeddings: ndarray,
-    ) -> Tuple[List, BERTopic]:
-        topic_model = BERTopicModel.from_config(config_file)
+    ) -> tuple[list, BERTopic]:
+        topic_model = BERTopicModel(config_file)
         output = topic_model.fit(
             docs=dataset[TEXT_COLUMN],
             embedding_model=embedding_model,

@@ -5,6 +5,8 @@
 
 from pathlib import Path
 
+from loguru import logger
+
 from bertrend import OUTPUT_PATH
 
 # Global variables for prompts
@@ -236,8 +238,8 @@ def get_prompt(
     return prompt
 
 
-def save_html_output(model_output, output_file="signal_llm.html"):
-    """Function to parse the model's output and save as HTML"""
+def clean_html_output(model_output) -> str:
+    """Function to parse the model's output"""
     # Clean the HTML content
     cleaned_html = model_output.strip()  # Remove leading/trailing whitespace
 
@@ -253,9 +255,14 @@ def save_html_output(model_output, output_file="signal_llm.html"):
 
     # Final strip to remove any remaining whitespace
     cleaned_html = cleaned_html.strip()
+    return cleaned_html
+
+
+def save_html_output(html_output, output_file="signal_llm.html"):
+    """Function to save the model's output as HTML"""
     output_path = OUTPUT_PATH / output_file
 
     # Save the cleaned HTML
     with open(output_path, "w", encoding="utf-8") as file:
-        file.write(cleaned_html)
-    print(f"Cleaned HTML output saved to {output_path}")
+        file.write(html_output)
+    logger.debug(f"Cleaned HTML output saved to {output_path}")

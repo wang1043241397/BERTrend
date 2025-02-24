@@ -68,19 +68,39 @@ class BERTopicModel:
     Utility class to manage and configure BERTopic instances with custom parameters.
     """
 
-    def __init__(self, config_file: str | Path = BERTOPIC_DEFAULT_CONFIG_PATH):
+    def __init__(self, config: str | Path | dict = BERTOPIC_DEFAULT_CONFIG_PATH):
         """
         Initialize a class from a TOML config file.
-        `config_file` can be:
+        `config` can be:
             - a `str` representing the TOML file
             - a `Path` to a TOML file
+            - a `dict` (with the same structure of the default config) containing values to be overridden compared to the default configuration
 
         To see file format and list of parameters: bertrend/config/topic_model_default_config.toml
         """
-        self.config_file = config_file
+        if isinstance(config, str) or isinstance(config, Path):
+            try:
+                self.config = load_toml_config(config)
+            except Exception as e:
+                raise Exception(f"Failed to load TOML config: {e}")
+        elif isinstance(config, dict):
+            # load default config
+            self.config = load_toml_config(BERTOPIC_DEFAULT_CONFIG_PATH)
+            # overrides keys with provided dict
+            for section, settings in config.items():
+                if section in config:
+                    self.config[section].update(
+                        settings
+                    )  # Update the settings in that section
+                else:
+                    self.config[section] = settings  # If section doesn't exist, add it
+        else:
+            raise TypeError(
+                f"Config must be a string, Path or dict object, got: {type(config)}"
+            )
 
-        # Load config file
-        self.config = self._load_config()
+        # Update config file (depending on language, etc.)
+        self._update_config()
 
         # Initialize models based on those parameters
         self._initialize_models()
@@ -92,34 +112,34 @@ class BERTopicModel:
             )
         )
 
-    def _load_config(self) -> dict:
-        """
-        Load the TOML config file as a dict when initializing the class.
-        """
-        config = load_toml_config(self.config_file)
+    @classmethod
+    def get_default_config(cls) -> dict:
+        """Helper function to get default config. Useful to modify a s"""
+        return load_toml_config(BERTOPIC_DEFAULT_CONFIG_PATH)
 
+    def _update_config(self):
+        """
+        Update the config file depending on initially loaded parameters.
+        """
         # Handle specific parameters
-
         # Transform ngram_range into tuple
-        if config["vectorizer_model"].get("ngram_range"):
-            config["vectorizer_model"]["ngram_range"] = tuple(
-                config["vectorizer_model"]["ngram_range"]
+        if self.config["vectorizer_model"].get("ngram_range"):
+            self.config["vectorizer_model"]["ngram_range"] = tuple(
+                self.config["vectorizer_model"]["ngram_range"]
             )
 
         # Load stop words list
-        if config["vectorizer_model"].get("stop_words"):
+        if self.config["vectorizer_model"].get("stop_words"):
             stop_words = (
                 STOPWORDS
-                if config["global"]["language"] == "French"
+                if self.config["global"]["language"] == "French"
                 else ENGLISH_STOPWORDS
             )
-            config["vectorizer_model"]["stop_words"] = stop_words
+            self.config["vectorizer_model"]["stop_words"] = stop_words
 
         # BERTopic needs a "None" instead of an empty list, otherwise it'll attempt zeroshot topic modeling on an empty list
-        if not config["bertopic_model"].get("zeroshot_topic_list"):  # empty list
-            config["bertopic_model"]["zeroshot_topic_list"] = None
-
-        return config
+        if not self.config["bertopic_model"].get("zeroshot_topic_list"):  # empty list
+            self.config["bertopic_model"]["zeroshot_topic_list"] = None
 
     def _initialize_models(self):
         self.umap_model = UMAP(**self.config["umap_model"])
