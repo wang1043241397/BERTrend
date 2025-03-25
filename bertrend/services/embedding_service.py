@@ -20,6 +20,7 @@ from bertrend.config.parameters import (
     EMBEDDING_BATCH_SIZE,
     EMBEDDING_MAX_SEQ_LENGTH,
 )
+from bertrend.services.authentication import SecureAPIClient
 
 
 class EmbeddingService(BaseEmbedder):
@@ -32,8 +33,7 @@ class EmbeddingService(BaseEmbedder):
         embedding_dtype: Literal[
             "float32", "float16", "bfloat16"
         ] = EMBEDDING_CONFIG.get("embedding_dtype", "float32"),
-        host: str = EMBEDDING_CONFIG["host"],
-        port: str = EMBEDDING_CONFIG["port"],
+        url: str = EMBEDDING_CONFIG["url"],
     ):
         """
         Class implementing embedding service.
@@ -46,7 +46,8 @@ class EmbeddingService(BaseEmbedder):
         super().__init__()
         self.local = local
         if not self.local:
-            self.url = f"http://{host}:{port}"
+            self.url = url
+            self.secure_client = SecureAPIClient(self.url)
 
         self.embedding_model = None
         self.embedding_model_name = model_name
@@ -181,14 +182,15 @@ class EmbeddingService(BaseEmbedder):
         return embeddings, token_strings, token_embeddings
 
     def _remote_embed_documents(
-        self, texts: list[str], show_progress_bar: bool = True
+        self,
+        texts: list[str],
+        show_progress_bar: bool = True,
     ) -> tuple[np.ndarray, None, None]:
         """
-        Embed a list of documents using a Sentence Transformer model.
-
-        This function loads a specified Sentence Transformer model and uses it to create
-        embeddings for a list of input texts. It processes the texts in batches to manage
-        memory efficiently, especially for large datasets.
+        Embed a list of documents using a remote embedding service.
+        The remote embedding service is assumed to have at least the endpoints /encode, /token and /model_name
+        The service is assumed to require authentication using OAuth2 protocol. Credentials have to be
+        provided for the "bertrend" app.
 
         Args:
             texts (List[str]): A list of text documents to be embedded.
@@ -200,10 +202,15 @@ class EmbeddingService(BaseEmbedder):
                 - A list of grouped token strings
                 - A list of grouped token embeddings
         """
+
+        headers = self.secure_client._get_headers()
+
         logger.debug(f"Computing embeddings...")
         response = requests.post(
             self.url + "/encode",
             data=json.dumps({"text": texts, "show_progress_bar": show_progress_bar}),
+            verify=False,
+            headers=headers,
         )
         if response.status_code == 200:
             embeddings = np.array(response.json()["embeddings"])
@@ -218,9 +225,7 @@ class EmbeddingService(BaseEmbedder):
         """
         Return currently loaded model name in Embedding API.
         """
-        response = requests.get(
-            self.url + "/model_name",
-        )
+        response = requests.get(self.url + "/model_name", verify=False)
         if response.status_code == 200:
             model_name = response.json()
             logger.debug(f"Model name: {model_name}")

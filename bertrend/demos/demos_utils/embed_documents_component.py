@@ -20,7 +20,7 @@ def display_embed_documents_component():
         with st.spinner("Embedding documents..."):
             embedding_dtype = SessionStateManager.get("embedding_dtype")
             embedding_model_name = SessionStateManager.get("embedding_model_name")
-            if SessionStateManager.get("embedding_service_type", "local") == "local":
+            if SessionStateManager.get("embedding_service_type", "remote") == "local":
                 embedding_service = EmbeddingService(
                     local=True,
                     model_name=embedding_model_name,
@@ -29,8 +29,7 @@ def display_embed_documents_component():
             else:
                 embedding_service = EmbeddingService(
                     local=False,
-                    host=SessionStateManager.get("embedding_service_hostname"),
-                    port=SessionStateManager.get("embedding_service_port"),
+                    url=SessionStateManager.get("embedding_service_url"),
                 )
 
             texts = SessionStateManager.get_dataframe("time_filtered_df")[

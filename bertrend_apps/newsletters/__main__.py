@@ -115,9 +115,9 @@ if __name__ == "__main__":
         # Embed dataset
         logger.info("Computation of embeddings for new data...")
         embedding_model_name = config["embedding_service"].get("model_name")
-        embeddings, _, _ = EmbeddingService(model_name=embedding_model_name).embed(
-            dataset[TEXT_COLUMN]
-        )
+        embeddings, _, _ = EmbeddingService(
+            model_name=embedding_model_name, local=False
+        ).embed(dataset[TEXT_COLUMN])
 
         if learning_type == INFERENCE_ONLY:
             # predict only

@@ -95,7 +95,7 @@ if __name__ == "__main__":
 
         # Initialization of embedding service
         # TODO: customize service (lang, etc)
-        embedding_service = EmbeddingService(local=True)
+        embedding_service = EmbeddingService(local=False)
 
         # Load data for last period
         new_data = load_all_data(model_id=model_id, user=user_name, language=language)

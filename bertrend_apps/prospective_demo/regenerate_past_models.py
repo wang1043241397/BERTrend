@@ -34,7 +34,7 @@ def regenerate_models(model_id: str, user: str):
 
     # Initialization of embedding service
     # TODO: customize service (lang, etc)
-    embedding_service = EmbeddingService(local=True)
+    embedding_service = EmbeddingService(local=False)
 
     # Load model config
     df = load_all_data(model_id=model_id, user=user, language=language)
