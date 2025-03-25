@@ -1,8 +1,8 @@
 """
 TempTopic: An addon to BERTopic that evaluates the model's dynamic topic modeling using embeddings
 
-The TempTopic class extends BERTopic for dynamic topic modeling evaluation, incorporating metrics such as 
-Temporal Topic Representation Stability and Temporal Topic Embedding Stability. This approach provides a 
+The TempTopic class extends BERTopic for dynamic topic modeling evaluation, incorporating metrics such as
+Temporal Topic Representation Stability and Temporal Topic Embedding Stability. This approach provides a
 comprehensive analysis of how topics evolve over time, focusing on their embeddings and vocabulary consistency.
 
 Key Features:
