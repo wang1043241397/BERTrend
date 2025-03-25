@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 
 from bertrend.BERTopicModel import BERTopicModel
 from bertrend.llm_utils.openai_client import OpenAI_Client
+from bertrend.services.embedding_service import EmbeddingService
 from bertrend_apps.exploration.curebot.prompts import (
     TOPIC_DESCRIPTION_SYSTEM_PROMPT,
     TOPIC_SUMMARY_SYSTEM_PROMPT,
@@ -37,11 +38,7 @@ TOP_N_WORDS = CONFIG["topics"]["top_n_words"]
 NEWSLETTER_TEMPLATE = CONFIG["newsletter"]["template"]
 
 # Load embdding model
-EMBEDDING_MODEL = SentenceTransformer(
-    CONFIG["embedding"]["model_name"],
-    model_kwargs={"torch_dtype": torch.float16},
-    trust_remote_code=True,
-)
+EMBEDDING_SERVICE = EmbeddingService(local=False)
 
 
 @st.cache_data(show_spinner=False)
@@ -97,7 +94,8 @@ def chunk_df(
 @st.cache_data(show_spinner=False)
 def get_embeddings(texts: list[str]) -> np.ndarray:
     """Get embeddings for a list of texts."""
-    return EMBEDDING_MODEL.encode(texts)
+    embeddings, _, _ = EMBEDDING_SERVICE.embed(texts)
+    return embeddings
 
 
 @st.cache_data(show_spinner=False)
@@ -118,7 +116,7 @@ def fit_bertopic(
     # Train topic model
     topic_model_output = topic_model.fit(
         docs=docs,
-        embedding_model=EMBEDDING_MODEL,
+        embedding_model=EMBEDDING_SERVICE.embedding_model_name,
         embeddings=embeddings,
         zeroshot_topic_list=zeroshot_topic_list,
         zeroshot_min_similarity=0.65,
