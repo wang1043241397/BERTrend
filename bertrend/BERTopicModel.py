@@ -200,8 +200,8 @@ class BERTopicModel:
     def fit(
         self,
         docs: list[str],
-        embedding_model: SentenceTransformer | str,
         embeddings: np.ndarray,
+        embedding_model: SentenceTransformer | str | None = None,
         zeroshot_topic_list: list[str] | None = None,
         zeroshot_min_similarity: float | None = None,
     ) -> BERTopicModelOutput:
@@ -210,12 +210,10 @@ class BERTopicModel:
 
         Args:
             docs (List[str]): List of documents.
-            embedding_model (SentenceTransformer | str): Sentence transformer (or associated model name) model for embeddings.
             embeddings (np.ndarray): Precomputed document embeddings.
-            umap_model (UMAP): UMAP model for dimensionality reduction.
-            hdbscan_model (HDBSCAN): HDBSCAN model for clustering.
-            vectorizer_model (CountVectorizer): CountVectorizer model for creating the document-term matrix.
-            mmr_model (MaximalMarginalRelevance): MMR model for diverse topic representation.
+            embedding_model (SentenceTransformer | str): Sentence transformer (or associated model name) model for embeddings.
+            zeroshot_topic_list (list[str]): List of topics used for zeroshot classification.
+            zeroshot_min_similarity (float): Parameter used for zeroshot classification.
 
         Returns:
             BERTopic: A fitted BERTopic model.

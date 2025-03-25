@@ -211,7 +211,6 @@ if __name__ == "__main__":
         topic_model = BERTopicModel({"global": {"language": language}})
         output = topic_model.fit(
             docs=dataset[TEXT_COLUMN],
-            embedding_model=embedding_model,
             embeddings=embeddings,
         )
         return output.topics, output.topic_model

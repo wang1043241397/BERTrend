@@ -116,7 +116,6 @@ def fit_bertopic(
     # Train topic model
     topic_model_output = topic_model.fit(
         docs=docs,
-        embedding_model=EMBEDDING_SERVICE.embedding_model_name,
         embeddings=embeddings,
         zeroshot_topic_list=zeroshot_topic_list,
         zeroshot_min_similarity=0.65,

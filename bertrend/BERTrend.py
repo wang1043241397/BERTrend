@@ -151,7 +151,6 @@ class BERTrend:
         logger.debug("Creating topic model...")
         topic_model = self.topic_model.fit(
             docs=docs,
-            embedding_model=embedding_model,
             embeddings=embeddings_subset,
         ).topic_model
 

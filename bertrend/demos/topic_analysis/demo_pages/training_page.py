@@ -137,7 +137,6 @@ def train_model():
         embeddings = st.session_state["embeddings"]
         topic_model_output = topic_model.fit(
             docs=dataset,
-            embedding_model=st.session_state["embedding_model_name"],
             embeddings=embeddings,
         )
         bertopic = topic_model_output.topic_model
