@@ -225,16 +225,16 @@ def test_create_topic_model_with_valid_input(
 
     result = topic_model.fit(
         docs,
-        mock_sentence_transformer,
-        embeddings,
+        embedding_model=mock_sentence_transformer,
+        embeddings=embeddings,
         zeroshot_topic_list=zeroshot_topic_list,
         zeroshot_min_similarity=zeroshot_min_similarity,
     )
 
     topic_model.fit.assert_called_once_with(
         docs,
-        mock_sentence_transformer,
-        embeddings,
+        embedding_model=mock_sentence_transformer,
+        embeddings=embeddings,
         zeroshot_topic_list=zeroshot_topic_list,
         zeroshot_min_similarity=zeroshot_min_similarity,
     )
@@ -251,8 +251,8 @@ def test_create_topic_model_with_empty_zeroshot_topic_list(
 
     result = topic_model.fit(
         docs,
-        None,  # mock_sentence_transformer,
-        np.random.random((len(docs), 768)),
+        embedding_model=None,  # mock_sentence_transformer,
+        embeddings=np.random.random((len(docs), 768)),
         zeroshot_topic_list=zeroshot_topic_list,
         zeroshot_min_similarity=zeroshot_min_similarity,
     )
@@ -278,8 +278,8 @@ def test_create_topic_model_exception_handling(
     with pytest.raises(Exception, match="Test Exception"):
         topic_model.fit(
             docs,
-            mock_sentence_transformer,
-            embeddings,
+            embedding_model=mock_sentence_transformer,
+            embeddings=embeddings,
             zeroshot_topic_list=zeroshot_topic_list,
             zeroshot_min_similarity=zeroshot_min_similarity,
         )
