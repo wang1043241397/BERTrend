@@ -872,7 +872,7 @@ def train_new_data(
         embedding_model=embedding_model_name,
     )
 
-    logger.info(f"BERTrend contains {len(bertrend.topic_models)} topic models")
+    logger.info(f"BERTrend built from {len(bertrend.doc_groups)} periods")
     # Save models
     bertrend.save_models(models_path=bertrend_models_path)
 

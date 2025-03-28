@@ -59,5 +59,5 @@ def regenerate_models(model_id: str, user: str):
     bertrend.save_models(models_path=bertrend_models_path)
 
     logger.success(
-        f"Regenerated models for '{model_id}' from scratch. {len(bertrend.topic_models)} models have been created."
+        f"Regenerated models for '{model_id}' from scratch. BERTrend model was built using {len(bertrend.doc_groups)} models/time periods."
     )
