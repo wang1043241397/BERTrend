@@ -203,7 +203,10 @@ class EmbeddingService(BaseEmbedder):
                 - A list of grouped token embeddings
         """
         logger.debug(f"Computing embeddings...")
-        self.secure_client.embed_documents(texts, show_progress_bar=show_progress_bar)
+        embeddings = self.secure_client.embed_documents(
+            texts, show_progress_bar=show_progress_bar
+        )
+        return np.array(embeddings), None, None
 
     def _get_remote_model_name(self) -> str:
         """
