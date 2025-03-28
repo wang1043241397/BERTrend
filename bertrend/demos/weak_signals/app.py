@@ -253,22 +253,9 @@ def training_page():
                 # Store bertrend object
                 SessionStateManager.set("bertrend", bertrend)
 
-        if (
-            "bertrend" not in st.session_state
-            or not SessionStateManager.get("bertrend")._is_fitted
-        ):
-            st.stop()
-        else:
-            if st.button("Merge Models", type="primary"):
-                with st.spinner("Merging models..."):
-                    bertrend = SessionStateManager.get("bertrend")
-                    bertrend.merge_all_models(
-                        min_similarity=SessionStateManager.get("min_similarity"),
-                    )
-
-                    bertrend.calculate_signal_popularity()
-
-                    SessionStateManager.set("popularity_computed", True)
+                # Compute signal popularity
+                bertrend.calculate_signal_popularity()
+                SessionStateManager.set("popularity_computed", True)
 
                 st.success(MODEL_MERGING_COMPLETE_MESSAGE, icon=SUCCESS_ICON)
 

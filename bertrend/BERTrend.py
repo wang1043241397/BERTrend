@@ -83,15 +83,20 @@ class BERTrend:
 
         # State variables of BERTrend
         self._is_fitted = False
-        self._are_models_merged = False
+        # self._are_models_merged = False
 
         # Variables related to time-based topic models
         # - topic_models: Dictionary of trained BERTopic models for each timestamp.
-        self.topic_models: dict[pd.Timestamp, BERTopic] = {}
+        # self.topic_models: dict[pd.Timestamp, BERTopic] = {}
+        # - last_topic_model: last trained BERTopic model (used for last timestamp)
+        self.last_topic_model: BERTopic = None
+        # - last_timestamp: timestamp associated to the last trained BERTopic model
+        self.last_topic_model_timestamp: pd.Timestamp = None
         # - doc_groups: Dictionary of document groups for each timestamp.
         self.doc_groups: dict[pd.Timestamp, list[str]] = {}
         # - emb_groups: Dictionary of document embeddings for each timestamp.
         self.emb_groups: dict[pd.Timestamp, np.ndarray] = {}
+        self.merge_df_size_over_time = []
 
         # Variables containing info about merged topics
         self.all_new_topics_df = None
@@ -205,7 +210,7 @@ class BERTrend:
     def train_topic_models(
         self,
         grouped_data: dict[pd.Timestamp, pd.DataFrame],
-        embedding_model: SentenceTransformer,
+        embedding_model: SentenceTransformer | str,
         embeddings: np.ndarray,
     ):
         """
@@ -232,12 +237,23 @@ class BERTrend:
             try:
                 logger.info(f"Training topic model {i+1}/{len(non_empty_groups)}...")
                 (
-                    self.topic_models[period],
+                    new_topic_model,
                     self.doc_groups[period],
                     self.emb_groups[period],
                 ) = self._train_by_period(
                     period, group, embedding_model, embeddings
                 )  # TODO: parallelize?
+
+                if self.last_topic_model is not None:
+                    self.merge_models_with(new_topic_model, period)
+
+                    # Update last topic model
+                    self.last_topic_model = new_topic_model
+                    self.last_topic_model_timestamp = period
+
+                    # save new model to disk for potential reuse
+                    # save model(self.last_topic_model)
+
                 logger.debug(f"Successfully processed period: {period}")
 
             except Exception as e:
@@ -249,100 +265,176 @@ class BERTrend:
 
         logger.success("Finished training all topic models")
 
-    def merge_all_models(
+    def merge_models_with(
         self,
+        new_model: BERTopic,
+        new_model_timestamp: pd.Timestamp,
         min_similarity: int | None = None,
     ):
-        """Merge together all topic models."""
+        """Merge two specific topic models."""
         logger.debug(
-            f"{len(self.topic_models)} topic models to be merged:\n{list(self.topic_models.keys())}"
+            f"Merging topic models for timestamps: {self.last_topic_model_timestamp} and {new_model_timestamp}"
         )
-        if len(self.topic_models) < 2:  # beginning of the process, no real merge needed
-            logger.warning("This function requires at least two topic models. Ignored")
-            self._are_models_merged = False
-            return
+
+        # Check if both timestamps exist in topic models
+        if new_model is None or self.last_topic_model is None:
+            raise ValueError(
+                f"At least one topic model is not valid. You must fit the BERTrend model before merging models."
+            )
 
         # Get default BERTrend config if argument is not provided
         if min_similarity is None:
             min_similarity = self.config["min_similarity"]
 
-        # Check if model is fitted
-        if not self._is_fitted:
-            raise RuntimeError("You must fit the BERTrend model before merging models.")
+        merged_df_without_outliers = self.merged_df
 
-        topic_dfs = {
-            period: _preprocess_model(
-                model, self.doc_groups[period], self.emb_groups[period]
+        if merged_df_without_outliers is None:
+            # Preprocess the two specific models
+            topic_df1 = _preprocess_model(
+                self.last_topic_model,
+                self.doc_groups[self.last_topic_model_timestamp],
+                self.emb_groups[self.last_topic_model_timestamp],
             )
-            for period, model in self.topic_models.items()
-        }
+            # Remove outliers (Topic == -1)
+            df1 = topic_df1[topic_df1["Topic"] != -1]
 
-        timestamps = sorted(topic_dfs.keys())
+        topic_df2 = _preprocess_model(
+            new_model,
+            self.doc_groups[new_model_timestamp],
+            self.emb_groups[new_model_timestamp],
+        )
+        # Remove outliers (Topic == -1)
+        df2 = topic_df2[topic_df2["Topic"] != -1]
 
-        assert len(self.topic_models) >= 2
-
-        merged_df_without_outliers = None
-        all_merge_histories = []
-        all_new_topics = []
-
-        # TODO: tqdm
-        merge_df_size_over_time = []
-
-        for i, (current_timestamp, next_timestamp) in tqdm(
-            enumerate(zip(timestamps[:-1], timestamps[1:]))
-        ):
-            df1 = topic_dfs[current_timestamp][
-                topic_dfs[current_timestamp]["Topic"] != -1
-            ]
-            df2 = topic_dfs[next_timestamp][topic_dfs[next_timestamp]["Topic"] != -1]
-
-            if merged_df_without_outliers is None:
-                if not (df1.empty or df2.empty):
-                    (
-                        merged_df_without_outliers,
-                        merge_history,
-                        new_topics,
-                    ) = _merge_models(
-                        df1,
-                        df2,
-                        min_similarity=min_similarity,
-                        timestamp=current_timestamp,
-                    )
-            elif not df2.empty:
-                (
-                    merged_df_without_outliers,
-                    merge_history,
-                    new_topics,
-                ) = _merge_models(
-                    merged_df_without_outliers,
-                    df2,
-                    min_similarity=min_similarity,
-                    timestamp=current_timestamp,
-                )
-            else:
-                continue
-
-            all_merge_histories.append(merge_history)
-            all_new_topics.append(new_topics)
-            merge_df_size_over_time = merge_df_size_over_time
-            merge_df_size_over_time.append(
-                (
-                    current_timestamp,
-                    merged_df_without_outliers["Topic"].max() + 1,
-                )
+        # Check if either dataframe is empty
+        if merged_df_without_outliers.empty or df2.empty:
+            logger.warning(
+                f"One of the dataframes is empty. Skipping merge for {new_model_timestamp}"
             )
+            return None
 
-            # progress_bar.progress((i + 1) / len(timestamps))
+        # Merge the two models #########TODO / FIXME A REVOIR
+        (
+            merged_df_without_outliers,
+            merge_history,
+            new_topics,
+        ) = _merge_models(
+            merged_df_without_outliers,
+            df2,
+            min_similarity=min_similarity,
+            timestamp=self.last_topic_model_timestamp,
+        )
 
-        all_merge_histories_df = pd.concat(all_merge_histories, ignore_index=True)
-        all_new_topics_df = pd.concat(all_new_topics, ignore_index=True)
-
+        # Store results
         self.merged_df = merged_df_without_outliers
-        self.all_merge_histories_df = all_merge_histories_df
-        self.all_new_topics_df = all_new_topics_df
+        self.all_merge_histories_df = pd.concat(
+            [self.all_merge_histories_df, merge_history], ignore_index=True
+        )
+        self.all_new_topics_df = pd.concat(
+            [self.all_new_topics_df, new_topics], ignore_index=True
+        )
+        self.merge_df_size_over_time.append(
+            (
+                new_model_timestamp,
+                merged_df_without_outliers["Topic"].max() + 1,
+            )
+        )
+        logger.success(f"Models {new_model_timestamp} merged successfully with others")
 
-        logger.success("All models merged successfully")
-        self._are_models_merged = True
+    # def merge_all_models(
+    #     self,
+    #     min_similarity: int | None = None,
+    # ):
+    #     """Merge together all topic models."""
+    #     logger.debug(
+    #         f"{len(self.topic_models)} topic models to be merged:\n{list(self.topic_models.keys())}"
+    #     )
+    #     if len(self.topic_models) < 2:  # beginning of the process, no real merge needed
+    #         logger.warning("This function requires at least two topic models. Ignored")
+    #         self._are_models_merged = False
+    #         return
+    #
+    #     # Get default BERTrend config if argument is not provided
+    #     if min_similarity is None:
+    #         min_similarity = self.config["min_similarity"]
+    #
+    #     # Check if model is fitted
+    #     if not self._is_fitted:
+    #         raise RuntimeError("You must fit the BERTrend model before merging models.")
+    #
+    #     topic_dfs = {
+    #         period: _preprocess_model(
+    #             model, self.doc_groups[period], self.emb_groups[period]
+    #         )
+    #         for period, model in self.topic_models.items()
+    #     }
+    #
+    #     timestamps = sorted(topic_dfs.keys())
+    #
+    #     assert len(self.topic_models) >= 2
+    #
+    #     merged_df_without_outliers = None
+    #     all_merge_histories = []
+    #     all_new_topics = []
+    #
+    #     # TODO: tqdm
+    #     merge_df_size_over_time = []
+    #
+    #     for i, (current_timestamp, next_timestamp) in tqdm(
+    #         enumerate(zip(timestamps[:-1], timestamps[1:]))
+    #     ):
+    #         df1 = topic_dfs[current_timestamp][
+    #             topic_dfs[current_timestamp]["Topic"] != -1
+    #         ]
+    #         df2 = topic_dfs[next_timestamp][topic_dfs[next_timestamp]["Topic"] != -1]
+    #
+    #         if merged_df_without_outliers is None:
+    #             if not (df1.empty or df2.empty):
+    #                 (
+    #                     merged_df_without_outliers,
+    #                     merge_history,
+    #                     new_topics,
+    #                 ) = _merge_models(
+    #                     df1,
+    #                     df2,
+    #                     min_similarity=min_similarity,
+    #                     timestamp=current_timestamp,
+    #                 )
+    #         elif not df2.empty:
+    #             (
+    #                 merged_df_without_outliers,
+    #                 merge_history,
+    #                 new_topics,
+    #             ) = _merge_models(
+    #                 merged_df_without_outliers,
+    #                 df2,
+    #                 min_similarity=min_similarity,
+    #                 timestamp=current_timestamp,
+    #             )
+    #         else:
+    #             continue
+    #
+    #         all_merge_histories.append(merge_history)
+    #         all_new_topics.append(new_topics)
+    #         merge_df_size_over_time = merge_df_size_over_time
+    #         merge_df_size_over_time.append(
+    #             (
+    #                 current_timestamp,
+    #                 merged_df_without_outliers["Topic"].max() + 1,
+    #             )
+    #         )
+    #
+    #         # progress_bar.progress((i + 1) / len(timestamps))
+    #
+    #     all_merge_histories_df = pd.concat(all_merge_histories, ignore_index=True)
+    #     all_new_topics_df = pd.concat(all_new_topics, ignore_index=True)
+    #
+    #     self.merged_df = merged_df_without_outliers
+    #     self.all_merge_histories_df = all_merge_histories_df
+    #     self.all_new_topics_df = all_new_topics_df
+    #
+    #     logger.success("All models merged successfully")
+    #     self._are_models_merged = True
 
     def calculate_signal_popularity(
         self,
@@ -614,28 +706,29 @@ class BERTrend:
         models_path.mkdir(parents=True, exist_ok=True)
 
         # Save topic models using the selected serialization type
-        for period, topic_model in self.topic_models.items():
-            model_dir = models_path / period.strftime("%Y-%m-%d")
-            model_dir.mkdir(exist_ok=True)
-            embedding_model = topic_model.embedding_model
-            topic_model.save(
-                model_dir,
-                serialization=BERTOPIC_SERIALIZATION,
-                save_ctfidf=False,
-                save_embedding_model=embedding_model,
-            )
-
-            topic_model.doc_info_df.to_pickle(model_dir / DOC_INFO_DF_FILE)
-            topic_model.topic_info_df.to_pickle(model_dir / TOPIC_INFO_DF_FILE)
-
-        # Serialize BERTrend (excluding topic models for separate reuse if needed)
-        topic_models_bak = copy.deepcopy(self.topic_models)
-        # FIXME: the code above introduced a too-heavy memory overhead, to be improved; the idea is to serialize
-        # the topics models separetely from the rest of the BERTrend object
-        self.topic_models = None
+        #
+        # for period, topic_model in self.topic_models.items():
+        #     model_dir = models_path / period.strftime("%Y-%m-%d")
+        #     model_dir.mkdir(exist_ok=True)
+        #     embedding_model = topic_model.embedding_model
+        #     topic_model.save(
+        #         model_dir,
+        #         serialization=BERTOPIC_SERIALIZATION,
+        #         save_ctfidf=False,
+        #         save_embedding_model=embedding_model,
+        #     )
+        #
+        #     topic_model.doc_info_df.to_pickle(model_dir / DOC_INFO_DF_FILE)
+        #     topic_model.topic_info_df.to_pickle(model_dir / TOPIC_INFO_DF_FILE)
+        #
+        # # Serialize BERTrend (excluding topic models for separate reuse if needed)
+        # topic_models_bak = copy.deepcopy(self.topic_models)
+        # # FIXME: the code above introduced a too-heavy memory overhead, to be improved; the idea is to serialize
+        # # the topics models separetely from the rest of the BERTrend object
+        # self.topic_models = None
         with open(models_path / BERTREND_FILE, "wb") as f:
             dill.dump(self, f)
-        self.topic_models = topic_models_bak
+        # self.topic_models = topic_models_bak
 
         logger.info(f"Models saved to: {models_path}")
 
@@ -650,27 +743,27 @@ class BERTrend:
         with open(models_path / BERTREND_FILE, "rb") as f:
             bertrend = dill.load(f)
 
-        # Restore topic models using the selected serialization type
-        topic_models = {}
-        for period_dir in models_path.glob(
-            r"????-??-??"
-        ):  # filter dir that are formatted YYYY-MM-DD
-            if period_dir.is_dir():
-                topic_model = BERTopic.load(period_dir)
-
-                doc_info_df_file = period_dir / DOC_INFO_DF_FILE
-                topic_info_df_file = period_dir / TOPIC_INFO_DF_FILE
-                if doc_info_df_file.exists() and topic_info_df_file.exists():
-                    topic_model.doc_info_df = pd.read_pickle(doc_info_df_file)
-                    topic_model.topic_info_df = pd.read_pickle(topic_info_df_file)
-                else:
-                    logger.warning(
-                        f"doc_info_df or topic_info_df not found for period {period_dir.name}"
-                    )
-
-                period = pd.Timestamp(period_dir.name.replace("_", ":"))
-                topic_models[period] = topic_model
-        bertrend.topic_models = topic_models
+        # # Restore topic models using the selected serialization type
+        # topic_models = {}
+        # for period_dir in models_path.glob(
+        #     r"????-??-??"
+        # ):  # filter dir that are formatted YYYY-MM-DD
+        #     if period_dir.is_dir():
+        #         topic_model = BERTopic.load(period_dir)
+        #
+        #         doc_info_df_file = period_dir / DOC_INFO_DF_FILE
+        #         topic_info_df_file = period_dir / TOPIC_INFO_DF_FILE
+        #         if doc_info_df_file.exists() and topic_info_df_file.exists():
+        #             topic_model.doc_info_df = pd.read_pickle(doc_info_df_file)
+        #             topic_model.topic_info_df = pd.read_pickle(topic_info_df_file)
+        #         else:
+        #             logger.warning(
+        #                 f"doc_info_df or topic_info_df not found for period {period_dir.name}"
+        #             )
+        #
+        #         period = pd.Timestamp(period_dir.name.replace("_", ":"))
+        #         topic_models[period] = topic_model
+        # bertrend.topic_models = topic_models
 
         return bertrend
 
@@ -784,7 +877,7 @@ def train_new_data(
     bertrend.save_models(models_path=bertrend_models_path)
 
     # Merge models
-    bertrend.merge_all_models()
+    # bertrend.merge_all_models()
 
     return bertrend
 

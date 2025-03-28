@@ -56,7 +56,6 @@ def regenerate_models(model_id: str, user: str):
         embedding_model=embedding_service.embedding_model_name,
         embeddings=embeddings,
     )
-    bertrend.merge_all_models()
     bertrend.save_models(models_path=bertrend_models_path)
 
     logger.success(
