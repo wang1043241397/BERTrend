@@ -247,12 +247,12 @@ class BERTrend:
                 if self.last_topic_model is not None:
                     self.merge_models_with(new_topic_model, period)
 
-                    # Update last topic model
-                    self.last_topic_model = new_topic_model
-                    self.last_topic_model_timestamp = period
-
                     # save new model to disk for potential reuse
                     # save model(self.last_topic_model)
+
+                # Update last topic model
+                self.last_topic_model = new_topic_model
+                self.last_topic_model_timestamp = period
 
                 logger.debug(f"Successfully processed period: {period}")
 
