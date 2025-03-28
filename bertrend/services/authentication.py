@@ -18,12 +18,7 @@ class SecureAPIClient:
     Generic API client, provides the basic security features
     """
 
-    def __init__(
-        self,
-        url: str,
-        client_id: str = "bertrend",
-        client_secret: str = os.getenv("BERTREND_CLIENT_SECRET", None),
-    ):
+    def __init__(self, url: str, client_id: str, client_secret: str = None):
         self.url = url
         # for authentification
         self.client_id = client_id

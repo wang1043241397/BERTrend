@@ -2,6 +2,7 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
+import typer
 from loguru import logger
 
 from bertrend.BERTopicModel import BERTopicModel
@@ -38,6 +39,7 @@ def regenerate_models(model_id: str, user: str):
 
     # Load model config
     df = load_all_data(model_id=model_id, user=user, language=language)
+    logger.info(f"Size of dataset: {len(df)}")
 
     # Split data by paragraphs
     df = split_data(df)
@@ -61,3 +63,20 @@ def regenerate_models(model_id: str, user: str):
     logger.success(
         f"Regenerated models for '{model_id}' from scratch. BERTrend model was built using {len(bertrend.doc_groups)} models/time periods."
     )
+
+
+if __name__ == "__main__":
+    app = typer.Typer()
+
+    @app.command("regenerate")
+    def regenerate(
+        model_id: str = typer.Argument(
+            help="identifier of the model to be regenerated from scratch"
+        ),
+        user: str = typer.Argument(default="nemo", help="identifier of the user"),
+    ):
+        """Regenerate past models"""
+        regenerate_models(model_id=model_id, user=user)
+
+    # Main app
+    app()

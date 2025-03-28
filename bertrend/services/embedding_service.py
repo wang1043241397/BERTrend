@@ -20,7 +20,7 @@ from bertrend.config.parameters import (
     EMBEDDING_BATCH_SIZE,
     EMBEDDING_MAX_SEQ_LENGTH,
 )
-from bertrend.services.authentication import SecureAPIClient
+from bertrend.services.embedding_client import EmbeddingAPIClient
 
 
 class EmbeddingService(BaseEmbedder):
@@ -47,7 +47,7 @@ class EmbeddingService(BaseEmbedder):
         self.local = local
         if not self.local:
             self.url = url
-            self.secure_client = SecureAPIClient(self.url)
+            self.secure_client = EmbeddingAPIClient(self.url)
 
         self.embedding_model = None
         self.embedding_model_name = model_name
@@ -202,24 +202,8 @@ class EmbeddingService(BaseEmbedder):
                 - A list of grouped token strings
                 - A list of grouped token embeddings
         """
-
-        headers = self.secure_client._get_headers()
-
         logger.debug(f"Computing embeddings...")
-        response = requests.post(
-            self.url + "/encode",
-            data=json.dumps({"text": texts, "show_progress_bar": show_progress_bar}),
-            verify=False,
-            headers=headers,
-        )
-        if response.status_code == 200:
-            embeddings = np.array(response.json()["embeddings"])
-            logger.debug(f"Computing embeddings done for batch")
-            self.embedding_model = self._get_remote_model_name()
-            return embeddings, None, None
-        else:
-            logger.error(f"Error: {response.status_code}")
-            raise Exception(f"Error: {response.status_code}")
+        self.secure_client.embed_documents(texts, show_progress_bar=show_progress_bar)
 
     def _get_remote_model_name(self) -> str:
         """
