@@ -376,9 +376,9 @@ class BERTrend:
             decay_power = self.config["decay_power"]
 
         # Check if models are merged
-        if not self._are_models_merged:
+        if len(self.doc_groups) < 2:
             logger.error(
-                "You must merge topic models first before computing signal popularity."
+                "You must train at least two topic models first before computing signal popularity."
             )
             return
 

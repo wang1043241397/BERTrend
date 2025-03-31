@@ -121,7 +121,7 @@ if __name__ == "__main__":
             granularity=granularity,
         )
 
-        if not bertrend._are_models_merged:
+        if len(bertrend.doc_groups) < 2:
             # This is generally the case when we have only one model
             return
 

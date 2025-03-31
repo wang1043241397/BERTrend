@@ -3,6 +3,7 @@
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
 import json
+import os
 from typing import Literal
 
 import numpy as np
@@ -34,6 +35,8 @@ class EmbeddingService(BaseEmbedder):
             "float32", "float16", "bfloat16"
         ] = EMBEDDING_CONFIG.get("embedding_dtype", "float32"),
         url: str = EMBEDDING_CONFIG["url"],
+        client_id: str = "bertrend",
+        client_secret: str = os.getenv("BERTREND_CLIENT_SECRET", None),
     ):
         """
         Class implementing embedding service.
@@ -47,7 +50,7 @@ class EmbeddingService(BaseEmbedder):
         self.local = local
         if not self.local:
             self.url = url
-            self.secure_client = EmbeddingAPIClient(self.url)
+            self.secure_client = EmbeddingAPIClient(self.url, client_id, client_secret)
 
         self.embedding_model = None
         self.embedding_model_name = model_name
