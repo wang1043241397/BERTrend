@@ -247,7 +247,7 @@ def training_page():
                 st.success(MODEL_TRAINING_COMPLETE_MESSAGE, icon=SUCCESS_ICON)
 
                 # Save trained models
-                bertrend.save_models()
+                bertrend.save_model()
                 st.success(MODELS_SAVED_MESSAGE, icon=SUCCESS_ICON)
 
                 # Store bertrend object
@@ -456,7 +456,7 @@ def main():
         if st.button("Restore Previous Run", use_container_width=True):
             restore_state()
             try:
-                SessionStateManager.set("bertrend", BERTrend.restore_models())
+                SessionStateManager.set("bertrend", BERTrend.restore_model())
                 st.success(MODELS_RESTORED_MESSAGE, icon=SUCCESS_ICON)
             except Exception as e:
                 st.warning(NO_MODELS_WARNING, icon=WARNING_ICON)

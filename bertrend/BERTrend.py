@@ -2,7 +2,6 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
-import copy
 import os
 import pickle
 
@@ -83,11 +82,8 @@ class BERTrend:
 
         # State variables of BERTrend
         self._is_fitted = False
-        # self._are_models_merged = False
 
         # Variables related to time-based topic models
-        # - topic_models: Dictionary of trained BERTopic models for each timestamp.
-        # self.topic_models: dict[pd.Timestamp, BERTopic] = {}
         # - last_topic_model: last trained BERTopic model (used for last timestamp)
         self.last_topic_model: BERTopic = None
         # - last_timestamp: timestamp associated to the last trained BERTopic model
@@ -212,6 +208,8 @@ class BERTrend:
         grouped_data: dict[pd.Timestamp, pd.DataFrame],
         embedding_model: SentenceTransformer | str,
         embeddings: np.ndarray,
+        bertrend_models_path: Path = MODELS_DIR,
+        save_topic_models: bool = True,
     ):
         """
         Train BERTopic models for each timestamp in the grouped data.
@@ -220,11 +218,15 @@ class BERTrend:
             - topic_models: Dictionary of trained BERTopic models for each timestamp.
             - doc_groups: Dictionary of document groups for each timestamp.
             - emb_groups: Dictionary of document embeddings for each timestamp.
+            - save_topic_models: Boolean flag to save topic models.
+            - bertrend_models_path: Path to BERTrend models folder.
 
         Args:
-            grouped_data (Dict[pd.Timestamp, pd.DataFrame]): Dictionary of grouped data by timestamp.
-            embedding_model (SentenceTransformer): Sentence transformer model for embeddings.
-            embeddings (np.ndarray): Precomputed document embeddings.
+            :param grouped_data: Dictionary of grouped data by timestamp.
+            :param embedding_model: Sentence transformer model for embeddings.
+            :param embeddings: Precomputed document embeddings.
+            :param save_topic_models: Boolean flag to save topic models.
+            :param bertrend_models_path: Path to BERTrend models folder.
         """
         non_empty_groups = [
             (period, group) for period, group in grouped_data.items() if not group.empty
@@ -247,8 +249,12 @@ class BERTrend:
                 if self.last_topic_model is not None:
                     self.merge_models_with(new_topic_model, period)
 
+                    if save_topic_models:
+                        logger.info(f"Saving topic model for period {period}...")
                     # save new model to disk for potential reuse
-                    # save model(self.last_topic_model)
+                    BERTrend.save_topic_model(
+                        period, self.last_topic_model, bertrend_models_path
+                    )
 
                 # Update last topic model
                 self.last_topic_model = new_topic_model
@@ -297,6 +303,7 @@ class BERTrend:
             )
             # Remove outliers (Topic == -1)
             df1 = topic_df1[topic_df1["Topic"] != -1]
+            merged_df_without_outliers = df1
 
         topic_df2 = _preprocess_model(
             new_model,
@@ -313,7 +320,7 @@ class BERTrend:
             )
             return None
 
-        # Merge the two models #########TODO / FIXME A REVOIR
+        # Merge the two models
         (
             merged_df_without_outliers,
             merge_history,
@@ -340,101 +347,6 @@ class BERTrend:
             )
         )
         logger.success(f"Models {new_model_timestamp} merged successfully with others")
-
-    # def merge_all_models(
-    #     self,
-    #     min_similarity: int | None = None,
-    # ):
-    #     """Merge together all topic models."""
-    #     logger.debug(
-    #         f"{len(self.topic_models)} topic models to be merged:\n{list(self.topic_models.keys())}"
-    #     )
-    #     if len(self.topic_models) < 2:  # beginning of the process, no real merge needed
-    #         logger.warning("This function requires at least two topic models. Ignored")
-    #         self._are_models_merged = False
-    #         return
-    #
-    #     # Get default BERTrend config if argument is not provided
-    #     if min_similarity is None:
-    #         min_similarity = self.config["min_similarity"]
-    #
-    #     # Check if model is fitted
-    #     if not self._is_fitted:
-    #         raise RuntimeError("You must fit the BERTrend model before merging models.")
-    #
-    #     topic_dfs = {
-    #         period: _preprocess_model(
-    #             model, self.doc_groups[period], self.emb_groups[period]
-    #         )
-    #         for period, model in self.topic_models.items()
-    #     }
-    #
-    #     timestamps = sorted(topic_dfs.keys())
-    #
-    #     assert len(self.topic_models) >= 2
-    #
-    #     merged_df_without_outliers = None
-    #     all_merge_histories = []
-    #     all_new_topics = []
-    #
-    #     # TODO: tqdm
-    #     merge_df_size_over_time = []
-    #
-    #     for i, (current_timestamp, next_timestamp) in tqdm(
-    #         enumerate(zip(timestamps[:-1], timestamps[1:]))
-    #     ):
-    #         df1 = topic_dfs[current_timestamp][
-    #             topic_dfs[current_timestamp]["Topic"] != -1
-    #         ]
-    #         df2 = topic_dfs[next_timestamp][topic_dfs[next_timestamp]["Topic"] != -1]
-    #
-    #         if merged_df_without_outliers is None:
-    #             if not (df1.empty or df2.empty):
-    #                 (
-    #                     merged_df_without_outliers,
-    #                     merge_history,
-    #                     new_topics,
-    #                 ) = _merge_models(
-    #                     df1,
-    #                     df2,
-    #                     min_similarity=min_similarity,
-    #                     timestamp=current_timestamp,
-    #                 )
-    #         elif not df2.empty:
-    #             (
-    #                 merged_df_without_outliers,
-    #                 merge_history,
-    #                 new_topics,
-    #             ) = _merge_models(
-    #                 merged_df_without_outliers,
-    #                 df2,
-    #                 min_similarity=min_similarity,
-    #                 timestamp=current_timestamp,
-    #             )
-    #         else:
-    #             continue
-    #
-    #         all_merge_histories.append(merge_history)
-    #         all_new_topics.append(new_topics)
-    #         merge_df_size_over_time = merge_df_size_over_time
-    #         merge_df_size_over_time.append(
-    #             (
-    #                 current_timestamp,
-    #                 merged_df_without_outliers["Topic"].max() + 1,
-    #             )
-    #         )
-    #
-    #         # progress_bar.progress((i + 1) / len(timestamps))
-    #
-    #     all_merge_histories_df = pd.concat(all_merge_histories, ignore_index=True)
-    #     all_new_topics_df = pd.concat(all_new_topics, ignore_index=True)
-    #
-    #     self.merged_df = merged_df_without_outliers
-    #     self.all_merge_histories_df = all_merge_histories_df
-    #     self.all_new_topics_df = all_new_topics_df
-    #
-    #     logger.success("All models merged successfully")
-    #     self._are_models_merged = True
 
     def calculate_signal_popularity(
         self,
@@ -702,70 +614,67 @@ class BERTrend:
         )
         return noise_topics_df, weak_signal_topics_df, strong_signal_topics_df
 
-    def save_models(self, models_path: Path = MODELS_DIR):
+    def save_model(self, models_path: Path = MODELS_DIR):
+        """Save BERTrend model to disk"""
         models_path.mkdir(parents=True, exist_ok=True)
-
-        # Save topic models using the selected serialization type
-        #
-        # for period, topic_model in self.topic_models.items():
-        #     model_dir = models_path / period.strftime("%Y-%m-%d")
-        #     model_dir.mkdir(exist_ok=True)
-        #     embedding_model = topic_model.embedding_model
-        #     topic_model.save(
-        #         model_dir,
-        #         serialization=BERTOPIC_SERIALIZATION,
-        #         save_ctfidf=False,
-        #         save_embedding_model=embedding_model,
-        #     )
-        #
-        #     topic_model.doc_info_df.to_pickle(model_dir / DOC_INFO_DF_FILE)
-        #     topic_model.topic_info_df.to_pickle(model_dir / TOPIC_INFO_DF_FILE)
-        #
-        # # Serialize BERTrend (excluding topic models for separate reuse if needed)
-        # topic_models_bak = copy.deepcopy(self.topic_models)
-        # # FIXME: the code above introduced a too-heavy memory overhead, to be improved; the idea is to serialize
-        # # the topics models separetely from the rest of the BERTrend object
-        # self.topic_models = None
+        # Serialize BERTrend object (using dill as an improvement of pickle for complex objects)
         with open(models_path / BERTREND_FILE, "wb") as f:
             dill.dump(self, f)
-        # self.topic_models = topic_models_bak
-
-        logger.info(f"Models saved to: {models_path}")
+        logger.info(f"BERTrend model saved to: {models_path}")
 
     @classmethod
-    def restore_models(cls, models_path: Path = MODELS_DIR) -> "BERTrend":
+    def restore_model(cls, models_path: Path = MODELS_DIR) -> "BERTrend":
         if not models_path.exists():
             raise FileNotFoundError(f"models_path={models_path} does not exist")
-
-        logger.info(f"Loading models from: {models_path}")
-
+        logger.info(f"Loading BERTrend model from: {models_path}")
         # Unserialize BERTrend object (using dill as an improvement of pickle for complex objects)
         with open(models_path / BERTREND_FILE, "rb") as f:
             bertrend = dill.load(f)
-
-        # # Restore topic models using the selected serialization type
-        # topic_models = {}
-        # for period_dir in models_path.glob(
-        #     r"????-??-??"
-        # ):  # filter dir that are formatted YYYY-MM-DD
-        #     if period_dir.is_dir():
-        #         topic_model = BERTopic.load(period_dir)
-        #
-        #         doc_info_df_file = period_dir / DOC_INFO_DF_FILE
-        #         topic_info_df_file = period_dir / TOPIC_INFO_DF_FILE
-        #         if doc_info_df_file.exists() and topic_info_df_file.exists():
-        #             topic_model.doc_info_df = pd.read_pickle(doc_info_df_file)
-        #             topic_model.topic_info_df = pd.read_pickle(topic_info_df_file)
-        #         else:
-        #             logger.warning(
-        #                 f"doc_info_df or topic_info_df not found for period {period_dir.name}"
-        #             )
-        #
-        #         period = pd.Timestamp(period_dir.name.replace("_", ":"))
-        #         topic_models[period] = topic_model
-        # bertrend.topic_models = topic_models
-
         return bertrend
+
+    @classmethod
+    def save_topic_model(
+        cls, period: pd.Timestamp, topic_model: BERTopic, models_path: Path = MODELS_DIR
+    ):
+        """Serialize a topic model to disk for potential reuse"""
+        models_path.mkdir(parents=True, exist_ok=True)
+        model_dir = models_path / period.strftime("%Y-%m-%d")
+        model_dir.mkdir(exist_ok=True)
+        embedding_model = topic_model.embedding_model
+        topic_model.save(
+            model_dir,
+            serialization=BERTOPIC_SERIALIZATION,
+            save_ctfidf=False,
+            save_embedding_model=embedding_model,
+        )
+        topic_model.doc_info_df.to_pickle(model_dir / DOC_INFO_DF_FILE)
+        topic_model.topic_info_df.to_pickle(model_dir / TOPIC_INFO_DF_FILE)
+
+    @classmethod
+    def restore_topic_model(
+        cls, period: pd.Timestamp, models_path: Path = MODELS_DIR
+    ) -> BERTopic | None:
+        """Restore a previously stored topic model"""
+        if not models_path.exists():
+            raise FileNotFoundError(f"models_path={models_path} does not exist")
+        # Restore topic models using the selected serialization type
+        for period_dir in models_path.glob(
+            r"????-??-??"
+        ):  # filter dir that are formatted YYYY-MM-DD
+            if period_dir.is_dir():
+                if period_dir.name == period.strftime("%Y-%m-%d"):
+                    topic_model = BERTopic.load(period_dir)
+                    doc_info_df_file = period_dir / DOC_INFO_DF_FILE
+                    topic_info_df_file = period_dir / TOPIC_INFO_DF_FILE
+                    if doc_info_df_file.exists() and topic_info_df_file.exists():
+                        topic_model.doc_info_df = pd.read_pickle(doc_info_df_file)
+                        topic_model.topic_info_df = pd.read_pickle(topic_info_df_file)
+                    else:
+                        logger.warning(
+                            f"doc_info_df or topic_info_df not found for period {period_dir.name}"
+                        )
+                    return topic_model
+        return None
 
     def save_signal_evolution_data(
         self,
@@ -847,7 +756,7 @@ def train_new_data(
     # Restore previous models
     try:
         logger.info(f"Restoring previous BERTrend models from {bertrend_models_path}")
-        bertrend = BERTrend.restore_models(bertrend_models_path)
+        bertrend = BERTrend.restore_model(bertrend_models_path)
     except:
         logger.warning("Cannot restore previous models, creating new one")
         # overrides default params
@@ -870,14 +779,13 @@ def train_new_data(
         {reference_timestamp: new_data},
         embeddings=embeddings,
         embedding_model=embedding_model_name,
+        bertrend_models_path=bertrend_models_path,
+        save_topic_models=True,
     )
 
     logger.info(f"BERTrend built from {len(bertrend.doc_groups)} periods")
-    # Save models
-    bertrend.save_models(models_path=bertrend_models_path)
-
-    # Merge models
-    # bertrend.merge_all_models()
+    # Save model
+    bertrend.save_model(models_path=bertrend_models_path)
 
     return bertrend
 
