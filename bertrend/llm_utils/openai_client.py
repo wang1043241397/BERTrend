@@ -8,13 +8,14 @@ import os
 from openai import OpenAI, AzureOpenAI, Timeout, Stream
 from loguru import logger
 from openai.types.chat import ChatCompletion, ChatCompletionChunk
+from pydantic import BaseModel
 
 MAX_ATTEMPTS = 3
 TIMEOUT = 60.0
 DEFAULT_TEMPERATURE = 0.1
 DEFAULT_MAX_TOKENS = 512
 
-AZURE_API_VERSION = "2024-02-01"
+AZURE_API_VERSION = "2025-01-01-preview"
 
 
 class OpenAI_Client:
@@ -130,6 +131,52 @@ class OpenAI_Client:
                 return answer
             else:
                 return answer.choices[0].message.content
+            # Details of errors available here: https://platform.openai.com/docs/guides/error-codes/api-errors
+        except Exception as e:
+            msg = f"OpenAI API fatal error: {e}"
+            logger.error(msg)
+            return msg
+
+    def parse(
+        self,
+        user_prompt,
+        system_prompt=None,
+        **kwargs,
+    ) -> BaseModel:
+        """Call openai model for generation with Structured Outpit.
+
+        Args:
+                user_prompt (str): prompt to send to the model with role=user.
+                system_prompt (str): prompt to send to the model with role=system.
+                **kwargs : other arguments
+
+        Returns:
+                BaseModel: a pydantic object.
+        """
+        # Transform messages into OpenAI API compatible format
+        messages = [{"role": "user", "content": user_prompt}]
+        # Add system prompt if one is provided
+        if system_prompt:
+            messages.insert(0, {"role": "system", "content": system_prompt})
+        # For important parameters, set default value if not given
+        if not kwargs.get("model"):
+            kwargs["model"] = self.model_name
+        if not kwargs.get("temperature"):
+            kwargs["temperature"] = self.temperature
+        if not kwargs.get("max_tokens"):
+            kwargs["max_tokens"] = self.max_tokens
+
+        try:
+            # NB. here use beta.chat...parse to support structured outputs
+            answer = self.llm_client.beta.chat.completions.parse(
+                messages=messages,
+                **kwargs,
+            )
+            logger.debug(f"API returned: {answer}")
+            if kwargs.get("stream", False):
+                return answer
+            else:
+                return answer.choices[0].message.parsed
             # Details of errors available here: https://platform.openai.com/docs/guides/error-codes/api-errors
         except Exception as e:
             msg = f"OpenAI API fatal error: {e}"
