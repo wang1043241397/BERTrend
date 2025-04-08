@@ -10,7 +10,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau de Bord d'Analyse des Controverses d'Infrastructure</title>
+    <title>Tableau de Bord d'Analyse des Sujets</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -83,47 +83,43 @@
     <div class="dashboard">
         <div class="column">
             <h2>Évolution du Sujet</h2>
+            {% for summary in topic_summary_list.topic_summary_by_time_period %}
             <div class="event">
-                <h3>{{DATE_EVENEMENT_1}} : {{TITRE_EVENEMENT_1}}</h3>
-                <p>{{DESCRIPTION_EVENEMENT_1}}</p>
+                <h3>{{ summary.date }}: {{ summary.title }}</h3>
+                <p>{{ summary.description }}</p>
                 <div class="whats-new">
-                    <strong>Nouveauté :</strong> {{NOUVEAUTE_EVENEMENT_1}}
+                    <strong>Nouveauté :</strong> {{ summary.novelty }}
                 </div>
-            </div>
-            <div class="event">
-                <h3>{{DATE_EVENEMENT_2}} : {{TITRE_EVENEMENT_2}}</h3>
-                <p>{{DESCRIPTION_EVENEMENT_2}}</p>
-                <div class="whats-new">
-                    <strong>Nouveauté :</strong> {{NOUVEAUTE_EVENEMENT_2}}
+                {% if summary.key_developments %}
+                <div class="developments">
+                    <strong>Développements clés :</strong>
+                    <ul>
+                        {% for development in summary.key_developments %}
+                        <li>{{ development }}</li>
+                        {% endfor %}
+                    </ul>
                 </div>
+                {% endif %}
             </div>
-            <div class="event">
-                <h3>{{DATE_EVENEMENT_3}} : {{TITRE_EVENEMENT_3}}</h3>
-                <p>{{DESCRIPTION_EVENEMENT_3}}</p>
-                <div class="whats-new">
-                    <strong>Nouveauté :</strong> {{NOUVEAUTE_EVENEMENT_3}}
-                </div>
-            </div>
-            
+            {% endfor %}
+
             <h2>Scénarios d'Évolution</h2>
             <div class="scenario optimistic">
                 <h3>Scénario Optimiste</h3>
-                <p>{{INTRO_SCENARIO_OPTIMISTE}}</p>
+                <p>{{ signal_analysis.evolution_scenario.optimistic_scenario_description }}</p>
                 <ul>
-                    <li>{{POINT_OPTIMISTE_1}}</li>
-                    <li>{{POINT_OPTIMISTE_2}}</li>
-                    <li>{{POINT_OPTIMISTE_3}}</li>
-                    <li>{{POINT_OPTIMISTE_4}}</li>
+                    {% for point in signal_analysis.evolution_scenario.optimistic_scenario_points %}
+                    <li>{{ point }}</li>
+                    {% endfor %}
                 </ul>
             </div>
             <div class="scenario pessimistic">
                 <h3>Scénario Pessimiste</h3>
-                <p>{{INTRO_SCENARIO_PESSIMISTE}}</p>
+                <p>{{ signal_analysis.evolution_scenario.pessimistic_scenario_description }}</p>
                 <ul>
-                    <li>{{POINT_PESSIMISTE_1}}</li>
-                    <li>{{POINT_PESSIMISTE_2}}</li>
-                    <li>{{POINT_PESSIMISTE_3}}</li>
-                    <li>{{POINT_PESSIMISTE_4}}</li>
+                    {% for point in signal_analysis.evolution_scenario.pessimistic_scenario_points %}
+                    <li>{{ point }}</li>
+                    {% endfor %}
                 </ul>
             </div>
         </div>
@@ -133,55 +129,49 @@
                 <div class="section">
                     <h3>Implications à Court Terme</h3>
                     <ul>
-                        <li>{{COURT_TERME_1}}</li>
-                        <li>{{COURT_TERME_2}}</li>
-                        <li>{{COURT_TERME_3}}</li>
-                        <li>{{COURT_TERME_4}}</li>
+                        {% for implication in signal_analysis.potential_implications.short_term_implications %}
+                        <li>{{ implication }}</li>
+                        {% endfor %}
                     </ul>
                 </div>
                 <div class="section">
                     <h3>Implications à Long Terme</h3>
                     <ul>
-                        <li>{{LONG_TERME_1}}</li>
-                        <li>{{LONG_TERME_2}}</li>
-                        <li>{{LONG_TERME_3}}</li>
-                        <li>{{LONG_TERME_4}}</li>
+                        {% for implication in signal_analysis.potential_implications.long_term_implications %}
+                        <li>{{ implication }}</li>
+                        {% endfor %}
                     </ul>
                 </div>
                 <div class="section">
                     <h3>Effets d'Entraînement</h3>
                     <ul>
-                        <li>{{EFFET_ENTRAINEMENT_1}}</li>
-                        <li>{{EFFET_ENTRAINEMENT_2}}</li>
-                        <li>{{EFFET_ENTRAINEMENT_3}}</li>
-                        <li>{{EFFET_ENTRAINEMENT_4}}</li>
+                        {% for effect in signal_analysis.topic_interconnexions.ripple_effects %}
+                        <li>{{ effect }}</li>
+                        {% endfor %}
                     </ul>
                 </div>
                 <div class="section">
                     <h3>Interconnexions</h3>
                     <ul>
-                        <li>{{INTERCONNEXION_1}}</li>
-                        <li>{{INTERCONNEXION_2}}</li>
-                        <li>{{INTERCONNEXION_3}}</li>
-                        <li>{{INTERCONNEXION_4}}</li>
+                        {% for interconnexion in signal_analysis.topic_interconnexions.interconnexions %}
+                        <li>{{ interconnexion }}</li>
+                        {% endfor %}
                     </ul>
                 </div>
                 <div class="section">
                     <h3>Moteurs</h3>
                     <ul>
-                        <li>{{MOTEUR_1}}</li>
-                        <li>{{MOTEUR_2}}</li>
-                        <li>{{MOTEUR_3}}</li>
-                        <li>{{MOTEUR_4}}</li>
+                        {% for driver in signal_analysis.drivers_inhibitors.drivers %}
+                        <li>{{ driver }}</li>
+                        {% endfor %}
                     </ul>
                 </div>
                 <div class="section">
                     <h3>Freins</h3>
                     <ul>
-                        <li>{{FREIN_1}}</li>
-                        <li>{{FREIN_2}}</li>
-                        <li>{{FREIN_3}}</li>
-                        <li>{{FREIN_4}}</li>
+                        {% for inhibitor in signal_analysis.drivers_inhibitors.inhibitors %}
+                        <li>{{ inhibitor }}</li>
+                        {% endfor %}
                     </ul>
                 </div>
             </div>

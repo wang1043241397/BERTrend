@@ -12,11 +12,8 @@ from pandas import Timestamp
 
 from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend import LLM_CONFIG
-from bertrend.trend_analysis.prompts import (
-    get_prompt,
-    save_html_output,
-    clean_html_output,
-)
+from bertrend.trend_analysis.data_structure import TopicSummaryList, SignalAnalysis
+from bertrend.trend_analysis.prompts import get_prompt, fill_html_template
 
 
 def detect_weak_signals_zeroshot(
@@ -372,41 +369,49 @@ def analyze_signal(bertrend, topic_number: int, current_date: Timestamp):
                 topic_number=topic_number,
                 content_summary=content_summary,
             )
-            summary = openai_client.generate(
+            summaries = openai_client.parse(
                 system_prompt=LLM_CONFIG["system_prompt"],
                 user_prompt=summary_prompt,
                 temperature=LLM_CONFIG["temperature"],
                 max_tokens=LLM_CONFIG["max_tokens"],
+                response_format=TopicSummaryList,
             )
 
             # Second prompt: Analyze weak signal
             logger.debug("Second prompt - analyze weak signal")
             weak_signal_prompt = get_prompt(
-                language, "weak_signal", summary_from_first_prompt=summary
+                language,
+                "weak_signal",
+                summary_from_first_prompt=summaries.model_dump_json(),
             )
-            weak_signal_analysis = openai_client.generate(
+            weak_signal_analysis = openai_client.parse(
                 system_prompt=LLM_CONFIG["system_prompt"],
                 user_prompt=weak_signal_prompt,
                 temperature=LLM_CONFIG["temperature"],
                 max_tokens=LLM_CONFIG["max_tokens"],
+                response_format=SignalAnalysis,
+            )
+
+            formatted_html = fill_html_template(
+                summaries, weak_signal_analysis, language
             )
 
             # Third prompt: Generate HTML format
-            logger.debug("Third prompt - generate html format")
-            html_format_prompt = get_prompt(
-                language=language,
-                prompt_type="html_format",
-                topic_summary=summary,
-                weak_signal_analysis=weak_signal_analysis,
-            )
-            formatted_html = openai_client.generate(
-                system_prompt=LLM_CONFIG["system_prompt"],
-                user_prompt=html_format_prompt,
-                temperature=LLM_CONFIG["temperature"],
-                max_tokens=LLM_CONFIG["max_tokens"],
-            )
-            formatted_html = clean_html_output(formatted_html)
-            return summary, weak_signal_analysis, formatted_html
+            # logger.debug("Third prompt - generate html format")
+            # html_format_prompt = get_prompt(
+            #     language=language,
+            #     prompt_type="html_format",
+            #     topic_summary=summary,
+            #     weak_signal_analysis=weak_signal_analysis,
+            # )
+            # formatted_html = openai_client.generate(
+            #     system_prompt=LLM_CONFIG["system_prompt"],
+            #     user_prompt=html_format_prompt,
+            #     temperature=LLM_CONFIG["temperature"],
+            #     max_tokens=LLM_CONFIG["max_tokens"],
+            # )
+            # formatted_html = clean_html_output(formatted_html)
+            return summaries, weak_signal_analysis, formatted_html
 
         except Exception as e:
             error_msg = f"An error occurred while generating the analysis: {str(e)}"

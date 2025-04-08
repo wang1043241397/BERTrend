@@ -2,12 +2,14 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
-
+import os
 from pathlib import Path
 
+from jinja2 import Template, Environment, FileSystemLoader
 from loguru import logger
 
 from bertrend import OUTPUT_PATH
+from bertrend.trend_analysis.data_structure import TopicSummaryList, SignalAnalysis
 
 # Global variables for prompts
 SIGNAL_INTRO = {
@@ -217,20 +219,20 @@ def get_prompt(
             topic_number=topic_number, content_summary=content_summary
         )
 
-    elif prompt_type == "html_format":
-        # Read the appropriate HTML template based on the language
-        if lang == "en":
-            template_file = Path(__file__).parent / "signal_llm_template_en.html"
-        else:
-            template_file = Path(__file__).parent / "signal_llm_template_fr.html"
-        with open(template_file, "r", encoding="utf-8") as file:
-            html_template = file.read()
-
-        prompt = HTML_FORMAT_PROMPT[lang].format(
-            topic_summary=topic_summary,
-            weak_signal_analysis=weak_signal_analysis,
-            html_template=html_template,
-        )
+    # elif prompt_type == "html_format":
+    #     # Read the appropriate HTML template based on the language
+    #     if lang == "en":
+    #         template_file = Path(__file__).parent / "signal_llm_template_en.html"
+    #     else:
+    #         template_file = Path(__file__).parent / "signal_llm_template_fr.html"
+    #     with open(template_file, "r", encoding="utf-8") as file:
+    #         html_template = file.read()
+    #
+    #     prompt = HTML_FORMAT_PROMPT[lang].format(
+    #         topic_summary=topic_summary,
+    #         weak_signal_analysis=weak_signal_analysis,
+    #         html_template=html_template,
+    #     )
 
     else:
         raise ValueError(f"Unsupported prompt type: {prompt_type}")
@@ -238,24 +240,24 @@ def get_prompt(
     return prompt
 
 
-def clean_html_output(model_output) -> str:
-    """Function to parse the model's output"""
-    # Clean the HTML content
-    cleaned_html = model_output.strip()  # Remove leading/trailing whitespace
-
-    # Remove ```html from the beginning if present
-    if cleaned_html.startswith("```html"):
-        cleaned_html = cleaned_html[7:]
-    elif cleaned_html.startswith("```"):
-        cleaned_html = cleaned_html[3:]
-
-    # Remove ``` from the end if present
-    if cleaned_html.endswith("```"):
-        cleaned_html = cleaned_html[:-3]
-
-    # Final strip to remove any remaining whitespace
-    cleaned_html = cleaned_html.strip()
-    return cleaned_html
+# def clean_html_output(model_output) -> str:
+#     """Function to parse the model's output"""
+#     # Clean the HTML content
+#     cleaned_html = model_output.strip()  # Remove leading/trailing whitespace
+#
+#     # Remove ```html from the beginning if present
+#     if cleaned_html.startswith("```html"):
+#         cleaned_html = cleaned_html[7:]
+#     elif cleaned_html.startswith("```"):
+#         cleaned_html = cleaned_html[3:]
+#
+#     # Remove ``` from the end if present
+#     if cleaned_html.endswith("```"):
+#         cleaned_html = cleaned_html[:-3]
+#
+#     # Final strip to remove any remaining whitespace
+#     cleaned_html = cleaned_html.strip()
+#     return cleaned_html
 
 
 def save_html_output(html_output, output_file="signal_llm.html"):
@@ -266,3 +268,31 @@ def save_html_output(html_output, output_file="signal_llm.html"):
     with open(output_path, "w", encoding="utf-8") as file:
         file.write(html_output)
     logger.debug(f"Cleaned HTML output saved to {output_path}")
+
+
+def fill_html_template(
+    topic_summary_list: TopicSummaryList,
+    signal_analysis: SignalAnalysis,
+    language: str = "fr",
+) -> str:
+    """Fill the HTML template with appropriate data"""
+    # Setup Jinja2 environment
+    template_dir = os.path.dirname(os.path.abspath(__file__))
+    env = Environment(
+        loader=FileSystemLoader(template_dir),
+    )
+    template = env.get_template(
+        "signal_llm_template_en.html"
+        if language == "en"
+        else "signal_llm_template_fr.html"
+    )
+    # Render the template with the provided data
+    rendered_html = template.render(
+        topic_summary_list=topic_summary_list, signal_analysis=signal_analysis
+    )
+
+    # FIXME: many \n are added...
+    rendered_html = rendered_html.replace("\n", "")
+    rendered_html = rendered_html.replace("\\'", "'")
+
+    return rendered_html

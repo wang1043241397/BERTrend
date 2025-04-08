@@ -45,6 +45,7 @@ pandas = "^2.2.2"
 plotly = "^5.24.1"
 plotly-resampler = "^0.10.0"
 pylabeladjust = "0.1.13"
+Pyqtree = "1.0.0"
 scipy = {version = "1.12", python=""}
 scikit-learn = "^1.5.2"
 sentence-transformers = "3.0.1"
