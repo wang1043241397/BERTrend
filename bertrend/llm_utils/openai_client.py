@@ -4,6 +4,7 @@
 #  This file is part of BERTrend.
 
 import os
+from typing import Type
 
 from openai import OpenAI, AzureOpenAI, Timeout, Stream
 from loguru import logger
@@ -139,15 +140,17 @@ class OpenAI_Client:
 
     def parse(
         self,
-        user_prompt,
-        system_prompt=None,
+        user_prompt: str,
+        system_prompt: str = None,
+        response_format: Type[BaseModel] = None,
         **kwargs,
-    ) -> BaseModel:
-        """Call openai model for generation with Structured Outpit.
+    ) -> BaseModel | None:
+        """Call openai model for generation with Structured Output.
 
         Args:
                 user_prompt (str): prompt to send to the model with role=user.
                 system_prompt (str): prompt to send to the model with role=system.
+                response_format (BaseModel): expected output format.
                 **kwargs : other arguments
 
         Returns:
@@ -170,15 +173,12 @@ class OpenAI_Client:
             # NB. here use beta.chat...parse to support structured outputs
             answer = self.llm_client.beta.chat.completions.parse(
                 messages=messages,
+                response_format=response_format,
                 **kwargs,
             )
             logger.debug(f"API returned: {answer}")
-            if kwargs.get("stream", False):
-                return answer
-            else:
-                return answer.choices[0].message.parsed
+            return answer.choices[0].message.parsed
             # Details of errors available here: https://platform.openai.com/docs/guides/error-codes/api-errors
         except Exception as e:
             msg = f"OpenAI API fatal error: {e}"
             logger.error(msg)
-            return msg
