@@ -59,7 +59,7 @@ def _process_uploaded_files(
             if tmp_file is not None:
                 df = load_data(
                     Path(tmp_file.name),
-                    st.session_state["language"],
+                    SessionStateManager.get("language", "French"),
                 )
                 if df is not None:
                     dataframes.append(df)
@@ -75,7 +75,7 @@ def _load_files(
         file_path = DATA_PATH / selected_file
         df = load_data(
             file_path,
-            st.session_state["language"],
+            SessionStateManager.get("language", "French"),
         )
         if df is not None:
             dfs.append(df)
