@@ -30,8 +30,8 @@ PAGE_TITLE = "BERTrend - Démo Veille & Analyse"
 LAYOUT: Literal["centered", "wide"] = "wide"
 
 # TODO: reactivate password
-# AUTHENTIFICATION = True
-AUTHENTIFICATION = False
+AUTHENTIFICATION = True
+# AUTHENTIFICATION = False
 
 
 def main():
