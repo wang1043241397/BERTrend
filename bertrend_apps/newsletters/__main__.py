@@ -28,6 +28,7 @@ from bertrend.utils.data_loading import (
     TEXT_COLUMN,
     load_data,
     split_data,
+    TITLE_COLUMN,
 )
 from bertrend.llm_utils.newsletter_features import (
     generate_newsletter,
@@ -108,8 +109,9 @@ if __name__ == "__main__":
             .reset_index(drop=True)
             .reset_index()
         )
-        # Deduplicate using all columns
-        dataset = dataset.drop_duplicates()
+
+        # Deduplicate using only useful columns (otherwise possible problems with non hashable types)
+        dataset = dataset.drop_duplicates(subset=[TEXT_COLUMN, TITLE_COLUMN])
         logger.info(f"Dataset size: {len(dataset)}")
 
         # Embed dataset
