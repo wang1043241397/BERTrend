@@ -396,21 +396,6 @@ def analyze_signal(bertrend, topic_number: int, current_date: Timestamp):
                 summaries, weak_signal_analysis, language
             )
 
-            # Third prompt: Generate HTML format
-            # logger.debug("Third prompt - generate html format")
-            # html_format_prompt = get_prompt(
-            #     language=language,
-            #     prompt_type="html_format",
-            #     topic_summary=summary,
-            #     weak_signal_analysis=weak_signal_analysis,
-            # )
-            # formatted_html = openai_client.generate(
-            #     system_prompt=LLM_CONFIG["system_prompt"],
-            #     user_prompt=html_format_prompt,
-            #     temperature=LLM_CONFIG["temperature"],
-            #     max_tokens=LLM_CONFIG["max_tokens"],
-            # )
-            # formatted_html = clean_html_output(formatted_html)
             return summaries, weak_signal_analysis, formatted_html
 
         except Exception as e:

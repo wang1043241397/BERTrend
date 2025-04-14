@@ -219,45 +219,10 @@ def get_prompt(
             topic_number=topic_number, content_summary=content_summary
         )
 
-    # elif prompt_type == "html_format":
-    #     # Read the appropriate HTML template based on the language
-    #     if lang == "en":
-    #         template_file = Path(__file__).parent / "signal_llm_template_en.html"
-    #     else:
-    #         template_file = Path(__file__).parent / "signal_llm_template_fr.html"
-    #     with open(template_file, "r", encoding="utf-8") as file:
-    #         html_template = file.read()
-    #
-    #     prompt = HTML_FORMAT_PROMPT[lang].format(
-    #         topic_summary=topic_summary,
-    #         weak_signal_analysis=weak_signal_analysis,
-    #         html_template=html_template,
-    #     )
-
     else:
         raise ValueError(f"Unsupported prompt type: {prompt_type}")
 
     return prompt
-
-
-# def clean_html_output(model_output) -> str:
-#     """Function to parse the model's output"""
-#     # Clean the HTML content
-#     cleaned_html = model_output.strip()  # Remove leading/trailing whitespace
-#
-#     # Remove ```html from the beginning if present
-#     if cleaned_html.startswith("```html"):
-#         cleaned_html = cleaned_html[7:]
-#     elif cleaned_html.startswith("```"):
-#         cleaned_html = cleaned_html[3:]
-#
-#     # Remove ``` from the end if present
-#     if cleaned_html.endswith("```"):
-#         cleaned_html = cleaned_html[:-3]
-#
-#     # Final strip to remove any remaining whitespace
-#     cleaned_html = cleaned_html.strip()
-#     return cleaned_html
 
 
 def save_html_output(html_output, output_file="signal_llm.html"):
