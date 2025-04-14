@@ -86,6 +86,7 @@ from bertrend.demos.weak_signals.visualizations_utils import (
     save_signal_evolution,
     display_signal_analysis,
     retrieve_topic_counts,
+    display_signal_types,
 )
 
 # UI Settings
@@ -255,12 +256,12 @@ def training_page():
                 bertrend.save_model()
                 st.success(MODELS_SAVED_MESSAGE, icon=SUCCESS_ICON)
 
-                # Store bertrend object
-                SessionStateManager.set("bertrend", bertrend)
-
                 # Compute signal popularity
                 bertrend.calculate_signal_popularity()
                 SessionStateManager.set("popularity_computed", True)
+
+                # Store bertrend object
+                SessionStateManager.set("bertrend", bertrend)
 
                 st.success(MODEL_MERGING_COMPLETE_MESSAGE, icon=SUCCESS_ICON)
 
@@ -275,7 +276,10 @@ def analysis_page():
         )
         st.stop()
 
-    elif not SessionStateManager.get("bertrend")._is_fitted:
+    elif (
+        not SessionStateManager.get("bertrend")
+        or not SessionStateManager.get("bertrend")._is_fitted
+    ):
         st.warning(
             TRAIN_WARNING,
             icon=WARNING_ICON,
@@ -283,7 +287,7 @@ def analysis_page():
         st.stop()
 
     else:
-        topic_models = SessionStateManager.get("bertrend").topic_models
+        topic_models = SessionStateManager.get("bertrend").restore_topic_models()
         with st.expander("Topic Overview", expanded=False):
             # Number of Topics Detected for each topic model
             st.plotly_chart(
@@ -402,6 +406,9 @@ def analysis_page():
                 display_popularity_evolution()
                 # Save Signal Evolution Data to investigate later on in a separate notebook
                 save_signal_evolution()
+
+            # Show weak/strong signals
+            display_signal_types()
 
             # Analyze signal
             with st.expander("Signal Analysis", expanded=True):

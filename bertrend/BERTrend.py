@@ -233,9 +233,6 @@ class BERTrend:
             (period, group) for period, group in grouped_data.items() if not group.empty
         ]
 
-        # Set up progress bar
-        # TODO: tqdm
-
         for i, (period, group) in enumerate(non_empty_groups):
             try:
                 logger.info(f"Training topic model {i+1}/{len(non_empty_groups)}...")
@@ -676,6 +673,17 @@ class BERTrend:
                         )
                     return topic_model
         return None
+
+    def restore_topic_models(
+        self, models_path: Path = MODELS_DIR
+    ) -> dict[pd.Timestamp, BERTopic] | None:
+        """Restore all previously stored topic models"""
+        topic_models = {}
+        for ts in self.doc_groups.keys():
+            tm = self.restore_topic_model(period=ts, models_path=models_path)
+            if tm:
+                topic_models[ts] = tm
+        return topic_models
 
     def save_signal_evolution_data(
         self,

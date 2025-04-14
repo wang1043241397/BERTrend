@@ -198,11 +198,10 @@ def display_popularity_evolution():
     window_start, window_end, all_popularity_values, q1, q3 = (
         bertrend._compute_popularity_values_and_thresholds(window_size, current_date)
     )
-
-    # Classify signals
-    noise_topics_df, weak_signal_topics_df, strong_signal_topics_df = (
-        bertrend._classify_signals(window_start, window_end, q1, q3)
-    )
+    st.session_state["window_start"] = window_start
+    st.session_state["window_end"] = window_end
+    st.session_state["q1"] = q1
+    st.session_state["q3"] = q3
 
     # Display threshold values for noise and strong signals
     col1, col2 = st.columns(2)
@@ -223,9 +222,25 @@ def display_popularity_evolution():
     )
     st.plotly_chart(fig, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True)
 
+
+def display_signal_types():
+    """Show weak/strong signals"""
+    bertrend = SessionStateManager.get("bertrend")
+
+    # Classify signals
+    window_end = st.session_state.get("window_end")
+    window_start = st.session_state.get("window_start")
+    q1 = st.session_state.get("q1")
+    q3 = st.session_state.get("q3")
+    noise_topics_df, weak_signal_topics_df, strong_signal_topics_df = (
+        bertrend._classify_signals(window_start, window_end, q1, q3)
+    )
     # Display DataFrames for each category noise, weak signals, strong signals
     display_signal_categories_df(
-        noise_topics_df, weak_signal_topics_df, strong_signal_topics_df, window_end
+        noise_topics_df,
+        weak_signal_topics_df,
+        strong_signal_topics_df,
+        window_end,
     )
 
 
