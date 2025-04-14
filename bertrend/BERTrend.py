@@ -247,11 +247,11 @@ class BERTrend:
                 if self.last_topic_model is not None:
                     self.merge_models_with(new_topic_model, period)
 
-                    if save_topic_models:
-                        logger.info(f"Saving topic model for period {period}...")
+                if save_topic_models:
+                    logger.info(f"Saving topic model for period {period}...")
                     # save new model to disk for potential reuse
                     BERTrend.save_topic_model(
-                        period, self.last_topic_model, bertrend_models_path
+                        period, new_topic_model, bertrend_models_path
                     )
 
                 # Update last topic model
