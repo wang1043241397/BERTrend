@@ -16,7 +16,7 @@ def get_topic_description(
     topic_representation: str,
     docs_text: str,
     language_code: str = "fr",
-):
+) -> TopicDescription | None:
     """Generates a LLM-based human-readable description of a topic composed of a title and a description (as a dict)"""
     # Prepare the prompt
     prompt = TOPIC_DESCRIPTION_PROMPT[language_code]

@@ -13,7 +13,7 @@ def generate_bertrend_topic_description(
     topic_number: int,
     texts: list[str],
     language_code: str = "fr",
-) -> TopicDescription | None:
+) -> tuple[str, str]:
     """Generates a LLM-based human-readable description of a topic composed of a title and a description (as a dict)"""
     if not texts:
         logger.warning(f"No text found for topic number {topic_number}")
@@ -26,4 +26,9 @@ def generate_bertrend_topic_description(
         [f"Document {i + 1}: {doc[0:2000]}..." for i, doc in enumerate(texts)]
     )
 
-    return get_topic_description(topic_representation, docs_text, language_code)
+    topic_description: TopicDescription = get_topic_description(
+        topic_representation, docs_text, language_code
+    )
+    if not topic_description:
+        return None, None
+    return topic_description.title, topic_description.description

@@ -146,23 +146,17 @@ if __name__ == "__main__":
         ):
             if not df.empty:
                 # enrich signal description with LLM-based topic description
-                df["TEMP_LLM"] = df.apply(
-                    lambda row: generate_bertrend_topic_description(
-                        topic_words=row["Representation"],
-                        topic_number=row["Topic"],
-                        texts=row["Documents"],
-                        language_code=language_code,
+                df[[LLM_TOPIC_TITLE_COLUMN, LLM_TOPIC_DESCRIPTION_COLUMN]] = df.apply(
+                    lambda row: pd.Series(
+                        generate_bertrend_topic_description(
+                            topic_words=row["Representation"],
+                            topic_number=row["Topic"],
+                            texts=row["Documents"],
+                            language_code=language_code,
+                        )
                     ),
                     axis=1,
                 )
-
-                df[LLM_TOPIC_TITLE_COLUMN] = df["TEMP_LLM"].apply(
-                    lambda x: x.get("title") if isinstance(x, dict) else None
-                )
-                df[[LLM_TOPIC_TITLE_COLUMN, LLM_TOPIC_DESCRIPTION_COLUMN]] = (
-                    pd.json_normalize(df["TEMP_LLM"])[["title", "description"]]
-                )
-                df.drop("TEMP_LLM", axis=1, inplace=True)
 
                 # Add documents URL
                 df = pd.merge(
@@ -223,7 +217,11 @@ if __name__ == "__main__":
                 bertrend, topic, reference_timestamp
             )
             interpretation.append(
-                {"topic": topic, "summary": summary, "analysis": formatted_html}
+                {
+                    "topic": topic,
+                    "summary": summary.model_dump_json(),
+                    "analysis": analysis.model_dump_json(),
+                }
             )
 
         # Save interpretation

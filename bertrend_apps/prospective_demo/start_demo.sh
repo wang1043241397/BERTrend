@@ -6,4 +6,4 @@
 #
 
 # Starts the Trend Analysis application
-CUDA_VISIBLE_DEVICES=0 streamlit run --theme.primaryColor royalblue app.py
+CUDA_VISIBLE_DEVICES=0 streamlit run app.py

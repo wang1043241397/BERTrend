@@ -377,6 +377,11 @@ def analyze_signal(bertrend, topic_number: int, current_date: Timestamp):
                 response_format=TopicSummaryList,
             )
 
+            if not summaries:
+                raise ValueError(
+                    "An anomaly occured during topic summary generation. Context probably too long. Check other logs for details"
+                )
+
             # Second prompt: Analyze weak signal
             logger.debug("Second prompt - analyze weak signal")
             weak_signal_prompt = get_prompt(
