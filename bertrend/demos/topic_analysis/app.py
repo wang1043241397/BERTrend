@@ -2,6 +2,12 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
+
+import torch
+
+# workaround with streamlit to avoid errors Examining the path of torch.classes raised: Tried to instantiate class 'path.path’, but it does not exist! Ensure that it is registered via torch::class
+torch.classes.__path__ = []
+
 import locale
 
 import streamlit as st

@@ -41,7 +41,7 @@ class OpenAI_Client:
             )
             raise EnvironmentError(f"OPENAI_API_KEY environment variable not found.")
 
-        endpoint = endpoint if endpoint else os.getenv("OPENAI_ENDPOINT", None)
+        endpoint = endpoint or os.getenv("OPENAI_ENDPOINT", None)
         if endpoint == "":  # check empty env var
             endpoint = None
 
@@ -57,7 +57,7 @@ class OpenAI_Client:
         }
         azure_params = {
             "azure_endpoint": endpoint,
-            "api_version": api_version if api_version else AZURE_API_VERSION,
+            "api_version": api_version or AZURE_API_VERSION,
         }
 
         if not run_on_azure:
@@ -70,7 +70,7 @@ class OpenAI_Client:
                 **common_params,
                 **azure_params,
             )
-        self.model_name = model if model else os.getenv("OPENAI_DEFAULT_MODEL_NAME")
+        self.model_name = model or os.getenv("OPENAI_DEFAULT_MODEL_NAME")
         self.temperature = temperature
         self.max_tokens = DEFAULT_MAX_TOKENS
 

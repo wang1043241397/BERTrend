@@ -3,6 +3,11 @@
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
 
+import torch
+
+# workaround with streamlit to avoid errors Examining the path of torch.classes raised: Tried to instantiate class 'path.path’, but it does not exist! Ensure that it is registered via torch::class
+torch.classes.__path__ = []
+
 import pickle
 import shutil
 from typing import Literal
@@ -166,9 +171,9 @@ def load_data_page():
             if SessionStateManager.get("data_embedded", False):
                 save_state()
         except Exception as e:
-            logger.error(f"An error occurred while embedding documents: {str(e)}")
+            logger.error(f"An error occurred while embedding documents: {e}")
             st.error(
-                f"An error occurred while embedding documents: {str(e)}",
+                f"An error occurred while embedding documents: {e}",
                 icon=ERROR_ICON,
             )
 

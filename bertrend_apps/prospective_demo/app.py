@@ -2,6 +2,12 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
+
+import torch
+
+# workaround with streamlit to avoid errors Examining the path of torch.classes raised: Tried to instantiate class 'path.path’, but it does not exist! Ensure that it is registered via torch::class
+torch.classes.__path__ = []
+
 from typing import Literal
 
 import streamlit as st
@@ -23,6 +29,7 @@ from bertrend_apps.prospective_demo.feeds_data import display_data_status
 from bertrend_apps.prospective_demo.models_info import models_monitoring
 from bertrend_apps.prospective_demo.report_generation import reporting
 from bertrend_apps.prospective_demo.dashboard_signals import signal_analysis
+
 
 # UI Settings
 # PAGE_TITLE = "BERTrend - Prospective Analysis demo"

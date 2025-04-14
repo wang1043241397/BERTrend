@@ -157,8 +157,9 @@ class BERTrend:
 
         logger.debug("Topic model created successfully")
 
-        doc_info_df = topic_model.get_document_info(docs=docs)
-        doc_info_df = doc_info_df.rename(columns={"Document": "Paragraph"})
+        doc_info_df = topic_model.get_document_info(docs=docs).rename(
+            columns={"Document": "Paragraph"}
+        )
         doc_info_df = doc_info_df.merge(
             group[[TEXT_COLUMN, "document_id", "source", "url"]],
             left_on="Paragraph",
@@ -263,7 +264,7 @@ class BERTrend:
                 logger.debug(f"Successfully processed period: {period}")
 
             except Exception as e:
-                logger.error(f"Error processing period {period}: {str(e)}")
+                logger.error(f"Error processing period {period}: {e}")
                 logger.exception("Traceback:")
                 continue  # TODO: better error handling
 

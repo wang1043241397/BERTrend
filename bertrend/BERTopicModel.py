@@ -78,7 +78,7 @@ class BERTopicModel:
 
         To see file format and list of parameters: bertrend/config/topic_model_default_config.toml
         """
-        if isinstance(config, str) or isinstance(config, Path):
+        if isinstance(config, str | Path):
             try:
                 self.config = load_toml_config(config)
             except Exception as e:

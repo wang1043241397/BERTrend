@@ -167,13 +167,15 @@ def generate_newsletter(
                 model=openai_model_name,
             ).replace('"', "")
 
-            if improved_topic_description_v2.endswith("."):
-                improved_topic_description_v2 = improved_topic_description_v2[:-1]
+            improved_topic_description_v2 = improved_topic_description_v2.removesuffix(
+                "."
+            )
 
-            md_lines.append(f"## Sujet {i + 1} : {improved_topic_description_v2}")
-
-            md_lines.append(
-                f"### {' '.join(['#' + keyword for keyword in topics_info['Representation'].iloc[i]])}"
+            md_lines.extend(
+                (
+                    f"## Sujet {i + 1} : {improved_topic_description_v2}",
+                    f"### {' '.join(['#' + keyword for keyword in topics_info['Representation'].iloc[i]])}",
+                )
             )
         else:
             md_lines.append(
