@@ -8,6 +8,8 @@ import pandas as pd
 import streamlit as st
 
 from bertrend.demos.demos_utils.icons import ERROR_ICON
+from bertrend.trend_analysis.data_structure import SignalAnalysis, TopicSummaryList
+from bertrend.trend_analysis.prompts import fill_html_template
 from bertrend_apps.prospective_demo import (
     WEAK_SIGNALS,
     STRONG_SIGNALS,
@@ -101,8 +103,14 @@ def display_detailed_analysis(
         color = "green"
     st.subheader(f":{color}[**{desc[LLM_TOPIC_TITLE_COLUMN]}**]")
     st.write(desc[LLM_TOPIC_DESCRIPTION_COLUMN])
-    # Detailed description
-    st.html(desc["analysis"])
+
+    # Detailed description (HTML formatted)
+    summaries: TopicSummaryList = TopicSummaryList.model_validate_json(desc["summary"])
+    signal_analysis: SignalAnalysis = SignalAnalysis.model_validate_json(
+        desc["analysis"]
+    )
+    formatted_html = fill_html_template(summaries, signal_analysis, "fr")
+    st.html(formatted_html)
 
     st.session_state.signal_interpretations[model_id] = interpretations
 

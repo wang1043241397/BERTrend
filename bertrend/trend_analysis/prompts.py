@@ -3,6 +3,7 @@
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
 import os
+from datetime import datetime
 from pathlib import Path
 
 from jinja2 import Template, Environment, FileSystemLoader
@@ -251,6 +252,17 @@ def fill_html_template(
         if language == "en"
         else "signal_llm_template_fr.html"
     )
+
+    # Sort the list by date from most recent to least recent
+    sorted_topic_summary_by_time_period = sorted(
+        topic_summary_list.topic_summary_by_time_period,
+        key=lambda x: datetime.strptime(x.date, "%Y-%m-%d"),
+        reverse=True,
+    )
+    topic_summary_list.topic_summary_by_time_period = (
+        sorted_topic_summary_by_time_period
+    )
+
     # Render the template with the provided data
     rendered_html = template.render(
         topic_summary_list=topic_summary_list, signal_analysis=signal_analysis
