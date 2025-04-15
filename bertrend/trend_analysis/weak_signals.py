@@ -338,7 +338,7 @@ def analyze_signal(
     topic_number: int,
     current_date: Timestamp,
     maximum_analysed_periods: int = MAXIMUM_ANALYZED_PERIODS,
-):
+) -> tuple[TopicSummaryList, SignalAnalysis]:
     topic_merge_rows = bertrend.all_merge_histories_df[
         bertrend.all_merge_histories_df["Topic1"] == topic_number
     ].sort_values("Timestamp")
@@ -414,18 +414,14 @@ def analyze_signal(
                 response_format=SignalAnalysis,
             )
 
-            formatted_html = fill_html_template(
-                summaries, weak_signal_analysis, language
-            )
-
-            return summaries, weak_signal_analysis, formatted_html
+            return summaries, weak_signal_analysis
 
         except Exception as e:
             error_msg = f"An error occurred while generating the analysis: {str(e)}"
             logger.error(error_msg)
-            raise Exception(error_msg)
+            return None, None
 
     else:
         error_msg = f"No data available for topic {topic_number} within the specified date range. Please enter a valid topic number."
         logger.error(error_msg)
-        raise Exception(error_msg)
+        return None, None

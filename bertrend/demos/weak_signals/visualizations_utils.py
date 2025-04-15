@@ -24,6 +24,7 @@ from bertrend.config.parameters import (
     INDIVIDUAL_MODEL_TOPIC_COUNTS_FILE,
     CUMULATIVE_MERGED_TOPIC_COUNTS_FILE,
 )
+from bertrend.trend_analysis.prompts import fill_html_template
 from bertrend.trend_analysis.visualizations import (
     create_sankey_diagram_plotly,
     plot_newly_emerged_topics,
@@ -340,10 +341,14 @@ def display_signal_analysis(topic_number: int):
 
     st.subheader("Signal Interpretation")
     with st.spinner("Analyzing signal..."):
-        summary, analysis, formatted_html = analyze_signal(
+        summaries, weak_signal_analysis = analyze_signal(
             bertrend,
             topic_number,
             SessionStateManager.get("current_date"),
+        )
+
+        formatted_html = fill_html_template(
+            summaries, weak_signal_analysis, SessionStateManager.get("language", "fr")
         )
 
         # Display the HTML content

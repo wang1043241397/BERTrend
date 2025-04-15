@@ -13,6 +13,7 @@ from loguru import logger
 from bertrend import load_toml_config, FEED_BASE_PATH
 from bertrend.BERTrend import train_new_data, BERTrend
 from bertrend.services.embedding_service import EmbeddingService
+from bertrend.trend_analysis.data_structure import TopicSummaryList, SignalAnalysis
 from bertrend.trend_analysis.weak_signals import analyze_signal
 from bertrend.utils.data_loading import load_data, split_data
 from bertrend_apps.prospective_demo import (
@@ -213,9 +214,10 @@ if __name__ == "__main__":
         for topic in df.sort_values(by=["Latest_Popularity"], ascending=False).head(
             top_k
         )["Topic"]:
-            summary, analysis, formatted_html = analyze_signal(
-                bertrend, topic, reference_timestamp
-            )
+            summary, analysis = analyze_signal(bertrend, topic, reference_timestamp)
+            if not summary or not analysis:
+                logger.warning(f"Skipping topic {topic} as analysis of signal failed.")
+                continue
             interpretation.append(
                 {
                     "topic": topic,
