@@ -88,7 +88,7 @@ Structure your analysis as follows:
 For the first timestamp:
 
 ## [Concise yet impactful title capturing the essence of the topic at this point]
-### Date: [Relevant date or time frame]
+### Date: [Relevant date or time frame - format %Y-%m-%d]
 ### Key Developments
 - [Bullet point summarizing a major development or trend]
 - [Additional bullet points as needed]
@@ -99,7 +99,7 @@ For the first timestamp:
 For all subsequent timestamps:
 
 ## [Concise yet impactful title capturing the essence of the topic at this point]
-### Date: [Relevant date or time frame]
+### Date: [Relevant date or time frame - format %Y-%m-%d]
 ### Key Developments
 - [Bullet point summarizing a major development or trend]
 - [Additional bullet points as needed]
@@ -122,7 +122,7 @@ Structurez votre analyse comme suit :
 Pour le premier timestamp :
 
 ## [Titre concis mais percutant capturant l'essence du sujet à ce moment]
-### Date : [Date ou période pertinente]
+### Date : [Date ou période pertinente - format %Y-%m-%d]
 ### Développements Clés
 - [Point résumant un développement majeur ou une tendance]
 - [Points supplémentaires si nécessaire]
@@ -133,7 +133,7 @@ Pour le premier timestamp :
 Pour tous les timestamps suivants :
 
 ## [Titre concis mais percutant capturant l'essence du sujet à ce moment]
-### Date : [Date ou période pertinente]
+### Date : [Date ou période pertinente - format %Y-%m-%d]
 ### Développements Clés
 - [Point résumant un développement majeur ou une tendance]
 - [Points supplémentaires si nécessaire]
@@ -254,14 +254,17 @@ def fill_html_template(
     )
 
     # Sort the list by date from most recent to least recent
-    sorted_topic_summary_by_time_period = sorted(
-        topic_summary_list.topic_summary_by_time_period,
-        key=lambda x: datetime.strptime(x.date, "%Y-%m-%d"),
-        reverse=True,
-    )
-    topic_summary_list.topic_summary_by_time_period = (
-        sorted_topic_summary_by_time_period
-    )
+    try:
+        sorted_topic_summary_by_time_period = sorted(
+            topic_summary_list.topic_summary_by_time_period,
+            key=lambda x: datetime.strptime(x.date, "%Y-%m-%d"),
+            reverse=True,
+        )
+        topic_summary_list.topic_summary_by_time_period = (
+            sorted_topic_summary_by_time_period
+        )
+    except Exception as e:
+        logger.warning("Cannot sort summaries by date, probably wrong date format")
 
     # Render the template with the provided data
     rendered_html = template.render(
