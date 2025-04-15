@@ -116,6 +116,10 @@ class BERTrend:
         config = load_toml_config(self.config_file)
         return config
 
+    def get_periods(self):
+        """Return the time periods used by the model"""
+        return list(self.doc_groups.keys())
+
     def _train_by_period(
         self,
         period: pd.Timestamp,
@@ -679,7 +683,7 @@ class BERTrend:
     ) -> dict[pd.Timestamp, BERTopic] | None:
         """Restore all previously stored topic models"""
         topic_models = {}
-        for ts in self.doc_groups.keys():
+        for ts in self.get_periods():
             tm = self.restore_topic_model(period=ts, models_path=models_path)
             if tm:
                 topic_models[ts] = tm

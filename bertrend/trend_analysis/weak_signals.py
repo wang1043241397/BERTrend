@@ -15,6 +15,8 @@ from bertrend import LLM_CONFIG
 from bertrend.trend_analysis.data_structure import TopicSummaryList, SignalAnalysis
 from bertrend.trend_analysis.prompts import get_prompt, fill_html_template
 
+MAXIMUM_ANALYZED_PERIODS = 4
+
 
 def detect_weak_signals_zeroshot(
     topic_models: dict[Timestamp, BERTopic],
@@ -331,13 +333,28 @@ def _apply_decay_to_inactive_topics(
             topic_last_popularity[topic] = decayed_popularity
 
 
-def analyze_signal(bertrend, topic_number: int, current_date: Timestamp):
+def analyze_signal(
+    bertrend,
+    topic_number: int,
+    current_date: Timestamp,
+    maximum_analysed_periods: int = MAXIMUM_ANALYZED_PERIODS,
+):
     topic_merge_rows = bertrend.all_merge_histories_df[
         bertrend.all_merge_histories_df["Topic1"] == topic_number
     ].sort_values("Timestamp")
     topic_merge_rows_filtered = topic_merge_rows[
         topic_merge_rows["Timestamp"] <= current_date
     ]
+
+    # In order to avoid to have too big contexts, keep only data that correspond to the N last models built
+    # before the current date
+    considered_periods = sorted(
+        [ts for ts in bertrend.get_periods() if ts < current_date]
+    )[-maximum_analysed_periods:]
+    if considered_periods:
+        topic_merge_rows_filtered = topic_merge_rows_filtered[
+            topic_merge_rows["Timestamp"] >= considered_periods[0]
+        ]
 
     if not topic_merge_rows_filtered.empty:
         content_summary = "\n".join(
@@ -386,7 +403,7 @@ def analyze_signal(bertrend, topic_number: int, current_date: Timestamp):
             logger.debug("Second prompt - analyze weak signal")
             weak_signal_prompt = get_prompt(
                 language,
-                "weak_signal",
+                prompt_type="weak_signal",
                 summary_from_first_prompt=summaries.model_dump_json(),
             )
             weak_signal_analysis = openai_client.parse(

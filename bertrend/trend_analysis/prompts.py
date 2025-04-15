@@ -149,61 +149,12 @@ Fournissez votre analyse en utilisant uniquement ce format, basé uniquement sur
 }
 
 
-HTML_FORMAT_PROMPT = {
-    "en": """You are an expert data analyst tasked with formatting the following strategic foresight analysis into a structured HTML dashboard. Use the provided HTML template to organize the information.
-
-Topic Evolution Summary:
-{topic_summary}
-
-Weak Signal Analysis:
-{weak_signal_analysis}
-
-Instructions:
-1. Carefully read the provided topic evolution summary, weak signal analysis, and HTML template.
-2. Fill in the placeholders in the HTML template with relevant information from both the topic evolution summary and the weak signal analysis.
-3. Use the topic evolution summary for the left column of the dashboard (Topic Evolution and Evolution Scenarios).
-4. Use the weak signal analysis for the right column of the dashboard (Topic Analysis).
-5. Ensure all sections of the template are populated with appropriate content.
-6. Maintain the structure and styling of the original HTML template.
-7. Return ONLY the filled HTML content, without any additional text before or after.
-
-HTML Template:
-{html_template}
-
-Please provide the completed HTML with all placeholders replaced by the relevant content from the analysis.""",
-    "fr": """Vous êtes un analyste de données expert chargé de formater l'analyse de prospective stratégique suivante dans un tableau de bord HTML structuré. Utilisez le modèle HTML fourni pour organiser les informations.
-
-Résumé de l'Évolution du Sujet :
-{topic_summary}
-
-Analyse du Signal Faible :
-{weak_signal_analysis}
-
-Instructions :
-1. Lisez attentivement le résumé de l'évolution du sujet, l'analyse du signal faible et le modèle HTML fournis.
-2. Remplissez les espaces réservés dans le modèle HTML avec les informations pertinentes provenant à la fois du résumé de l'évolution du sujet et de l'analyse du signal faible.
-3. Utilisez le résumé de l'évolution du sujet pour la colonne de gauche du tableau de bord (Évolution du Sujet et Scénarios d'Évolution).
-4. Utilisez l'analyse du signal faible pour la colonne de droite du tableau de bord (Analyse du Sujet).
-5. Assurez-vous que toutes les sections du modèle sont remplies avec un contenu approprié.
-6. Maintenez la structure et le style du modèle HTML original.
-7. Retournez UNIQUEMENT le contenu HTML rempli, sans aucun texte supplémentaire avant ou après.
-
-Modèle HTML :
-{html_template}
-
-Veuillez fournir le HTML complété avec tous les espaces réservés remplacés par le contenu pertinent de l'analyse.""",
-}
-
-
 def get_prompt(
-    language,
-    prompt_type,
-    topic_number=None,
-    content_summary=None,
-    summary_from_first_prompt=None,
-    topic_summary=None,
-    weak_signal_analysis=None,
-    html_template=None,
+    language: str,
+    prompt_type: str,
+    topic_number: int = None,
+    content_summary: str = None,
+    summary_from_first_prompt: str = None,
 ):
     lang = "en" if language == "English" else "fr"
 
