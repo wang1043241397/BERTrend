@@ -52,13 +52,14 @@ def display_detailed_analysis(
     # Retrieve previously computed interpretation
     interpretations = {}
     for df_id, df in dfs_topics.items():
-        if not df.empty:
-            interpretation_file_path = (
-                model_interpretation_path / f"{df_id}_interpretation.jsonl"
-            )
+        interpretation_file_path = (
+            model_interpretation_path / f"{df_id}_interpretation.jsonl"
+        )
+        interpretation_df = pd.read_json(interpretation_file_path, lines=True)
+        if not df.empty and not interpretation_df.empty:
             interpretations[df_id] = (
                 pd.merge(
-                    pd.read_json(interpretation_file_path, lines=True),
+                    interpretation_df,
                     df,
                     how="left",
                     left_on="topic",
