@@ -25,7 +25,17 @@ from bertrend.services.embedding_client import EmbeddingAPIClient
 
 
 class EmbeddingService(BaseEmbedder):
-    """Class implementing embedding service."""
+    """
+    Service for generating text embeddings using local or remote embedding models.
+
+    This class provides functionality to embed text documents using either a local
+    Sentence Transformer model or a remote embedding service. It supports batched
+    processing for efficient memory usage and can return both document-level embeddings
+    and token-level embeddings.
+
+    The class inherits from BERTopic's BaseEmbedder, allowing it to be used directly
+    with BERTopic models for topic modeling.
+    """
 
     def __init__(
         self,

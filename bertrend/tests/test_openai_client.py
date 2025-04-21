@@ -7,18 +7,8 @@ import pytest
 import os
 from unittest.mock import patch, MagicMock
 from openai import OpenAI, AzureOpenAI, Stream
-from openai.types.chat import ChatCompletion, ChatCompletionChunk
 
 from bertrend.llm_utils.openai_client import OpenAI_Client
-
-
-# Helper function to mock OpenAI responses
-def mock_openai_response():
-    mock_response = MagicMock(spec=ChatCompletion)
-    mock_response.choices = [
-        MagicMock(message=MagicMock(content="This is a mock response"))
-    ]
-    return mock_response
 
 
 @pytest.fixture
@@ -53,11 +43,11 @@ def test_generate_user_prompt(mock_api_key):
     """Test generation with a simple user prompt"""
     client = OpenAI_Client(api_key="test_api_key")
 
-    # Mocking the llm_client's chat completion method
+    # Mocking the llm_client's responses create method
     with patch.object(
-        client.llm_client.chat.completions,
+        client.llm_client.responses,
         "create",
-        return_value=mock_openai_response(),
+        return_value=MagicMock(output_text="This is a mock response"),
     ):
         result = client.generate("What is the weather today?")
         assert result == "This is a mock response"
@@ -67,11 +57,11 @@ def test_generate_from_history(mock_api_key):
     """Test generation using history of messages"""
     client = OpenAI_Client(api_key="test_api_key")
 
-    # Mocking the llm_client's chat completion method
+    # Mocking the llm_client's responses create method
     with patch.object(
-        client.llm_client.chat.completions,
+        client.llm_client.responses,
         "create",
-        return_value=mock_openai_response(),
+        return_value=MagicMock(output_text="This is a mock response"),
     ):
         messages = [{"role": "user", "content": "What is the weather today?"}]
         result = client.generate_from_history(messages)
@@ -84,7 +74,7 @@ def test_api_error_handling(mock_api_key):
 
     # Simulate an error during API call
     with patch.object(
-        client.llm_client.chat.completions, "create", side_effect=Exception("API Error")
+        client.llm_client.responses, "create", side_effect=Exception("API Error")
     ):
         result = client.generate("What is the weather today?")
         assert result == "OpenAI API fatal error: API Error"
@@ -97,7 +87,7 @@ def test_generate_with_streaming(mock_api_key):
     # Mock streaming response
     mock_stream = MagicMock(spec=Stream)
     with patch.object(
-        client.llm_client.chat.completions, "create", return_value=mock_stream
+        client.llm_client.responses, "create", return_value=mock_stream
     ):
         result = client.generate("What is the weather today?", stream=True)
         assert result == mock_stream

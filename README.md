@@ -94,11 +94,50 @@ BERTrend requires the following environment variables to be set:
 
 - Install using pip or poetry in the BERTrend home directory:
 
-  `pip install .  # or poetry install`
+  ```bash
+  # Basic installation with core dependencies
+  pip install .  # or poetry install
+
+  # Installation with test dependencies
+  pip install ".[tests]"  # or poetry install --with test
+
+  # Installation with apps dependencies
+  pip install ".[apps]"  # or poetry install --with apps
+
+  # Installation with all optional dependencies
+  pip install ".[tests,apps]"  # or poetry install --with test,apps
+  ```
 
 - (Use `pip install -e .` for a local installation)
 
 NB. Due to the number of dependencies, the installation may take some time on an empty environement.
+
+### Dependency Management
+
+BERTrend's dependencies are organized into logical groups for easier management:
+
+- **Core dependencies**: Essential packages for topic modeling and analysis
+- **NLP and text processing**: Libraries for natural language processing tasks
+- **LLM integration**: Components for working with large language models
+- **Visualization and UI**: Tools for data visualization and user interfaces
+- **Utilities**: General utility libraries
+
+Optional dependency groups:
+
+- **test**: Dependencies for running tests and measuring code coverage
+- **apps**: Additional dependencies required for BERTrend applications
+
+This organization simplifies installation and maintenance, allowing users to install only the dependencies they need for their specific use case.
+
+### Verifying Installation
+
+To verify that your installation is working correctly, you can run the installation verification script:
+
+```bash
+python -m bertrend.tests.test_installation
+```
+
+This script will check that all dependencies are installed correctly and provide a summary of the installation status. If any dependencies are missing, the script will provide instructions on how to install them.
 
 ### Datasets
 
@@ -161,7 +200,7 @@ The application is split into several pages:
 - `Topic exploration`
   - Computes topics over time
   ![exploration_over_time](./docs/images/explore1.png)
-  
+
   - Allow to select sources and generate short descriptions for each theme
   ![topic_exploration](./docs/images/explore2.png)
 
@@ -183,7 +222,7 @@ The application is split into several pages:
   - This is an example of application combining topic analysis and LLMs
   - Generates newsletters based on prominent topics
   - Uses LLMs to generate topic descriptions and summarize representative documents
-   
+
 
 ### 2. Weak Signal Analysis
 **Weak signals** refer to early, small indicators of larger, important trends (like disruptive technologies or public health issues).

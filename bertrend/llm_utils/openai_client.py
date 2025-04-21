@@ -20,9 +20,17 @@ AZURE_API_VERSION = "2025-01-01-preview"
 
 
 class OpenAI_Client:
-    """Generic client for Open AI API (either direct API or via Azure).
-    Important note: the API key and the ENDPOINT must be set using environment variables OPENAI_API_KEY and
-    OPENAI_ENDPOINT respectively. (The endpoint shall only be set for Azure or local deployment)
+    """
+    Generic client for OpenAI API (either direct API or via Azure).
+
+    This class provides a unified interface for interacting with OpenAI models,
+    supporting both direct API access and Azure-hosted deployments. It handles
+    authentication, request formatting, and error handling.
+
+    Notes
+    -----
+    The API key and the ENDPOINT must be set using environment variables OPENAI_API_KEY and
+    OPENAI_ENDPOINT respectively. The endpoint should only be set for Azure or local deployments.
     """
 
     def __init__(
@@ -33,6 +41,28 @@ class OpenAI_Client:
         temperature: float = DEFAULT_TEMPERATURE,
         api_version: str = AZURE_API_VERSION,
     ):
+        """
+        Initialize the OpenAI client.
+
+        Parameters
+        ----------
+        api_key : str, optional
+            OpenAI API key. If None, will try to get from OPENAI_API_KEY environment variable.
+        endpoint : str, optional
+            API endpoint URL. If None, will try to get from OPENAI_ENDPOINT environment variable.
+            Should be set for Azure or local deployments.
+        model : str, optional
+            Name of the model to use. If None, will try to get from OPENAI_DEFAULT_MODEL_NAME environment variable.
+        temperature : float, default=DEFAULT_TEMPERATURE
+            Temperature parameter for controlling randomness in generation.
+        api_version : str, default=AZURE_API_VERSION
+            API version to use for Azure OpenAI service.
+
+        Raises
+        ------
+        EnvironmentError
+            If api_key is None and OPENAI_API_KEY environment variable is not set.
+        """
         if not api_key:
             api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
@@ -80,16 +110,22 @@ class OpenAI_Client:
         system_prompt=None,
         **kwargs,
     ) -> ChatCompletion | Stream[ChatCompletionChunk] | str:
-        """Call openai model for generation.
+        """
+        Call OpenAI model for text generation.
 
-        Args:
-                user_prompt (str): prompt to send to the model with role=user.
-                system_prompt (str): prompt to send to the model with role=system.
-                **kwargs : other arguments
+        Parameters
+        ----------
+        user_prompt : str
+            Prompt to send to the model with role=user.
+        system_prompt : str, optional
+            Prompt to send to the model with role=system.
+        **kwargs : dict
+            Additional arguments to pass to the OpenAI API.
 
-        Returns:
-                (str or Stream[ChatCompletionChunk]): model answer.
-
+        Returns
+        -------
+        str or Stream[ChatCompletionChunk]
+            Model response as text, or a stream of response chunks if stream=True is passed in kwargs.
         """
         # Transform messages into OpenAI API compatible format
         messages = [{"role": "user", "content": user_prompt}]
@@ -104,15 +140,21 @@ class OpenAI_Client:
         messages: list[dict],
         **kwargs,
     ) -> ChatCompletion | Stream[ChatCompletionChunk] | str:
-        """Call openai model for generation.
+        """
+        Call OpenAI model for text generation using a conversation history.
 
-        Args:
-                messages (List): list of messages to pass to the API (in the openAI format)
-                **kwargs : other arguments
+        Parameters
+        ----------
+        messages : list[dict]
+            List of message dictionaries to pass to the API in OpenAI format.
+            Each message should have 'role' and 'content' keys.
+        **kwargs : dict
+            Additional arguments to pass to the OpenAI API.
 
-        Returns:
-                (str or Stream[ChatCompletionChunk]): model answer.
-
+        Returns
+        -------
+        str or Stream[ChatCompletionChunk]
+            Model response as text, or a stream of response chunks if stream=True is passed in kwargs.
         """
         # For important parameters, set default value if not given
         if not kwargs.get("model"):
@@ -142,16 +184,30 @@ class OpenAI_Client:
         response_format: Type[BaseModel] = None,
         **kwargs,
     ) -> BaseModel | None:
-        """Call openai model for generation with Structured Output.
+        """
+        Call OpenAI model for generation with structured output.
 
-        Args:
-                user_prompt (str): prompt to send to the model with role=user.
-                system_prompt (str): prompt to send to the model with role=system.
-                response_format (BaseModel): expected output format.
-                **kwargs : other arguments
+        Parameters
+        ----------
+        user_prompt : str
+            Prompt to send to the model with role=user.
+        system_prompt : str, optional
+            Prompt to send to the model with role=system.
+        response_format : Type[BaseModel], optional
+            Pydantic model class defining the expected output structure.
+        **kwargs : dict
+            Additional arguments to pass to the OpenAI API.
 
-        Returns:
-                BaseModel: a pydantic object.
+        Returns
+        -------
+        BaseModel or None
+            A pydantic object instance of the specified response_format type,
+            or None if an error occurs.
+
+        Notes
+        -----
+        This method uses the beta.chat.completions.parse API which supports
+        structured outputs in the format defined by the response_format parameter.
         """
         # Transform messages into OpenAI API compatible format
         messages = [{"role": "user", "content": user_prompt}]
