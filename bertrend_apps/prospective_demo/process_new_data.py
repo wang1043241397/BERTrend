@@ -80,42 +80,28 @@ def get_relevant_model_config(
 if __name__ == "__main__":
     app = typer.Typer()
 
-    @app.command("train-new-model")
-    def train_new_model(
-        user_name: str = typer.Argument(help="Identifier of the user"),
-        model_id: str = typer.Argument(help="ID of the model/data to train"),
+    def train_new_model_for_period(
+        model_id: str,
+        user_name: str,
+        new_data: pd.DataFrame,
+        reference_timestamp: pd.Timestamp,
     ):
+        # Initialization of embedding service
+        # TODO: customize service (lang, etc)
+        embedding_service = EmbeddingService(local=False)
+
+        # Path to previously saved models for those data and this user
+        bertrend_models_path = get_user_models_path(user_name, model_id)
+
         # Get relevant model info from config
         granularity, window_size, language = get_relevant_model_config(
             model_id=model_id, user=user_name
         )
         language_code = "fr" if language == "French" else "en"
 
-        # Path to previously saved models for those data and this user
-        bertrend_models_path = get_user_models_path(user_name, model_id)
-
-        # Initialization of embedding service
-        # TODO: customize service (lang, etc)
-        embedding_service = EmbeddingService(local=False)
-
-        # Load data for last period
-        new_data = load_all_data(model_id=model_id, user=user_name, language=language)
-        # filter data according to granularity
-        # Calculate the date X days ago
-        reference_timestamp = pd.Timestamp(
-            new_data["timestamp"].max().date()
-        )  # used to identify the last model
-        cut_off_date = new_data["timestamp"].max() - timedelta(days=granularity)
-        # Filter the DataFrame to keep only the rows within the last X days
-        filtered_df = new_data[new_data["timestamp"] >= cut_off_date]
-
-        # Split data by paragraphs
-        filtered_df = split_data(filtered_df)
-
-        logger.info(f'Processing new data for user "{user_name}" about "{model_id}"...')
         # Process new data
         bertrend = train_new_data(
-            filtered_df,
+            new_data,
             bertrend_models_path=bertrend_models_path,
             embedding_service=embedding_service,
             language=language,
@@ -130,6 +116,7 @@ if __name__ == "__main__":
         bertrend.calculate_signal_popularity()
 
         # classify last signals
+        cut_off_date = new_data["timestamp"].max() - timedelta(days=granularity)
         noise_topics_df, weak_signal_topics_df, strong_signal_topics_df = (
             bertrend.classify_signals(window_size, cut_off_date)
         )
@@ -189,6 +176,40 @@ if __name__ == "__main__":
                     df_name=df_name,
                     output_path=interpretation_path,
                 )
+
+    @app.command("train-new-model")
+    def train_new_model(
+        user_name: str = typer.Argument(help="Identifier of the user"),
+        model_id: str = typer.Argument(help="ID of the model/data to train"),
+    ):
+
+        logger.info(f'Processing new data for user "{user_name}" about "{model_id}"...')
+
+        # Get relevant model info from config
+        granularity, window_size, language = get_relevant_model_config(
+            model_id=model_id, user=user_name
+        )
+
+        # Load data for last period
+        new_data = load_all_data(model_id=model_id, user=user_name, language=language)
+        # filter data according to granularity
+        # Calculate the date X days ago
+        reference_timestamp = pd.Timestamp(
+            new_data["timestamp"].max().date()
+        )  # used to identify the last model
+        cut_off_date = new_data["timestamp"].max() - timedelta(days=granularity)
+        # Filter the DataFrame to keep only the rows within the last X days
+        filtered_df = new_data[new_data["timestamp"] >= cut_off_date]
+
+        # Split data by paragraphs
+        filtered_df = split_data(filtered_df)
+
+        train_new_model_for_period(
+            model_id=model_id,
+            user_name=user_name,
+            new_data=filtered_df,
+            reference_timestamp=reference_timestamp,
+        )
 
     def generate_llm_interpretation(
         bertrend: BERTrend,

@@ -123,15 +123,12 @@ class OpenAI_Client:
             kwargs["max_tokens"] = self.max_tokens
 
         try:
-            answer = self.llm_client.chat.completions.create(
-                messages=messages,
-                **kwargs,
-            )
-            logger.debug(f"API returned: {answer}")
+            response = self.llm_client.responses.create(input=messages, **kwargs)
+            logger.debug(f"API returned: {response}")
             if kwargs.get("stream", False):
-                return answer
+                return response
             else:
-                return answer.choices[0].message.content
+                return response.output_text
             # Details of errors available here: https://platform.openai.com/docs/guides/error-codes/api-errors
         except Exception as e:
             msg = f"OpenAI API fatal error: {e}"

@@ -13,6 +13,7 @@ from bertrend_apps.prospective_demo import get_user_models_path
 from bertrend_apps.prospective_demo.process_new_data import (
     load_all_data,
     get_relevant_model_config,
+    train_new_model_for_period,
 )
 
 
@@ -21,7 +22,7 @@ from bertrend_apps.prospective_demo.process_new_data import (
 # This will not regenerate the analysis which are quite costly
 
 
-def regenerate_models(model_id: str, user: str):
+def regenerate_models(model_id: str, user: str, with_analysis: bool = True):
     """Regenerate from scratch (method retrospective) the models associated to the specified model identifier
     for the specified user."""
 
@@ -48,19 +49,28 @@ def regenerate_models(model_id: str, user: str):
     # - Group data based on granularity
     grouped_data = group_by_days(df=df, day_granularity=granularity)
 
-    # Train BERTrend
-    bertrend = BERTrend(topic_model=BERTopicModel({"global": {"language": language}}))
-    embeddings, _, _ = embedding_service.embed(
-        texts=df[TEXT_COLUMN],
-    )
-    bertrend.train_topic_models(
-        grouped_data=grouped_data,
-        embedding_model=embedding_service.embedding_model_name,
-        embeddings=embeddings,
-        bertrend_models_path=bertrend_models_path,
-        save_topic_models=True,
-    )
-    bertrend.save_model(models_path=bertrend_models_path)
+    if not with_analysis:
+        # Train BERTrend
+        bertrend = BERTrend(
+            topic_model=BERTopicModel({"global": {"language": language}})
+        )
+        embeddings, _, _ = embedding_service.embed(
+            texts=df[TEXT_COLUMN],
+        )
+        bertrend.train_topic_models(
+            grouped_data=grouped_data,
+            embedding_model=embedding_service.embedding_model_name,
+            embeddings=embeddings,
+            bertrend_models_path=bertrend_models_path,
+            save_topic_models=True,
+        )
+        bertrend.save_model(models_path=bertrend_models_path)
+
+    else:
+        for ts, df in sorted(grouped_data.items()):
+            train_new_model_for_period(
+                model_id=model_id, user_name=user, new_data=df, reference_timestamp=ts
+            )
 
     logger.success(
         f"Regenerated models for '{model_id}' from scratch. BERTrend model was built using {len(bertrend.doc_groups)} models/time periods."
