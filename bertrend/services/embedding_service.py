@@ -40,11 +40,21 @@ class EmbeddingService(BaseEmbedder):
     ):
         """
         Class implementing embedding service.
-        :param local (bool): indicates whether to use local or remote embeddings service.
-        :param model_name (str): The name of the Sentence Transformer model to use.
-        :param embedding_dtype: (Literal): The data type to use for the embeddings ('float32', 'float16', or 'bfloat16').
-        :param host (str): The host address of the remote embedding service to use.
-        :param port (str): The port of the remote embedding service to use.
+
+        Parameters
+        ----------
+        local : bool
+            Indicates whether to use local or remote embedding service.
+        model_name : str
+            The name of the Sentence Transformer model to use.
+        embedding_dtype : Literal['float32', 'float16', 'bfloat16']
+            The data type to use for the embeddings.
+        url : str
+            The URL of the remote embedding service to use.
+        client_id : str
+            The client ID for authentication with the remote service.
+        client_secret : str
+            The client secret for authentication with the remote service.
         """
         super().__init__()
         self.local = local
@@ -68,15 +78,20 @@ class EmbeddingService(BaseEmbedder):
         embeddings for a list of input texts. It processes the texts in batches to manage
         memory efficiently, especially for large datasets.
 
-        Args:
-            texts (Union[List[str], pd.Series]): A list of text documents to be embedded.
-            verbose (bool): Level of output details. Defaults to False.
+        Parameters
+        ----------
+        texts : list[str] or pd.Series
+            A list of text documents to be embedded.
+        verbose : bool, default=False
+            Level of output details.
 
-        Returns:
-            Tuple[SentenceTransformer, np.ndarray]: A tuple containing:
-                - A numpy array of embeddings, where each row corresponds to a text in the input list.
-                - A list of grouped token strings
-                - A list of grouped token embeddings
+        Returns
+        -------
+        tuple
+            A tuple containing:
+            - np.ndarray : A numpy array of embeddings, where each row corresponds to a text in the input list.
+            - list[list[str]] or None : A list of grouped token strings
+            - list[np.ndarray] or None : A list of grouped token embeddings
         """
         # Convert to list if input is a pandas Series
         if isinstance(texts, pd.Series):
@@ -100,21 +115,30 @@ class EmbeddingService(BaseEmbedder):
         embeddings for a list of input texts. It processes the texts in batches to manage
         memory efficiently, especially for large datasets.
 
-        Args:
-            texts (List[str]): A list of text documents to be embedded.
-            embedding_device (str, optional): The device to use for embedding ('cuda' or 'cpu').
-                                              Defaults to 'cuda' if available, else 'cpu'.
-            batch_size (int, optional): The number of texts to process in each batch. Defaults to 32.
-            max_seq_length (int, optional): The maximum sequence length for the model. Defaults to 512.
+        Parameters
+        ----------
+        texts : list[str]
+            A list of text documents to be embedded.
+        embedding_device : str, optional
+            The device to use for embedding ('cuda' or 'cpu').
+            Defaults to 'cuda' if available, else 'cpu'.
+        batch_size : int, optional
+            The number of texts to process in each batch. Defaults to 32.
+        max_seq_length : int, optional
+            The maximum sequence length for the model. Defaults to 512.
 
-        Returns:
-            Tuple[SentenceTransformer, np.ndarray]: A tuple containing:
-                - A numpy array of embeddings, where each row corresponds to a text in the input list.
-                - A list of grouped token strings
-                - A list of grouped token embeddings
+        Returns
+        -------
+        tuple
+            A tuple containing:
+            - np.ndarray : A numpy array of embeddings, where each row corresponds to a text in the input list.
+            - list[list[str]] : A list of grouped token strings
+            - list[np.ndarray] : A list of grouped token embeddings
 
-        Raises:
-            ValueError: If an invalid embedding_dtype is provided.
+        Raises
+        ------
+        ValueError
+            If an invalid embedding_dtype is provided.
         """
         # Configure model kwargs based on the specified dtype
         model_kwargs = {}
@@ -195,15 +219,20 @@ class EmbeddingService(BaseEmbedder):
         The service is assumed to require authentication using OAuth2 protocol. Credentials have to be
         provided for the "bertrend" app.
 
-        Args:
-            texts (List[str]): A list of text documents to be embedded.
-            show_progress_bar (bool): Progress bar display on service side. Defaults to True.
+        Parameters
+        ----------
+        texts : list[str]
+            A list of text documents to be embedded.
+        show_progress_bar : bool, default=True
+            Progress bar display on service side.
 
-        Returns:
-            Tuple[SentenceTransformer, np.ndarray]: A tuple containing:
-                - A numpy array of embeddings, where each row corresponds to a text in the input list.
-                - A list of grouped token strings
-                - A list of grouped token embeddings
+        Returns
+        -------
+        tuple
+            A tuple containing:
+            - np.ndarray : A numpy array of embeddings, where each row corresponds to a text in the input list.
+            - None : Placeholder for token strings (not available in remote mode)
+            - None : Placeholder for token embeddings (not available in remote mode)
         """
         logger.debug(f"Computing embeddings...")
         embeddings = self.secure_client.embed_documents(
@@ -214,6 +243,16 @@ class EmbeddingService(BaseEmbedder):
     def _get_remote_model_name(self) -> str:
         """
         Return currently loaded model name in Embedding API.
+
+        Returns
+        -------
+        str
+            The name of the model currently loaded in the Embedding API.
+
+        Raises
+        ------
+        Exception
+            If the API request fails.
         """
         response = requests.get(self.url + "/model_name", verify=False)
         if response.status_code == 200:
@@ -228,11 +267,23 @@ class EmbeddingService(BaseEmbedder):
 def _convert_to_numpy(obj, type=None):
     """
     Convert a torch.Tensor or list of torch.Tensors to numpy arrays.
-    Args:
-        obj: The object to convert (torch.Tensor or list).
-        type: The type of conversion (optional, used for token ids).
-    Returns:
-        np.ndarray or list of np.ndarray.
+
+    Parameters
+    ----------
+    obj : torch.Tensor or list
+        The object to convert.
+    type : str, optional
+        The type of conversion (used for token ids).
+
+    Returns
+    -------
+    np.ndarray or list
+        Converted numpy array or list of numpy arrays.
+
+    Raises
+    ------
+    TypeError
+        If the object is not a list or torch.Tensor.
     """
     if isinstance(obj, torch.Tensor):
         return (
@@ -249,13 +300,24 @@ def _convert_to_numpy(obj, type=None):
 def _group_tokens(tokenizer, token_ids, token_embeddings, language="french"):
     """
     Group split tokens into whole words and average their embeddings.
-    Args:
-        tokenizer: The tokenizer to use for converting ids to tokens.
-        token_ids: List of token ids.
-        token_embeddings: List of token embeddings.
-        language: The language of the tokens (default is "french").
-    Returns:
-        List of grouped tokens and their corresponding embeddings.
+
+    Parameters
+    ----------
+    tokenizer : object
+        The tokenizer to use for converting ids to tokens.
+    token_ids : list
+        List of token ids.
+    token_embeddings : list
+        List of token embeddings.
+    language : str, default="french"
+        The language of the tokens.
+
+    Returns
+    -------
+    tuple
+        A tuple containing:
+        - list : List of grouped tokens
+        - list : List of corresponding averaged embeddings
     """
     grouped_token_lists = []
     grouped_embedding_lists = []

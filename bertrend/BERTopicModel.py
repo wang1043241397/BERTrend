@@ -71,12 +71,26 @@ class BERTopicModel:
     def __init__(self, config: str | Path | dict = BERTOPIC_DEFAULT_CONFIG_PATH):
         """
         Initialize a class from a TOML config file.
-        `config` can be:
+
+        Parameters
+        ----------
+        config : str or Path or dict, default=BERTOPIC_DEFAULT_CONFIG_PATH
+            Configuration source, which can be:
             - a `str` representing the TOML file
             - a `Path` to a TOML file
-            - a `dict` (with the same structure of the default config) containing values to be overridden compared to the default configuration
+            - a `dict` (with the same structure of the default config) containing values 
+              to be overridden compared to the default configuration
 
+        Notes
+        -----
         To see file format and list of parameters: bertrend/config/topic_model_default_config.toml
+
+        Raises
+        ------
+        Exception
+            If the TOML config file cannot be loaded.
+        TypeError
+            If the config parameter is not a string, Path, or dict.
         """
         if isinstance(config, str | Path):
             try:
@@ -114,7 +128,14 @@ class BERTopicModel:
 
     @classmethod
     def get_default_config(cls) -> dict:
-        """Helper function to get default config. Useful to modify a s"""
+        """
+        Helper function to get default configuration.
+
+        Returns
+        -------
+        dict
+            The default configuration dictionary loaded from the default config file.
+        """
         return load_toml_config(BERTOPIC_DEFAULT_CONFIG_PATH)
 
     def _update_config(self):
@@ -208,15 +229,28 @@ class BERTopicModel:
         """
         Create a TopicModelOutput model.
 
-        Args:
-            docs (List[str]): List of documents.
-            embeddings (np.ndarray): Precomputed document embeddings.
-            embedding_model (SentenceTransformer | str): Sentence transformer (or associated model name) model for embeddings.
-            zeroshot_topic_list (list[str]): List of topics used for zeroshot classification.
-            zeroshot_min_similarity (float): Parameter used for zeroshot classification.
+        Parameters
+        ----------
+        docs : list[str]
+            List of documents.
+        embeddings : np.ndarray
+            Precomputed document embeddings.
+        embedding_model : SentenceTransformer or str or None, optional
+            Sentence transformer (or associated model name) model for embeddings.
+        zeroshot_topic_list : list[str] or None, optional
+            List of topics used for zeroshot classification.
+        zeroshot_min_similarity : float or None, optional
+            Parameter used for zeroshot classification.
 
-        Returns:
-            BERTopic: A fitted BERTopic model.
+        Returns
+        -------
+        BERTopicModelOutput
+            A fitted BERTopic model output object containing the model and related data.
+
+        Raises
+        ------
+        Exception
+            If there's an error during the model creation or fitting process.
         """
         # Override zeroshot parameters if provided in method argument
         if zeroshot_topic_list:

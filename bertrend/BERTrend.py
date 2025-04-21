@@ -52,12 +52,21 @@ class BERTrend:
     """
     A comprehensive trend analysis and weak signal detection tool using BERTopic.
 
-    Key Parameters:
-    - embedding_model_name: Name of the embedding model to use
-    - granularity: Number of days to group documents
-    - min_chars: Minimum character length for documents
-    - split_by_paragraph: Whether to split documents by paragraph
-    - sample_size: Number of documents to sample
+    This class provides functionality for analyzing trends and detecting weak signals
+    in text data over time using BERTopic models.
+
+    Parameters
+    ----------
+    embedding_model_name : str
+        Name of the embedding model to use
+    granularity : int
+        Number of days to group documents
+    min_chars : int
+        Minimum character length for documents
+    split_by_paragraph : bool
+        Whether to split documents by paragraph
+    sample_size : int
+        Number of documents to sample
     """
 
     def __init__(
@@ -67,10 +76,18 @@ class BERTrend:
     ):
         """
         Initialize a class from a TOML config file.
-        `config_file` can be:
+
+        Parameters
+        ----------
+        config_file : str or Path, default=BERTREND_DEFAULT_CONFIG_PATH
+            Configuration file path, which can be:
             - a `str` representing the TOML file
             - a `Path` to a TOML file
+        topic_model : BERTopicModel, optional
+            Pre-configured BERTopicModel instance. If None, a default instance will be created.
 
+        Notes
+        -----
         To see file format and list of parameters: bertrend/config/bertrend_default_config.toml
         """
         # Load configuration file
@@ -112,12 +129,24 @@ class BERTrend:
     def _load_config(self) -> dict:
         """
         Load the TOML config file as a dict when initializing the class.
+
+        Returns
+        -------
+        dict
+            The configuration dictionary loaded from the config file.
         """
         config = load_toml_config(self.config_file)
         return config
 
     def get_periods(self):
-        """Return the time periods used by the model"""
+        """
+        Return the time periods used by the model.
+
+        Returns
+        -------
+        list
+            List of timestamps representing the time periods used by the model.
+        """
         return list(self.doc_groups.keys())
 
     def _train_by_period(
@@ -134,18 +163,24 @@ class BERTrend:
         """
         Train BERTopic models for a given time period from the grouped data.
 
-        Args:
-            period (pd.Timestamp): Timestamp of the time period
-            group (pd.DataFrame): Group of data associated to that timestamp.
-            embedding_model (SentenceTransformer): Sentence transformer model for embeddings.
-            embeddings (np.ndarray): Precomputed document embeddings.
+        Parameters
+        ----------
+        period : pd.Timestamp
+            Timestamp of the time period.
+        group : pd.DataFrame
+            Group of data associated to that timestamp.
+        embedding_model : SentenceTransformer
+            Sentence transformer model for embeddings.
+        embeddings : np.ndarray
+            Precomputed document embeddings.
 
-
-        Returns:
-            Tuple[BERTopic, List[str], np.ndarray]:
-                - topic_model: trained BERTopic models for this period.
-                - doc_group: document groups for this period.
-                - emb_group: document embeddings for this period.
+        Returns
+        -------
+        tuple
+            A tuple containing:
+            - BERTopic : Trained BERTopic model for this period.
+            - list[str] : Document groups for this period.
+            - np.ndarray : Document embeddings for this period.
         """
         docs = group[TEXT_COLUMN].tolist()
         embeddings_subset = embeddings[group.index]
@@ -219,19 +254,29 @@ class BERTrend:
         """
         Train BERTopic models for each timestamp in the grouped data.
 
-        Stores Tuple[Dict[pd.Timestamp, BERTopic], Dict[pd.Timestamp, List[str]], Dict[pd.Timestamp, np.ndarray]]:
-            - topic_models: Dictionary of trained BERTopic models for each timestamp.
-            - doc_groups: Dictionary of document groups for each timestamp.
-            - emb_groups: Dictionary of document embeddings for each timestamp.
-            - save_topic_models: Boolean flag to save topic models.
-            - bertrend_models_path: Path to BERTrend models folder.
+        This method trains BERTopic models for each timestamp in the grouped data and
+        stores the results in instance variables.
 
-        Args:
-            :param grouped_data: Dictionary of grouped data by timestamp.
-            :param embedding_model: Sentence transformer model for embeddings.
-            :param embeddings: Precomputed document embeddings.
-            :param save_topic_models: Boolean flag to save topic models.
-            :param bertrend_models_path: Path to BERTrend models folder.
+        Parameters
+        ----------
+        grouped_data : dict[pd.Timestamp, pd.DataFrame]
+            Dictionary of grouped data by timestamp.
+        embedding_model : SentenceTransformer or str
+            Sentence transformer model for embeddings.
+        embeddings : np.ndarray
+            Precomputed document embeddings.
+        bertrend_models_path : Path, default=MODELS_DIR
+            Path to BERTrend models folder.
+        save_topic_models : bool, default=True
+            Boolean flag to save topic models.
+
+        Notes
+        -----
+        This method updates the following instance variables:
+        - doc_groups : Dictionary of document groups for each timestamp.
+        - emb_groups : Dictionary of document embeddings for each timestamp.
+        - last_topic_model : The most recently trained BERTopic model.
+        - last_topic_model_timestamp : The timestamp of the most recently trained model.
         """
         non_empty_groups = [
             (period, group) for period, group in grouped_data.items() if not group.empty
