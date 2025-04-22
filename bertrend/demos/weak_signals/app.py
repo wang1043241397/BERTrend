@@ -3,6 +3,11 @@
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
 
+import torch
+
+# workaround with streamlit to avoid errors Examining the path of torch.classes raised: Tried to instantiate class 'path.path’, but it does not exist! Ensure that it is registered via torch::class
+torch.classes.__path__ = []
+
 import pickle
 import shutil
 from typing import Literal
@@ -81,6 +86,7 @@ from bertrend.demos.weak_signals.visualizations_utils import (
     save_signal_evolution,
     display_signal_analysis,
     retrieve_topic_counts,
+    display_signal_types,
 )
 
 # UI Settings
@@ -166,9 +172,9 @@ def load_data_page():
             if SessionStateManager.get("data_embedded", False):
                 save_state()
         except Exception as e:
-            logger.error(f"An error occurred while embedding documents: {str(e)}")
+            logger.error(f"An error occurred while embedding documents: {e}")
             st.error(
-                f"An error occurred while embedding documents: {str(e)}",
+                f"An error occurred while embedding documents: {e}",
                 icon=ERROR_ICON,
             )
 
@@ -247,28 +253,15 @@ def training_page():
                 st.success(MODEL_TRAINING_COMPLETE_MESSAGE, icon=SUCCESS_ICON)
 
                 # Save trained models
-                bertrend.save_models()
+                bertrend.save_model()
                 st.success(MODELS_SAVED_MESSAGE, icon=SUCCESS_ICON)
+
+                # Compute signal popularity
+                bertrend.calculate_signal_popularity()
+                SessionStateManager.set("popularity_computed", True)
 
                 # Store bertrend object
                 SessionStateManager.set("bertrend", bertrend)
-
-        if (
-            "bertrend" not in st.session_state
-            or not SessionStateManager.get("bertrend")._is_fitted
-        ):
-            st.stop()
-        else:
-            if st.button("Merge Models", type="primary"):
-                with st.spinner("Merging models..."):
-                    bertrend = SessionStateManager.get("bertrend")
-                    bertrend.merge_all_models(
-                        min_similarity=SessionStateManager.get("min_similarity"),
-                    )
-
-                    bertrend.calculate_signal_popularity()
-
-                    SessionStateManager.set("popularity_computed", True)
 
                 st.success(MODEL_MERGING_COMPLETE_MESSAGE, icon=SUCCESS_ICON)
 
@@ -283,7 +276,10 @@ def analysis_page():
         )
         st.stop()
 
-    elif not SessionStateManager.get("bertrend")._is_fitted:
+    elif (
+        not SessionStateManager.get("bertrend")
+        or not SessionStateManager.get("bertrend")._is_fitted
+    ):
         st.warning(
             TRAIN_WARNING,
             icon=WARNING_ICON,
@@ -291,7 +287,7 @@ def analysis_page():
         st.stop()
 
     else:
-        topic_models = SessionStateManager.get("bertrend").topic_models
+        topic_models = SessionStateManager.get("bertrend").restore_topic_models()
         with st.expander("Topic Overview", expanded=False):
             # Number of Topics Detected for each topic model
             st.plotly_chart(
@@ -411,6 +407,9 @@ def analysis_page():
                 # Save Signal Evolution Data to investigate later on in a separate notebook
                 save_signal_evolution()
 
+            # Show weak/strong signals
+            display_signal_types()
+
             # Analyze signal
             with st.expander("Signal Analysis", expanded=True):
                 st.subheader("Signal Analysis")
@@ -469,7 +468,7 @@ def main():
         if st.button("Restore Previous Run", use_container_width=True):
             restore_state()
             try:
-                SessionStateManager.set("bertrend", BERTrend.restore_models())
+                SessionStateManager.set("bertrend", BERTrend.restore_model())
                 st.success(MODELS_RESTORED_MESSAGE, icon=SUCCESS_ICON)
             except Exception as e:
                 st.warning(NO_MODELS_WARNING, icon=WARNING_ICON)

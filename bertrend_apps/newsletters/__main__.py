@@ -28,6 +28,7 @@ from bertrend.utils.data_loading import (
     TEXT_COLUMN,
     load_data,
     split_data,
+    TITLE_COLUMN,
 )
 from bertrend.llm_utils.newsletter_features import (
     generate_newsletter,
@@ -108,16 +109,17 @@ if __name__ == "__main__":
             .reset_index(drop=True)
             .reset_index()
         )
-        # Deduplicate using all columns
-        dataset = dataset.drop_duplicates()
+
+        # Deduplicate using only useful columns (otherwise possible problems with non hashable types)
+        dataset = dataset.drop_duplicates(subset=[TEXT_COLUMN, TITLE_COLUMN])
         logger.info(f"Dataset size: {len(dataset)}")
 
         # Embed dataset
         logger.info("Computation of embeddings for new data...")
         embedding_model_name = config["embedding_service"].get("model_name")
-        embeddings, _, _ = EmbeddingService(model_name=embedding_model_name).embed(
-            dataset[TEXT_COLUMN]
-        )
+        embeddings, _, _ = EmbeddingService(
+            model_name=embedding_model_name, local=False
+        ).embed(dataset[TEXT_COLUMN])
 
         if learning_type == INFERENCE_ONLY:
             # predict only
@@ -205,10 +207,12 @@ if __name__ == "__main__":
         embedding_model: str,
         embeddings: ndarray,
     ) -> tuple[list, BERTopic]:
-        topic_model = BERTopicModel(config_file)
+        toml = load_toml_config(config_file)
+        # extract relevant bertopic info
+        language = toml["bertopic_parameters"].get("language")
+        topic_model = BERTopicModel({"global": {"language": language}})
         output = topic_model.fit(
             docs=dataset[TEXT_COLUMN],
-            embedding_model=embedding_model,
             embeddings=embeddings,
         )
         return output.topics, output.topic_model

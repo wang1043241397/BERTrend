@@ -67,20 +67,12 @@ def _on_language_change():
 
 def display_remote_embeddings():
     """UI settings for remote embedding service"""
-    register_widget("embedding_service_hostname")
-    register_widget("embedding_service_port")
-    if "embedding_service_hostname" not in st.session_state:
-        st.session_state["embedding_service_hostname"] = EMBEDDING_CONFIG["host"]
-    if "embedding_service_port" not in st.session_state:
-        st.session_state["embedding_service_port"] = EMBEDDING_CONFIG["port"]
+    register_widget("embedding_service_url")
+    if "embedding_service_url" not in st.session_state:
+        st.session_state["embedding_service_url"] = EMBEDDING_CONFIG["url"]
     st.text_input(
-        "Embedding service hostname",
-        key="embedding_service_hostname",
-        on_change=save_widget_state,
-    )
-    st.text_input(
-        "Embedding service port",
-        value=EMBEDDING_CONFIG["port"],
+        "Embedding service URL",
+        key="embedding_service_url",
         on_change=save_widget_state,
     )
 
@@ -91,7 +83,7 @@ def display_embedding_hyperparameters():
     with st.expander("Embedding Model Settings", expanded=False):
         register_widget("embedding_service_type")
         if "embedding_service_type" not in st.session_state:
-            st.session_state["embedding_service_type"] = "local"
+            st.session_state["embedding_service_type"] = "remote"
         st.segmented_control(
             "Embedding service",
             selection_mode="single",

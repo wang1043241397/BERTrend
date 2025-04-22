@@ -4,23 +4,33 @@
 #  This file is part of BERTrend.
 
 import os
+from typing import Type
 
 from openai import OpenAI, AzureOpenAI, Timeout, Stream
 from loguru import logger
 from openai.types.chat import ChatCompletion, ChatCompletionChunk
+from pydantic import BaseModel
 
 MAX_ATTEMPTS = 3
 TIMEOUT = 60.0
 DEFAULT_TEMPERATURE = 0.1
 DEFAULT_MAX_TOKENS = 512
 
-AZURE_API_VERSION = "2024-02-01"
+AZURE_API_VERSION = "2025-01-01-preview"
 
 
 class OpenAI_Client:
-    """Generic client for Open AI API (either direct API or via Azure).
-    Important note: the API key and the ENDPOINT must be set using environment variables OPENAI_API_KEY and
-    OPENAI_ENDPOINT respectively. (The endpoint shall only be set for Azure or local deployment)
+    """
+    Generic client for OpenAI API (either direct API or via Azure).
+
+    This class provides a unified interface for interacting with OpenAI models,
+    supporting both direct API access and Azure-hosted deployments. It handles
+    authentication, request formatting, and error handling.
+
+    Notes
+    -----
+    The API key and the ENDPOINT must be set using environment variables OPENAI_API_KEY and
+    OPENAI_ENDPOINT respectively. The endpoint should only be set for Azure or local deployments.
     """
 
     def __init__(
@@ -31,6 +41,28 @@ class OpenAI_Client:
         temperature: float = DEFAULT_TEMPERATURE,
         api_version: str = AZURE_API_VERSION,
     ):
+        """
+        Initialize the OpenAI client.
+
+        Parameters
+        ----------
+        api_key : str, optional
+            OpenAI API key. If None, will try to get from OPENAI_API_KEY environment variable.
+        endpoint : str, optional
+            API endpoint URL. If None, will try to get from OPENAI_ENDPOINT environment variable.
+            Should be set for Azure or local deployments.
+        model : str, optional
+            Name of the model to use. If None, will try to get from OPENAI_DEFAULT_MODEL_NAME environment variable.
+        temperature : float, default=DEFAULT_TEMPERATURE
+            Temperature parameter for controlling randomness in generation.
+        api_version : str, default=AZURE_API_VERSION
+            API version to use for Azure OpenAI service.
+
+        Raises
+        ------
+        EnvironmentError
+            If api_key is None and OPENAI_API_KEY environment variable is not set.
+        """
         if not api_key:
             api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
@@ -39,7 +71,7 @@ class OpenAI_Client:
             )
             raise EnvironmentError(f"OPENAI_API_KEY environment variable not found.")
 
-        endpoint = endpoint if endpoint else os.getenv("OPENAI_ENDPOINT", None)
+        endpoint = endpoint or os.getenv("OPENAI_ENDPOINT", None)
         if endpoint == "":  # check empty env var
             endpoint = None
 
@@ -55,7 +87,7 @@ class OpenAI_Client:
         }
         azure_params = {
             "azure_endpoint": endpoint,
-            "api_version": api_version if api_version else AZURE_API_VERSION,
+            "api_version": api_version or AZURE_API_VERSION,
         }
 
         if not run_on_azure:
@@ -68,7 +100,7 @@ class OpenAI_Client:
                 **common_params,
                 **azure_params,
             )
-        self.model_name = model if model else os.getenv("OPENAI_DEFAULT_MODEL_NAME")
+        self.model_name = model or os.getenv("OPENAI_DEFAULT_MODEL_NAME")
         self.temperature = temperature
         self.max_tokens = DEFAULT_MAX_TOKENS
 
@@ -78,16 +110,22 @@ class OpenAI_Client:
         system_prompt=None,
         **kwargs,
     ) -> ChatCompletion | Stream[ChatCompletionChunk] | str:
-        """Call openai model for generation.
+        """
+        Call OpenAI model for text generation.
 
-        Args:
-                user_prompt (str): prompt to send to the model with role=user.
-                system_prompt (str): prompt to send to the model with role=system.
-                **kwargs : other arguments
+        Parameters
+        ----------
+        user_prompt : str
+            Prompt to send to the model with role=user.
+        system_prompt : str, optional
+            Prompt to send to the model with role=system.
+        **kwargs : dict
+            Additional arguments to pass to the OpenAI API.
 
-        Returns:
-                (str or Stream[ChatCompletionChunk]): model answer.
-
+        Returns
+        -------
+        str or Stream[ChatCompletionChunk]
+            Model response as text, or a stream of response chunks if stream=True is passed in kwargs.
         """
         # Transform messages into OpenAI API compatible format
         messages = [{"role": "user", "content": user_prompt}]
@@ -102,15 +140,21 @@ class OpenAI_Client:
         messages: list[dict],
         **kwargs,
     ) -> ChatCompletion | Stream[ChatCompletionChunk] | str:
-        """Call openai model for generation.
+        """
+        Call OpenAI model for text generation using a conversation history.
 
-        Args:
-                messages (List): list of messages to pass to the API (in the openAI format)
-                **kwargs : other arguments
+        Parameters
+        ----------
+        messages : list[dict]
+            List of message dictionaries to pass to the API in OpenAI format.
+            Each message should have 'role' and 'content' keys.
+        **kwargs : dict
+            Additional arguments to pass to the OpenAI API.
 
-        Returns:
-                (str or Stream[ChatCompletionChunk]): model answer.
-
+        Returns
+        -------
+        str or Stream[ChatCompletionChunk]
+            Model response as text, or a stream of response chunks if stream=True is passed in kwargs.
         """
         # For important parameters, set default value if not given
         if not kwargs.get("model"):
@@ -121,17 +165,73 @@ class OpenAI_Client:
             kwargs["max_tokens"] = self.max_tokens
 
         try:
-            answer = self.llm_client.chat.completions.create(
-                messages=messages,
-                **kwargs,
-            )
-            logger.debug(f"API returned: {answer}")
+            response = self.llm_client.responses.create(input=messages, **kwargs)
+            logger.debug(f"API returned: {response}")
             if kwargs.get("stream", False):
-                return answer
+                return response
             else:
-                return answer.choices[0].message.content
+                return response.output_text
             # Details of errors available here: https://platform.openai.com/docs/guides/error-codes/api-errors
         except Exception as e:
             msg = f"OpenAI API fatal error: {e}"
             logger.error(msg)
             return msg
+
+    def parse(
+        self,
+        user_prompt: str,
+        system_prompt: str = None,
+        response_format: Type[BaseModel] = None,
+        **kwargs,
+    ) -> BaseModel | None:
+        """
+        Call OpenAI model for generation with structured output.
+
+        Parameters
+        ----------
+        user_prompt : str
+            Prompt to send to the model with role=user.
+        system_prompt : str, optional
+            Prompt to send to the model with role=system.
+        response_format : Type[BaseModel], optional
+            Pydantic model class defining the expected output structure.
+        **kwargs : dict
+            Additional arguments to pass to the OpenAI API.
+
+        Returns
+        -------
+        BaseModel or None
+            A pydantic object instance of the specified response_format type,
+            or None if an error occurs.
+
+        Notes
+        -----
+        This method uses the beta.chat.completions.parse API which supports
+        structured outputs in the format defined by the response_format parameter.
+        """
+        # Transform messages into OpenAI API compatible format
+        messages = [{"role": "user", "content": user_prompt}]
+        # Add system prompt if one is provided
+        if system_prompt:
+            messages.insert(0, {"role": "system", "content": system_prompt})
+        # For important parameters, set default value if not given
+        if not kwargs.get("model"):
+            kwargs["model"] = self.model_name
+        if not kwargs.get("temperature"):
+            kwargs["temperature"] = self.temperature
+        if not kwargs.get("max_tokens"):
+            kwargs["max_tokens"] = self.max_tokens
+
+        try:
+            # NB. here use beta.chat...parse to support structured outputs
+            answer = self.llm_client.beta.chat.completions.parse(
+                messages=messages,
+                response_format=response_format,
+                **kwargs,
+            )
+            logger.debug(f"API returned: {answer}")
+            return answer.choices[0].message.parsed
+            # Details of errors available here: https://platform.openai.com/docs/guides/error-codes/api-errors
+        except Exception as e:
+            msg = f"OpenAI API fatal error: {e}"
+            logger.error(msg)

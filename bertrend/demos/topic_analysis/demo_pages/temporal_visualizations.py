@@ -50,7 +50,7 @@ def check_model_trained():
 
 def check_embedding_type():
     """Check the embedding service type. Remote embedding service currently not support these visualizations."""
-    if SessionStateManager.get("embedding_service_type", "local") != "local":
+    if SessionStateManager.get("embedding_service_type", "remote") != "local":
         st.error(
             REMOTE_EMBEDDING_SEVICE_TYPE_NOT_SUPPORTED_ERROR,
             icon=ERROR_ICON,

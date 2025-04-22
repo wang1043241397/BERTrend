@@ -2,7 +2,6 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
-import copy
 import os
 import pickle
 
@@ -22,7 +21,6 @@ from tqdm import tqdm
 
 from bertrend import (
     MODELS_DIR,
-    CACHE_PATH,
     BERTREND_DEFAULT_CONFIG_PATH,
     load_toml_config,
     SIGNAL_EVOLUTION_DATA_DIR,
@@ -54,12 +52,21 @@ class BERTrend:
     """
     A comprehensive trend analysis and weak signal detection tool using BERTopic.
 
-    Key Parameters:
-    - embedding_model_name: Name of the embedding model to use
-    - granularity: Number of days to group documents
-    - min_chars: Minimum character length for documents
-    - split_by_paragraph: Whether to split documents by paragraph
-    - sample_size: Number of documents to sample
+    This class provides functionality for analyzing trends and detecting weak signals
+    in text data over time using BERTopic models.
+
+    Parameters
+    ----------
+    embedding_model_name : str
+        Name of the embedding model to use
+    granularity : int
+        Number of days to group documents
+    min_chars : int
+        Minimum character length for documents
+    split_by_paragraph : bool
+        Whether to split documents by paragraph
+    sample_size : int
+        Number of documents to sample
     """
 
     def __init__(
@@ -69,10 +76,18 @@ class BERTrend:
     ):
         """
         Initialize a class from a TOML config file.
-        `config_file` can be:
+
+        Parameters
+        ----------
+        config_file : str or Path, default=BERTREND_DEFAULT_CONFIG_PATH
+            Configuration file path, which can be:
             - a `str` representing the TOML file
             - a `Path` to a TOML file
+        topic_model : BERTopicModel, optional
+            Pre-configured BERTopicModel instance. If None, a default instance will be created.
 
+        Notes
+        -----
         To see file format and list of parameters: bertrend/config/bertrend_default_config.toml
         """
         # Load configuration file
@@ -84,15 +99,17 @@ class BERTrend:
 
         # State variables of BERTrend
         self._is_fitted = False
-        self._are_models_merged = False
 
         # Variables related to time-based topic models
-        # - topic_models: Dictionary of trained BERTopic models for each timestamp.
-        self.topic_models: dict[pd.Timestamp, BERTopic] = {}
+        # - last_topic_model: last trained BERTopic model (used for last timestamp)
+        self.last_topic_model: BERTopic = None
+        # - last_timestamp: timestamp associated to the last trained BERTopic model
+        self.last_topic_model_timestamp: pd.Timestamp = None
         # - doc_groups: Dictionary of document groups for each timestamp.
         self.doc_groups: dict[pd.Timestamp, list[str]] = {}
         # - emb_groups: Dictionary of document embeddings for each timestamp.
         self.emb_groups: dict[pd.Timestamp, np.ndarray] = {}
+        self.merge_df_size_over_time = []
 
         # Variables containing info about merged topics
         self.all_new_topics_df = None
@@ -112,9 +129,25 @@ class BERTrend:
     def _load_config(self) -> dict:
         """
         Load the TOML config file as a dict when initializing the class.
+
+        Returns
+        -------
+        dict
+            The configuration dictionary loaded from the config file.
         """
         config = load_toml_config(self.config_file)
         return config
+
+    def get_periods(self):
+        """
+        Return the time periods used by the model.
+
+        Returns
+        -------
+        list
+            List of timestamps representing the time periods used by the model.
+        """
+        return list(self.doc_groups.keys())
 
     def _train_by_period(
         self,
@@ -130,18 +163,24 @@ class BERTrend:
         """
         Train BERTopic models for a given time period from the grouped data.
 
-        Args:
-            period (pd.Timestamp): Timestamp of the time period
-            group (pd.DataFrame): Group of data associated to that timestamp.
-            embedding_model (SentenceTransformer): Sentence transformer model for embeddings.
-            embeddings (np.ndarray): Precomputed document embeddings.
+        Parameters
+        ----------
+        period : pd.Timestamp
+            Timestamp of the time period.
+        group : pd.DataFrame
+            Group of data associated to that timestamp.
+        embedding_model : SentenceTransformer
+            Sentence transformer model for embeddings.
+        embeddings : np.ndarray
+            Precomputed document embeddings.
 
-
-        Returns:
-            Tuple[BERTopic, List[str], np.ndarray]:
-                - topic_model: trained BERTopic models for this period.
-                - doc_group: document groups for this period.
-                - emb_group: document embeddings for this period.
+        Returns
+        -------
+        tuple
+            A tuple containing:
+            - BERTopic : Trained BERTopic model for this period.
+            - list[str] : Document groups for this period.
+            - np.ndarray : Document embeddings for this period.
         """
         docs = group[TEXT_COLUMN].tolist()
         embeddings_subset = embeddings[group.index]
@@ -152,14 +191,14 @@ class BERTrend:
         logger.debug("Creating topic model...")
         topic_model = self.topic_model.fit(
             docs=docs,
-            embedding_model=embedding_model,
             embeddings=embeddings_subset,
         ).topic_model
 
         logger.debug("Topic model created successfully")
 
-        doc_info_df = topic_model.get_document_info(docs=docs)
-        doc_info_df = doc_info_df.rename(columns={"Document": "Paragraph"})
+        doc_info_df = topic_model.get_document_info(docs=docs).rename(
+            columns={"Document": "Paragraph"}
+        )
         doc_info_df = doc_info_df.merge(
             group[[TEXT_COLUMN, "document_id", "source", "url"]],
             left_on="Paragraph",
@@ -207,162 +246,174 @@ class BERTrend:
     def train_topic_models(
         self,
         grouped_data: dict[pd.Timestamp, pd.DataFrame],
-        embedding_model: SentenceTransformer,
+        embedding_model: SentenceTransformer | str,
         embeddings: np.ndarray,
+        bertrend_models_path: Path = MODELS_DIR,
+        save_topic_models: bool = True,
     ):
         """
         Train BERTopic models for each timestamp in the grouped data.
 
-        Stores Tuple[Dict[pd.Timestamp, BERTopic], Dict[pd.Timestamp, List[str]], Dict[pd.Timestamp, np.ndarray]]:
-            - topic_models: Dictionary of trained BERTopic models for each timestamp.
-            - doc_groups: Dictionary of document groups for each timestamp.
-            - emb_groups: Dictionary of document embeddings for each timestamp.
+        This method trains BERTopic models for each timestamp in the grouped data and
+        stores the results in instance variables.
 
-        Args:
-            grouped_data (Dict[pd.Timestamp, pd.DataFrame]): Dictionary of grouped data by timestamp.
-            embedding_model (SentenceTransformer): Sentence transformer model for embeddings.
-            embeddings (np.ndarray): Precomputed document embeddings.
+        Parameters
+        ----------
+        grouped_data : dict[pd.Timestamp, pd.DataFrame]
+            Dictionary of grouped data by timestamp.
+        embedding_model : SentenceTransformer or str
+            Sentence transformer model for embeddings.
+        embeddings : np.ndarray
+            Precomputed document embeddings.
+        bertrend_models_path : Path, default=MODELS_DIR
+            Path to BERTrend models folder.
+        save_topic_models : bool, default=True
+            Boolean flag to save topic models.
+
+        Notes
+        -----
+        This method updates the following instance variables:
+        - doc_groups : Dictionary of document groups for each timestamp.
+        - emb_groups : Dictionary of document embeddings for each timestamp.
+        - last_topic_model : The most recently trained BERTopic model.
+        - last_topic_model_timestamp : The timestamp of the most recently trained model.
         """
-        topic_models = {}
-        doc_groups = {}
-        emb_groups = {}
-
         non_empty_groups = [
             (period, group) for period, group in grouped_data.items() if not group.empty
         ]
 
-        # Set up progress bar
-        # TODO: tqdm
-        # progress_bar = st.progress(0)
-        # progress_text = st.empty()
-
         for i, (period, group) in enumerate(non_empty_groups):
             try:
                 logger.info(f"Training topic model {i+1}/{len(non_empty_groups)}...")
-                topic_models[period], doc_groups[period], emb_groups[period] = (
-                    self._train_by_period(period, group, embedding_model, embeddings)
+                (
+                    new_topic_model,
+                    self.doc_groups[period],
+                    self.emb_groups[period],
+                ) = self._train_by_period(
+                    period, group, embedding_model, embeddings
                 )  # TODO: parallelize?
+
+                if self.last_topic_model is not None:
+                    self.merge_models_with(new_topic_model, period)
+
+                if save_topic_models:
+                    logger.info(f"Saving topic model for period {period}...")
+                    # save new model to disk for potential reuse
+                    BERTrend.save_topic_model(
+                        period, new_topic_model, bertrend_models_path
+                    )
+
+                # Update last topic model
+                self.last_topic_model = new_topic_model
+                self.last_topic_model_timestamp = period
+
                 logger.debug(f"Successfully processed period: {period}")
 
             except Exception as e:
-                logger.error(f"Error processing period {period}: {str(e)}")
+                logger.error(f"Error processing period {period}: {e}")
                 logger.exception("Traceback:")
                 continue  # TODO: better error handling
 
-            # Update progress bar
-            """
-            progress = (i + 1) / len(non_empty_groups)
-            progress_bar.progress(progress)
-            progress_text.text(
-                f"Training BERTopic model for {period} ({i + 1}/{len(non_empty_groups)})"
-            )
-            """
-
         self._is_fitted = True
 
-        # Merge the newly obtained topic models with new ones
-        # Update topic_models: Dictionary of trained BERTopic models for each timestamp.
-        self.topic_models.update(topic_models)
-        # Update doc_groups: Dictionary of document groups for each timestamp.
-        self.doc_groups.update(doc_groups)
-        # Update emb_groups: Dictionary of document embeddings for each timestamp.
-        self.emb_groups.update(emb_groups)
         logger.success("Finished training all topic models")
 
-    def merge_all_models(
+    def merge_models_with(
         self,
+        new_model: BERTopic,
+        new_model_timestamp: pd.Timestamp,
         min_similarity: int | None = None,
     ):
-        """Merge together all topic models."""
+        """
+        Merge two specific topic models.
+
+        Parameters
+        ----------
+        new_model : BERTopic
+            The new topic model to merge with the last trained model.
+        new_model_timestamp : pd.Timestamp
+            Timestamp associated with the new model.
+        min_similarity : int or None, default=None
+            Minimum similarity threshold for merging topics. If None, uses the value from config.
+
+        Raises
+        ------
+        ValueError
+            If either the new model or the last topic model is not valid.
+
+        Notes
+        -----
+        This method updates the merged_df, all_merge_histories_df, and all_new_topics_df instance variables.
+        """
         logger.debug(
-            f"{len(self.topic_models)} topic models to be merged:\n{list(self.topic_models.keys())}"
+            f"Merging topic models for timestamps: {self.last_topic_model_timestamp} and {new_model_timestamp}"
         )
-        if len(self.topic_models) < 2:  # beginning of the process, no real merge needed
-            logger.warning("This function requires at least two topic models. Ignored")
-            self._are_models_merged = False
-            return
+
+        # Check if both timestamps exist in topic models
+        if new_model is None or self.last_topic_model is None:
+            raise ValueError(
+                f"At least one topic model is not valid. You must fit the BERTrend model before merging models."
+            )
 
         # Get default BERTrend config if argument is not provided
         if min_similarity is None:
             min_similarity = self.config["min_similarity"]
 
-        # Check if model is fitted
-        if not self._is_fitted:
-            raise RuntimeError("You must fit the BERTrend model before merging models.")
+        merged_df_without_outliers = self.merged_df
 
-        topic_dfs = {
-            period: _preprocess_model(
-                model, self.doc_groups[period], self.emb_groups[period]
+        if merged_df_without_outliers is None:
+            # Preprocess the two specific models
+            topic_df1 = _preprocess_model(
+                self.last_topic_model,
+                self.doc_groups[self.last_topic_model_timestamp],
+                self.emb_groups[self.last_topic_model_timestamp],
             )
-            for period, model in self.topic_models.items()
-        }
+            # Remove outliers (Topic == -1)
+            df1 = topic_df1[topic_df1["Topic"] != -1]
+            merged_df_without_outliers = df1
 
-        timestamps = sorted(topic_dfs.keys())
+        topic_df2 = _preprocess_model(
+            new_model,
+            self.doc_groups[new_model_timestamp],
+            self.emb_groups[new_model_timestamp],
+        )
+        # Remove outliers (Topic == -1)
+        df2 = topic_df2[topic_df2["Topic"] != -1]
 
-        assert len(self.topic_models) >= 2
-
-        merged_df_without_outliers = None
-        all_merge_histories = []
-        all_new_topics = []
-
-        # TODO: tqdm
-        merge_df_size_over_time = []
-
-        for i, (current_timestamp, next_timestamp) in tqdm(
-            enumerate(zip(timestamps[:-1], timestamps[1:]))
-        ):
-            df1 = topic_dfs[current_timestamp][
-                topic_dfs[current_timestamp]["Topic"] != -1
-            ]
-            df2 = topic_dfs[next_timestamp][topic_dfs[next_timestamp]["Topic"] != -1]
-
-            if merged_df_without_outliers is None:
-                if not (df1.empty or df2.empty):
-                    (
-                        merged_df_without_outliers,
-                        merge_history,
-                        new_topics,
-                    ) = _merge_models(
-                        df1,
-                        df2,
-                        min_similarity=min_similarity,
-                        timestamp=current_timestamp,
-                    )
-            elif not df2.empty:
-                (
-                    merged_df_without_outliers,
-                    merge_history,
-                    new_topics,
-                ) = _merge_models(
-                    merged_df_without_outliers,
-                    df2,
-                    min_similarity=min_similarity,
-                    timestamp=current_timestamp,
-                )
-            else:
-                continue
-
-            all_merge_histories.append(merge_history)
-            all_new_topics.append(new_topics)
-            merge_df_size_over_time = merge_df_size_over_time
-            merge_df_size_over_time.append(
-                (
-                    current_timestamp,
-                    merged_df_without_outliers["Topic"].max() + 1,
-                )
+        # Check if either dataframe is empty
+        if merged_df_without_outliers.empty or df2.empty:
+            logger.warning(
+                f"One of the dataframes is empty. Skipping merge for {new_model_timestamp}"
             )
+            return None
 
-            # progress_bar.progress((i + 1) / len(timestamps))
+        # Merge the two models
+        (
+            merged_df_without_outliers,
+            merge_history,
+            new_topics,
+        ) = _merge_models(
+            merged_df_without_outliers,
+            df2,
+            min_similarity=min_similarity,
+            timestamp=self.last_topic_model_timestamp,
+        )
 
-        all_merge_histories_df = pd.concat(all_merge_histories, ignore_index=True)
-        all_new_topics_df = pd.concat(all_new_topics, ignore_index=True)
-
+        # Store results
         self.merged_df = merged_df_without_outliers
-        self.all_merge_histories_df = all_merge_histories_df
-        self.all_new_topics_df = all_new_topics_df
-
-        logger.success("All models merged successfully")
-        self._are_models_merged = True
+        self.all_merge_histories_df = pd.concat(
+            [self.all_merge_histories_df, merge_history], ignore_index=True
+        )
+        self.all_new_topics_df = pd.concat(
+            [self.all_new_topics_df, new_topics], ignore_index=True
+        )
+        self.merge_df_size_over_time.append(
+            (
+                new_model_timestamp,
+                merged_df_without_outliers["Topic"].max() + 1,
+            )
+        )
+        logger.success(f"Models {new_model_timestamp} merged successfully with others")
 
     def calculate_signal_popularity(
         self,
@@ -371,19 +422,28 @@ class BERTrend:
     ):
         """
         Compute the popularity of signals (topics) over time, accounting for merges and applying decay.
-        Updates:
-           - topic_sizes (Dict[int, Dict[str, Any]]): Dictionary storing topic sizes and related information over time.
-           - topic_last_popularity (Dict[int, float]): Dictionary storing the last known popularity of each topic.
-           - topic_last_update (Dict[int, pd.Timestamp]): Dictionary storing the last update timestamp of each topic.
 
-        Args:
-            all_merge_histories_df (pd.DataFrame): DataFrame containing all merge histories.
-            granularity (int): Granularity of the timestamps in days.
-            decay_factor (float): Factor for exponential decay calculation.
-            decay_power (float): Power for exponential decay calculation.
+        Parameters
+        ----------
+        decay_factor : float or None, default=None
+            Factor for exponential decay calculation. If None, uses the value from config.
+        decay_power : float or None, default=None
+            Power for exponential decay calculation. If None, uses the value from config.
 
-        Returns:
+        Notes
+        -----
+        This method updates the following instance variables:
+        - topic_sizes : Dict[int, Dict[str, Any]]
+            Dictionary storing topic sizes and related information over time.
+        - topic_last_popularity : Dict[int, float]
+            Dictionary storing the last known popularity of each topic.
+        - topic_last_update : Dict[int, pd.Timestamp]
+            Dictionary storing the last update timestamp of each topic.
 
+        Raises
+        ------
+        ValueError
+            If less than two topic models have been trained.
         """
         # Get default BERTrend config if argument is not provided
         if decay_factor is None:
@@ -392,9 +452,9 @@ class BERTrend:
             decay_power = self.config["decay_power"]
 
         # Check if models are merged
-        if not self._are_models_merged:
+        if len(self.doc_groups) < 2:
             logger.error(
-                "You must merge topic models first before computing signal popularity."
+                "You must train at least two topic models first before computing signal popularity."
             )
             return
 
@@ -474,17 +534,29 @@ class BERTrend:
         self, window_size: int, current_date: Timestamp
     ) -> tuple[Timestamp, Timestamp, list, float, float]:
         """
-        Computes the popularity values and thresholds for the considered time window.
+        Compute the popularity values and thresholds for the considered time window.
 
-        Args:
-            window_size (int): The retrospective window size in days.
-            current_date (datetime): The current date selected by the user.
+        Parameters
+        ----------
+        window_size : int
+            The retrospective window size in days.
+        current_date : Timestamp
+            The current date selected by the user.
 
-        Returns:
-            Tuple[Timestamp,Timestamp, list, float, float,]:
-                window_start, window_end indicates the start / end periods.
-                all_popularities_values
-                The q1 and q3 values representing the 10th and 90th percentiles of popularity values,
+        Returns
+        -------
+        tuple
+            A tuple containing:
+            - window_start : Timestamp
+                Start timestamp of the time window.
+            - window_end : Timestamp
+                End timestamp of the time window.
+            - all_popularity_values : list
+                List of all popularity values within the time window.
+            - q1 : float
+                The lower threshold value (10th percentile of popularity values).
+            - q3 : float
+                The upper threshold value (90th percentile of popularity values).
         """
 
         window_size_timedelta = pd.Timedelta(days=window_size)
@@ -524,19 +596,31 @@ class BERTrend:
         """
         Classify signals into weak signal and strong signal dataframes.
 
-        Args:
-            window_start (pd.Timestamp): The start timestamp of the window.
-            window_end (pd.Timestamp): The end timestamp of the window.
-            q1 (float): The 10th percentile of popularity values.
-            q3 (float): The 50th percentile of popularity values.
-            rising_popularity_only (bool): Whether to consider only rising popularity topics as weak signals.
-            keep_documents (bool): Whether to keep track of the documents or not.
+        Parameters
+        ----------
+        window_start : pd.Timestamp
+            The start timestamp of the window.
+        window_end : pd.Timestamp
+            The end timestamp of the window.
+        q1 : float
+            The lower threshold value (10th percentile of popularity values).
+        q3 : float
+            The upper threshold value (90th percentile of popularity values).
+        rising_popularity_only : bool, default=True
+            Whether to consider only rising popularity topics as weak signals.
+        keep_documents : bool, default=True
+            Whether to keep track of the documents or not.
 
-        Returns:
-            Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-                - noise_topics_df: DataFrame containing noise topics.
-                - weak_signal_topics_df: DataFrame containing weak signal topics.
-                - strong_signal_topics_df: DataFrame containing strong signal topics.
+        Returns
+        -------
+        tuple
+            A tuple containing:
+            - noise_topics_df : pd.DataFrame
+                DataFrame containing noise topics.
+            - weak_signal_topics_df : pd.DataFrame
+                DataFrame containing weak signal topics.
+            - strong_signal_topics_df : pd.DataFrame
+                DataFrame containing strong signal topics.
         """
         noise_topics = []
         weak_signal_topics = []
@@ -608,16 +692,23 @@ class BERTrend:
         """
         Classify signals into weak signal and strong signal dataframes for the considered time window.
 
-        Args:
-            window_size (int): The retrospective window size in days.
-            current_date (datetime): The current date selected by the user.
+        Parameters
+        ----------
+        window_size : int
+            The retrospective window size in days.
+        current_date : Timestamp
+            The current date selected by the user.
 
-
-        Returns:
-            Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-                - noise_topics_df: DataFrame containing noise topics.
-                - weak_signal_topics_df: DataFrame containing weak signal topics.
-                - strong_signal_topics_df: DataFrame containing strong signal topics.
+        Returns
+        -------
+        tuple
+            A tuple containing:
+            - noise_topics_df : pd.DataFrame
+                DataFrame containing noise topics.
+            - weak_signal_topics_df : pd.DataFrame
+                DataFrame containing weak signal topics.
+            - strong_signal_topics_df : pd.DataFrame
+                DataFrame containing strong signal topics.
         """
         # Compute threshold values
         window_start, window_end, all_popularity_values, q1, q3 = (
@@ -630,67 +721,169 @@ class BERTrend:
         )
         return noise_topics_df, weak_signal_topics_df, strong_signal_topics_df
 
-    def save_models(self, models_path: Path = MODELS_DIR):
+    def save_model(self, models_path: Path = MODELS_DIR):
+        """
+        Save BERTrend model to disk.
+
+        Parameters
+        ----------
+        models_path : Path, default=MODELS_DIR
+            Path to the directory where the model will be saved.
+
+        Notes
+        -----
+        This method serializes the entire BERTrend object using dill and saves it to the specified path.
+        """
         models_path.mkdir(parents=True, exist_ok=True)
-
-        # Save topic models using the selected serialization type
-        for period, topic_model in self.topic_models.items():
-            model_dir = models_path / period.strftime("%Y-%m-%d")
-            model_dir.mkdir(exist_ok=True)
-            embedding_model = topic_model.embedding_model
-            topic_model.save(
-                model_dir,
-                serialization=BERTOPIC_SERIALIZATION,
-                save_ctfidf=False,
-                save_embedding_model=embedding_model,
-            )
-
-            topic_model.doc_info_df.to_pickle(model_dir / DOC_INFO_DF_FILE)
-            topic_model.topic_info_df.to_pickle(model_dir / TOPIC_INFO_DF_FILE)
-
-        # Serialize BERTrend (excluding topic models for separate reuse if needed)
-        topic_models_bak = copy.deepcopy(self.topic_models)
-        self.topic_models = None
+        # Serialize BERTrend object (using dill as an improvement of pickle for complex objects)
         with open(models_path / BERTREND_FILE, "wb") as f:
             dill.dump(self, f)
-        self.topic_models = topic_models_bak
-
-        logger.info(f"Models saved to: {models_path}")
+        logger.info(f"BERTrend model saved to: {models_path}")
 
     @classmethod
-    def restore_models(cls, models_path: Path = MODELS_DIR) -> "BERTrend":
+    def restore_model(cls, models_path: Path = MODELS_DIR) -> "BERTrend":
+        """
+        Restore a previously saved BERTrend model from disk.
+
+        Parameters
+        ----------
+        models_path : Path, default=MODELS_DIR
+            Path to the directory where the model was saved.
+
+        Returns
+        -------
+        BERTrend
+            The restored BERTrend model instance.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the specified models_path does not exist.
+
+        Notes
+        -----
+        This method deserializes a BERTrend object using dill from the specified path.
+        """
         if not models_path.exists():
             raise FileNotFoundError(f"models_path={models_path} does not exist")
-
-        logger.info(f"Loading models from: {models_path}")
-
+        logger.info(f"Loading BERTrend model from: {models_path}")
         # Unserialize BERTrend object (using dill as an improvement of pickle for complex objects)
         with open(models_path / BERTREND_FILE, "rb") as f:
             bertrend = dill.load(f)
+        return bertrend
 
+    @classmethod
+    def save_topic_model(
+        cls, period: pd.Timestamp, topic_model: BERTopic, models_path: Path = MODELS_DIR
+    ):
+        """
+        Serialize a topic model to disk for potential reuse.
+
+        Parameters
+        ----------
+        period : pd.Timestamp
+            Timestamp associated with the topic model.
+        topic_model : BERTopic
+            The BERTopic model to save.
+        models_path : Path, default=MODELS_DIR
+            Path to the directory where the model will be saved.
+
+        Notes
+        -----
+        This method saves the BERTopic model along with its associated document and topic information
+        to a directory named with the period's date (YYYY-MM-DD format).
+        """
+        models_path.mkdir(parents=True, exist_ok=True)
+        model_dir = models_path / period.strftime("%Y-%m-%d")
+        model_dir.mkdir(exist_ok=True)
+        embedding_model = topic_model.embedding_model
+        topic_model.save(
+            model_dir,
+            serialization=BERTOPIC_SERIALIZATION,
+            save_ctfidf=False,
+            save_embedding_model=embedding_model,
+        )
+        topic_model.doc_info_df.to_pickle(model_dir / DOC_INFO_DF_FILE)
+        topic_model.topic_info_df.to_pickle(model_dir / TOPIC_INFO_DF_FILE)
+
+    @classmethod
+    def restore_topic_model(
+        cls, period: pd.Timestamp, models_path: Path = MODELS_DIR
+    ) -> BERTopic | None:
+        """
+        Restore a previously stored topic model.
+
+        Parameters
+        ----------
+        period : pd.Timestamp
+            Timestamp associated with the topic model to restore.
+        models_path : Path, default=MODELS_DIR
+            Path to the directory where the model was saved.
+
+        Returns
+        -------
+        BERTopic or None
+            The restored BERTopic model if found, None otherwise.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the specified models_path does not exist.
+
+        Notes
+        -----
+        This method looks for a directory named with the period's date (YYYY-MM-DD format)
+        and attempts to load the BERTopic model along with its associated document and topic information.
+        """
+        if not models_path.exists():
+            raise FileNotFoundError(f"models_path={models_path} does not exist")
         # Restore topic models using the selected serialization type
-        topic_models = {}
         for period_dir in models_path.glob(
             r"????-??-??"
         ):  # filter dir that are formatted YYYY-MM-DD
             if period_dir.is_dir():
-                topic_model = BERTopic.load(period_dir)
+                if period_dir.name == period.strftime("%Y-%m-%d"):
+                    topic_model = BERTopic.load(period_dir)
+                    doc_info_df_file = period_dir / DOC_INFO_DF_FILE
+                    topic_info_df_file = period_dir / TOPIC_INFO_DF_FILE
+                    if doc_info_df_file.exists() and topic_info_df_file.exists():
+                        topic_model.doc_info_df = pd.read_pickle(doc_info_df_file)
+                        topic_model.topic_info_df = pd.read_pickle(topic_info_df_file)
+                    else:
+                        logger.warning(
+                            f"doc_info_df or topic_info_df not found for period {period_dir.name}"
+                        )
+                    return topic_model
+        return None
 
-                doc_info_df_file = period_dir / DOC_INFO_DF_FILE
-                topic_info_df_file = period_dir / TOPIC_INFO_DF_FILE
-                if doc_info_df_file.exists() and topic_info_df_file.exists():
-                    topic_model.doc_info_df = pd.read_pickle(doc_info_df_file)
-                    topic_model.topic_info_df = pd.read_pickle(topic_info_df_file)
-                else:
-                    logger.warning(
-                        f"doc_info_df or topic_info_df not found for period {period_dir.name}"
-                    )
+    def restore_topic_models(
+        self, models_path: Path = MODELS_DIR
+    ) -> dict[pd.Timestamp, BERTopic] | None:
+        """
+        Restore all previously stored topic models for the periods in this BERTrend instance.
 
-                period = pd.Timestamp(period_dir.name.replace("_", ":"))
-                topic_models[period] = topic_model
-        bertrend.topic_models = topic_models
+        Parameters
+        ----------
+        models_path : Path, default=MODELS_DIR
+            Path to the directory where the models were saved.
 
-        return bertrend
+        Returns
+        -------
+        dict or None
+            A dictionary mapping timestamps to their corresponding BERTopic models.
+            Returns an empty dictionary if no models are found.
+
+        Notes
+        -----
+        This method attempts to restore topic models for all periods that exist in the
+        current BERTrend instance by calling restore_topic_model for each period.
+        """
+        topic_models = {}
+        for ts in self.get_periods():
+            tm = self.restore_topic_model(period=ts, models_path=models_path)
+            if tm:
+                topic_models[ts] = tm
+        return topic_models
 
     def save_signal_evolution_data(
         self,
@@ -698,6 +891,29 @@ class BERTrend:
         start_timestamp: pd.Timestamp,
         end_timestamp: pd.Timestamp,
     ) -> Path:
+        """
+        Save signal evolution data for a range of timestamps.
+
+        Parameters
+        ----------
+        window_size : int
+            The retrospective window size in days.
+        start_timestamp : pd.Timestamp
+            The start timestamp of the range to process.
+        end_timestamp : pd.Timestamp
+            The end timestamp of the range to process.
+
+        Returns
+        -------
+        Path
+            Path to the directory where the signal evolution data was saved.
+
+        Notes
+        -----
+        This method processes each timestamp in the specified range, classifies signals,
+        and saves the results to disk for later analysis. The data is saved in a directory
+        named 'retrospective_{window_size}_days' within the SIGNAL_EVOLUTION_DATA_DIR.
+        """
         save_path = SIGNAL_EVOLUTION_DATA_DIR / f"retrospective_{window_size}_days"
         os.makedirs(save_path, exist_ok=True)
 
@@ -757,11 +973,36 @@ def train_new_data(
     granularity: int,
     language: str,
 ) -> BERTrend:
-    """Helper function for processing new data (incremental trend analysis:
-    - loads a previous saved BERTrend model
-    - train a new topic model with the new data
-    - merge the models and update merge histories
-    - save the model and returns it
+    """
+    Process new data for incremental trend analysis.
+
+    Parameters
+    ----------
+    new_data : pd.DataFrame
+        DataFrame containing new text data to process.
+    bertrend_models_path : Path
+        Path to the directory where BERTrend models are stored.
+    embedding_service : EmbeddingService
+        Service for generating text embeddings.
+    granularity : int
+        Number of days to group documents.
+    language : str
+        Language of the text data.
+
+    Returns
+    -------
+    BERTrend
+        Updated BERTrend model with the new data incorporated.
+
+    Notes
+    -----
+    This function performs the following steps:
+    1. Loads a previously saved BERTrend model
+    2. Trains a new topic model with the new data
+    3. Merges the models and updates merge histories
+    4. Saves the model and returns it
+
+    If no previous model exists, a new BERTrend model is created.
     """
     logger.debug(f"Processing new data: {len(new_data)} items")
 
@@ -772,7 +1013,7 @@ def train_new_data(
     # Restore previous models
     try:
         logger.info(f"Restoring previous BERTrend models from {bertrend_models_path}")
-        bertrend = BERTrend.restore_models(bertrend_models_path)
+        bertrend = BERTrend.restore_model(bertrend_models_path)
     except:
         logger.warning("Cannot restore previous models, creating new one")
         # overrides default params
@@ -795,14 +1036,13 @@ def train_new_data(
         {reference_timestamp: new_data},
         embeddings=embeddings,
         embedding_model=embedding_model_name,
+        bertrend_models_path=bertrend_models_path,
+        save_topic_models=True,
     )
 
-    logger.info(f"BERTrend contains {len(bertrend.topic_models)} topic models")
-    # Save models
-    bertrend.save_models(models_path=bertrend_models_path)
-
-    # Merge models
-    bertrend.merge_all_models()
+    logger.info(f"BERTrend built from {len(bertrend.doc_groups)} periods")
+    # Save model
+    bertrend.save_model(models_path=bertrend_models_path)
 
     return bertrend
 
@@ -813,13 +1053,21 @@ def _preprocess_model(
     """
     Preprocess a BERTopic model by extracting topic information, document groups, document embeddings, and URLs.
 
-    Args:
-        topic_model (BERTopic): A fitted BERTopic model.
-        docs (List[str]): List of documents.
-        embeddings (np.ndarray): Precomputed document embeddings.
+    Parameters
+    ----------
+    topic_model : BERTopic
+        A fitted BERTopic model.
+    docs : list[str]
+        List of documents.
+    embeddings : np.ndarray
+        Precomputed document embeddings.
 
-    Returns:
-        pd.DataFrame: A DataFrame with topic information, document groups, document embeddings, and URLs.
+    Returns
+    -------
+    pd.DataFrame
+        A DataFrame with topic information, document groups, document embeddings, and URLs.
+        The DataFrame contains columns for Topic, Count, Document_Count, Representation,
+        Documents, Embedding, DocEmbeddings, Sources, and URLs.
     """
     topic_info = topic_model.topic_info_df
     doc_info = topic_model.doc_info_df
@@ -861,6 +1109,37 @@ def _preprocess_model(
 def _merge_models(
     df1: pd.DataFrame, df2: pd.DataFrame, min_similarity: float, timestamp: pd.Timestamp
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Merge two topic model dataframes based on topic similarity.
+
+    Parameters
+    ----------
+    df1 : pd.DataFrame
+        First topic model dataframe (existing topics).
+    df2 : pd.DataFrame
+        Second topic model dataframe (new topics).
+    min_similarity : float
+        Minimum cosine similarity threshold for merging topics.
+    timestamp : pd.Timestamp
+        Timestamp associated with the merge operation.
+
+    Returns
+    -------
+    tuple
+        A tuple containing:
+        - merged_df : pd.DataFrame
+            DataFrame with merged topics.
+        - merge_history : pd.DataFrame
+            DataFrame containing the history of merged topics.
+        - new_topics : pd.DataFrame
+            DataFrame containing new topics that weren't merged.
+
+    Notes
+    -----
+    This function computes cosine similarities between topic embeddings and merges
+    topics that exceed the minimum similarity threshold. Topics that don't meet the
+    threshold are added as new topics.
+    """
     merged_df = df1.copy()
     merge_history = []
 

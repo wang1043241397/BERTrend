@@ -2,6 +2,12 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
+
+import torch
+
+# workaround with streamlit to avoid errors Examining the path of torch.classes raised: Tried to instantiate class 'path.path’, but it does not exist! Ensure that it is registered via torch::class
+torch.classes.__path__ = []
+
 from typing import Literal
 
 import streamlit as st
@@ -12,13 +18,8 @@ from bertrend.demos.demos_utils.icons import (
     ANALYSIS_ICON,
     NEWSLETTER_ICON,
     SERVER_STORAGE_ICON,
-    TOPIC_ICON,
     TREND_ICON,
     MODELS_ICON,
-)
-from bertrend.demos.demos_utils.parameters_component import (
-    display_bertopic_hyperparameters,
-    display_bertrend_hyperparameters,
 )
 from bertrend.demos.demos_utils.state_utils import SessionStateManager
 from bertrend_apps.prospective_demo.authentication import check_password
@@ -27,7 +28,8 @@ from bertrend_apps.prospective_demo.feeds_config import configure_information_so
 from bertrend_apps.prospective_demo.feeds_data import display_data_status
 from bertrend_apps.prospective_demo.models_info import models_monitoring
 from bertrend_apps.prospective_demo.report_generation import reporting
-from bertrend_apps.prospective_demo.signal_analysis import signal_analysis
+from bertrend_apps.prospective_demo.dashboard_signals import signal_analysis
+
 
 # UI Settings
 # PAGE_TITLE = "BERTrend - Prospective Analysis demo"
@@ -35,8 +37,8 @@ PAGE_TITLE = "BERTrend - Démo Veille & Analyse"
 LAYOUT: Literal["centered", "wide"] = "wide"
 
 # TODO: reactivate password
-# AUTHENTIFICATION = True
-AUTHENTIFICATION = False
+AUTHENTIFICATION = True
+# AUTHENTIFICATION = False
 
 
 def main():

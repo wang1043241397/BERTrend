@@ -304,9 +304,7 @@ def _display_topic_description(filtered_df: pd.DataFrame):
                 language_code=language_code,
             )
         with st.container(border=True):
-            st.markdown(
-                f"### {gpt_description['title']}\n{gpt_description['description']}"
-            )
+            st.markdown(f"### {gpt_description.title}\n{gpt_description.description}")
 
 
 def main():

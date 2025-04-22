@@ -125,7 +125,7 @@ class DataProvider(ABC):
         """Extracts text and (clean) title from an article URL"""
         if any(ele in url for ele in BLACKLISTED_URL):
             logger.warning(f"Source of {url} is blacklisted!")
-            return None
+            return "", ""
 
         logger.debug(f"Extracting text from {url}")
         try:
@@ -133,16 +133,20 @@ class DataProvider(ABC):
             return article.cleaned_text, article.title
         except:
             # goose3 not working, trying with alternate parser
-            logger.warning("Parsing of text failed with Goose3, trying newspaper3k")
+            logger.warning("Parsing of text failed with Goose3, trying newspaper4k")
             return self._get_text_alternate(url)
 
     def _get_text_alternate(self, url: str) -> tuple[str, str]:
         """Extracts text from an article URL"""
-        logger.debug(f"Extracting text from {url} with newspaper3k")
-        article = Article(url)
-        article.download()
-        article.parse()
-        return article.text, article.title
+        logger.debug(f"Extracting text from {url} with newspaper4k")
+        try:
+            article = Article(url)
+            article.download()
+            article.parse()
+            return article.text, article.title
+        except:
+            logger.warning("Parsing of text failed with newspaper4k, IGNORED")
+            return "", ""
 
     def _filter_out_bad_text(self, text):
         if (

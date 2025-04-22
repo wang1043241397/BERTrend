@@ -12,11 +12,10 @@ from pandas import Timestamp
 
 from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend import LLM_CONFIG
-from bertrend.trend_analysis.prompts import (
-    get_prompt,
-    save_html_output,
-    clean_html_output,
-)
+from bertrend.trend_analysis.data_structure import TopicSummaryList, SignalAnalysis
+from bertrend.trend_analysis.prompts import get_prompt, fill_html_template
+
+MAXIMUM_ANALYZED_PERIODS = 3
 
 
 def detect_weak_signals_zeroshot(
@@ -334,13 +333,28 @@ def _apply_decay_to_inactive_topics(
             topic_last_popularity[topic] = decayed_popularity
 
 
-def analyze_signal(bertrend, topic_number: int, current_date: Timestamp):
+def analyze_signal(
+    bertrend,
+    topic_number: int,
+    current_date: Timestamp,
+    maximum_analysed_periods: int = MAXIMUM_ANALYZED_PERIODS,
+) -> tuple[TopicSummaryList, SignalAnalysis]:
     topic_merge_rows = bertrend.all_merge_histories_df[
         bertrend.all_merge_histories_df["Topic1"] == topic_number
     ].sort_values("Timestamp")
     topic_merge_rows_filtered = topic_merge_rows[
         topic_merge_rows["Timestamp"] <= current_date
     ]
+
+    # In order to avoid to have too big contexts, keep only data that correspond to the N last models built
+    # before the current date
+    considered_periods = sorted(
+        [ts for ts in bertrend.get_periods() if ts < current_date]
+    )[-maximum_analysed_periods:]
+    if considered_periods:
+        topic_merge_rows_filtered = topic_merge_rows_filtered[
+            topic_merge_rows["Timestamp"] >= considered_periods[0]
+        ]
 
     if not topic_merge_rows_filtered.empty:
         content_summary = "\n".join(
@@ -372,48 +386,42 @@ def analyze_signal(bertrend, topic_number: int, current_date: Timestamp):
                 topic_number=topic_number,
                 content_summary=content_summary,
             )
-            summary = openai_client.generate(
+            summaries = openai_client.parse(
                 system_prompt=LLM_CONFIG["system_prompt"],
                 user_prompt=summary_prompt,
                 temperature=LLM_CONFIG["temperature"],
                 max_tokens=LLM_CONFIG["max_tokens"],
+                response_format=TopicSummaryList,
             )
+
+            if not summaries:
+                raise ValueError(
+                    "An anomaly occured during topic summary generation. Context probably too long. Check other logs for details"
+                )
 
             # Second prompt: Analyze weak signal
             logger.debug("Second prompt - analyze weak signal")
             weak_signal_prompt = get_prompt(
-                language, "weak_signal", summary_from_first_prompt=summary
+                language,
+                prompt_type="weak_signal",
+                summary_from_first_prompt=summaries.model_dump_json(),
             )
-            weak_signal_analysis = openai_client.generate(
+            weak_signal_analysis = openai_client.parse(
                 system_prompt=LLM_CONFIG["system_prompt"],
                 user_prompt=weak_signal_prompt,
                 temperature=LLM_CONFIG["temperature"],
                 max_tokens=LLM_CONFIG["max_tokens"],
+                response_format=SignalAnalysis,
             )
 
-            # Third prompt: Generate HTML format
-            logger.debug("Third prompt - generate html format")
-            html_format_prompt = get_prompt(
-                language=language,
-                prompt_type="html_format",
-                topic_summary=summary,
-                weak_signal_analysis=weak_signal_analysis,
-            )
-            formatted_html = openai_client.generate(
-                system_prompt=LLM_CONFIG["system_prompt"],
-                user_prompt=html_format_prompt,
-                temperature=LLM_CONFIG["temperature"],
-                max_tokens=LLM_CONFIG["max_tokens"],
-            )
-            formatted_html = clean_html_output(formatted_html)
-            return summary, weak_signal_analysis, formatted_html
+            return summaries, weak_signal_analysis
 
         except Exception as e:
             error_msg = f"An error occurred while generating the analysis: {str(e)}"
             logger.error(error_msg)
-            raise Exception(error_msg)
+            return None, None
 
     else:
         error_msg = f"No data available for topic {topic_number} within the specified date range. Please enter a valid topic number."
         logger.error(error_msg)
-        raise Exception(error_msg)
+        return None, None

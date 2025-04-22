@@ -97,9 +97,7 @@ def save_model_interface():
     # Button to save the model
     if st.button("Save Model", key="save_model_button"):
         if "topic_model" in st.session_state:
-            dynamic_model_name = generate_model_name(
-                base_model_name if base_model_name else "topic_model"
-            )
+            dynamic_model_name = generate_model_name(base_model_name or "topic_model")
             model_save_path = OUTPUT_PATH / "saved_models" / dynamic_model_name
             logger.debug(
                 f"Saving the model in the following directory: {model_save_path}"
@@ -137,7 +135,6 @@ def train_model():
         embeddings = st.session_state["embeddings"]
         topic_model_output = topic_model.fit(
             docs=dataset,
-            embedding_model=st.session_state["embedding_model_name"],
             embeddings=embeddings,
         )
         bertopic = topic_model_output.topic_model
@@ -194,10 +191,8 @@ def main():
     try:
         display_embed_documents_component()
     except Exception as e:
-        logger.error(f"An error occurred while embedding documents: {str(e)}")
-        st.error(
-            f"An error occurred while embedding documents: {str(e)}", icon=ERROR_ICON
-        )
+        logger.error(f"An error occurred while embedding documents: {e}")
+        st.error(f"An error occurred while embedding documents: {e}", icon=ERROR_ICON)
 
     if not SessionStateManager.get("data_embedded", False):
         st.warning(NO_EMBEDDINGS_WARNING_MESSAGE, icon=WARNING_ICON)

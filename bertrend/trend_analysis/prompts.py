@@ -2,12 +2,15 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
-
+import os
+from datetime import datetime
 from pathlib import Path
 
+from jinja2 import Template, Environment, FileSystemLoader
 from loguru import logger
 
 from bertrend import OUTPUT_PATH
+from bertrend.trend_analysis.data_structure import TopicSummaryList, SignalAnalysis
 
 # Global variables for prompts
 SIGNAL_INTRO = {
@@ -85,7 +88,7 @@ Structure your analysis as follows:
 For the first timestamp:
 
 ## [Concise yet impactful title capturing the essence of the topic at this point]
-### Date: [Relevant date or time frame]
+### Date: [Relevant date or time frame - format %Y-%m-%d]
 ### Key Developments
 - [Bullet point summarizing a major development or trend]
 - [Additional bullet points as needed]
@@ -96,7 +99,7 @@ For the first timestamp:
 For all subsequent timestamps:
 
 ## [Concise yet impactful title capturing the essence of the topic at this point]
-### Date: [Relevant date or time frame]
+### Date: [Relevant date or time frame - format %Y-%m-%d]
 ### Key Developments
 - [Bullet point summarizing a major development or trend]
 - [Additional bullet points as needed]
@@ -119,7 +122,7 @@ Structurez votre analyse comme suit :
 Pour le premier timestamp :
 
 ## [Titre concis mais percutant capturant l'essence du sujet à ce moment]
-### Date : [Date ou période pertinente]
+### Date : [Date ou période pertinente - format %Y-%m-%d]
 ### Développements Clés
 - [Point résumant un développement majeur ou une tendance]
 - [Points supplémentaires si nécessaire]
@@ -130,7 +133,7 @@ Pour le premier timestamp :
 Pour tous les timestamps suivants :
 
 ## [Titre concis mais percutant capturant l'essence du sujet à ce moment]
-### Date : [Date ou période pertinente]
+### Date : [Date ou période pertinente - format %Y-%m-%d]
 ### Développements Clés
 - [Point résumant un développement majeur ou une tendance]
 - [Points supplémentaires si nécessaire]
@@ -146,61 +149,12 @@ Fournissez votre analyse en utilisant uniquement ce format, basé uniquement sur
 }
 
 
-HTML_FORMAT_PROMPT = {
-    "en": """You are an expert data analyst tasked with formatting the following strategic foresight analysis into a structured HTML dashboard. Use the provided HTML template to organize the information.
-
-Topic Evolution Summary:
-{topic_summary}
-
-Weak Signal Analysis:
-{weak_signal_analysis}
-
-Instructions:
-1. Carefully read the provided topic evolution summary, weak signal analysis, and HTML template.
-2. Fill in the placeholders in the HTML template with relevant information from both the topic evolution summary and the weak signal analysis.
-3. Use the topic evolution summary for the left column of the dashboard (Topic Evolution and Evolution Scenarios).
-4. Use the weak signal analysis for the right column of the dashboard (Topic Analysis).
-5. Ensure all sections of the template are populated with appropriate content.
-6. Maintain the structure and styling of the original HTML template.
-7. Return ONLY the filled HTML content, without any additional text before or after.
-
-HTML Template:
-{html_template}
-
-Please provide the completed HTML with all placeholders replaced by the relevant content from the analysis.""",
-    "fr": """Vous êtes un analyste de données expert chargé de formater l'analyse de prospective stratégique suivante dans un tableau de bord HTML structuré. Utilisez le modèle HTML fourni pour organiser les informations.
-
-Résumé de l'Évolution du Sujet :
-{topic_summary}
-
-Analyse du Signal Faible :
-{weak_signal_analysis}
-
-Instructions :
-1. Lisez attentivement le résumé de l'évolution du sujet, l'analyse du signal faible et le modèle HTML fournis.
-2. Remplissez les espaces réservés dans le modèle HTML avec les informations pertinentes provenant à la fois du résumé de l'évolution du sujet et de l'analyse du signal faible.
-3. Utilisez le résumé de l'évolution du sujet pour la colonne de gauche du tableau de bord (Évolution du Sujet et Scénarios d'Évolution).
-4. Utilisez l'analyse du signal faible pour la colonne de droite du tableau de bord (Analyse du Sujet).
-5. Assurez-vous que toutes les sections du modèle sont remplies avec un contenu approprié.
-6. Maintenez la structure et le style du modèle HTML original.
-7. Retournez UNIQUEMENT le contenu HTML rempli, sans aucun texte supplémentaire avant ou après.
-
-Modèle HTML :
-{html_template}
-
-Veuillez fournir le HTML complété avec tous les espaces réservés remplacés par le contenu pertinent de l'analyse.""",
-}
-
-
 def get_prompt(
-    language,
-    prompt_type,
-    topic_number=None,
-    content_summary=None,
-    summary_from_first_prompt=None,
-    topic_summary=None,
-    weak_signal_analysis=None,
-    html_template=None,
+    language: str,
+    prompt_type: str,
+    topic_number: int = None,
+    content_summary: str = None,
+    summary_from_first_prompt: str = None,
 ):
     lang = "en" if language == "English" else "fr"
 
@@ -217,45 +171,10 @@ def get_prompt(
             topic_number=topic_number, content_summary=content_summary
         )
 
-    elif prompt_type == "html_format":
-        # Read the appropriate HTML template based on the language
-        if lang == "en":
-            template_file = Path(__file__).parent / "signal_llm_template_en.html"
-        else:
-            template_file = Path(__file__).parent / "signal_llm_template_fr.html"
-        with open(template_file, "r", encoding="utf-8") as file:
-            html_template = file.read()
-
-        prompt = HTML_FORMAT_PROMPT[lang].format(
-            topic_summary=topic_summary,
-            weak_signal_analysis=weak_signal_analysis,
-            html_template=html_template,
-        )
-
     else:
         raise ValueError(f"Unsupported prompt type: {prompt_type}")
 
     return prompt
-
-
-def clean_html_output(model_output) -> str:
-    """Function to parse the model's output"""
-    # Clean the HTML content
-    cleaned_html = model_output.strip()  # Remove leading/trailing whitespace
-
-    # Remove ```html from the beginning if present
-    if cleaned_html.startswith("```html"):
-        cleaned_html = cleaned_html[7:]
-    elif cleaned_html.startswith("```"):
-        cleaned_html = cleaned_html[3:]
-
-    # Remove ``` from the end if present
-    if cleaned_html.endswith("```"):
-        cleaned_html = cleaned_html[:-3]
-
-    # Final strip to remove any remaining whitespace
-    cleaned_html = cleaned_html.strip()
-    return cleaned_html
 
 
 def save_html_output(html_output, output_file="signal_llm.html"):
@@ -266,3 +185,45 @@ def save_html_output(html_output, output_file="signal_llm.html"):
     with open(output_path, "w", encoding="utf-8") as file:
         file.write(html_output)
     logger.debug(f"Cleaned HTML output saved to {output_path}")
+
+
+def fill_html_template(
+    topic_summary_list: TopicSummaryList,
+    signal_analysis: SignalAnalysis,
+    language: str = "fr",
+) -> str:
+    """Fill the HTML template with appropriate data"""
+    # Setup Jinja2 environment
+    template_dir = os.path.dirname(os.path.abspath(__file__))
+    env = Environment(
+        loader=FileSystemLoader(template_dir),
+    )
+    template = env.get_template(
+        "signal_llm_template_en.html"
+        if language == "en"
+        else "signal_llm_template_fr.html"
+    )
+
+    # Sort the list by date from most recent to least recent
+    try:
+        sorted_topic_summary_by_time_period = sorted(
+            topic_summary_list.topic_summary_by_time_period,
+            key=lambda x: datetime.strptime(x.date, "%Y-%m-%d"),
+            reverse=True,
+        )
+        topic_summary_list.topic_summary_by_time_period = (
+            sorted_topic_summary_by_time_period
+        )
+    except Exception as e:
+        logger.warning("Cannot sort summaries by date, probably wrong date format")
+
+    # Render the template with the provided data
+    rendered_html = template.render(
+        topic_summary_list=topic_summary_list, signal_analysis=signal_analysis
+    )
+
+    # FIXME: many \n are added...
+    rendered_html = rendered_html.replace("\n", "")
+    rendered_html = rendered_html.replace("\\'", "'")
+
+    return rendered_html

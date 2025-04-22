@@ -24,6 +24,7 @@ from bertrend.config.parameters import (
     INDIVIDUAL_MODEL_TOPIC_COUNTS_FILE,
     CUMULATIVE_MERGED_TOPIC_COUNTS_FILE,
 )
+from bertrend.trend_analysis.prompts import fill_html_template
 from bertrend.trend_analysis.visualizations import (
     create_sankey_diagram_plotly,
     plot_newly_emerged_topics,
@@ -84,6 +85,7 @@ def display_signal_categories_df(
     window_end: Timestamp,
     columns=None,
     column_order=None,
+    column_config=None,
 ):
     """Display the dataframes associated to each signal category: noise, weak signal, strong signal."""
     if columns is None:
@@ -110,8 +112,9 @@ def display_signal_categories_df(
             displayed_df["Documents"] = displayed_df["Documents"].astype(str)
             st.dataframe(
                 displayed_df,
-                # hide_index=True,
                 column_order=column_order,
+                column_config=column_config,
+                hide_index=True,
             )
 
         else:
@@ -129,8 +132,9 @@ def display_signal_categories_df(
             displayed_df["Documents"] = displayed_df["Documents"].astype(str)
             st.dataframe(
                 displayed_df,
-                hide_index=True,
                 column_order=column_order,
+                column_config=column_config,
+                hide_index=True,
             )
         else:
             st.info(
@@ -147,8 +151,9 @@ def display_signal_categories_df(
             displayed_df["Documents"] = displayed_df["Documents"].astype(str)
             st.dataframe(
                 displayed_df,
-                hide_index=True,
                 column_order=column_order,
+                column_config=column_config,
+                hide_index=True,
             )
         else:
             st.info(
@@ -194,11 +199,10 @@ def display_popularity_evolution():
     window_start, window_end, all_popularity_values, q1, q3 = (
         bertrend._compute_popularity_values_and_thresholds(window_size, current_date)
     )
-
-    # Classify signals
-    noise_topics_df, weak_signal_topics_df, strong_signal_topics_df = (
-        bertrend._classify_signals(window_start, window_end, q1, q3)
-    )
+    st.session_state["window_start"] = window_start
+    st.session_state["window_end"] = window_end
+    st.session_state["q1"] = q1
+    st.session_state["q3"] = q3
 
     # Display threshold values for noise and strong signals
     col1, col2 = st.columns(2)
@@ -219,9 +223,25 @@ def display_popularity_evolution():
     )
     st.plotly_chart(fig, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True)
 
+
+def display_signal_types():
+    """Show weak/strong signals"""
+    bertrend = SessionStateManager.get("bertrend")
+
+    # Classify signals
+    window_end = st.session_state.get("window_end")
+    window_start = st.session_state.get("window_start")
+    q1 = st.session_state.get("q1")
+    q3 = st.session_state.get("q3")
+    noise_topics_df, weak_signal_topics_df, strong_signal_topics_df = (
+        bertrend._classify_signals(window_start, window_end, q1, q3)
+    )
     # Display DataFrames for each category noise, weak signals, strong signals
     display_signal_categories_df(
-        noise_topics_df, weak_signal_topics_df, strong_signal_topics_df, window_end
+        noise_topics_df,
+        weak_signal_topics_df,
+        strong_signal_topics_df,
+        window_end,
     )
 
 
@@ -321,10 +341,14 @@ def display_signal_analysis(topic_number: int):
 
     st.subheader("Signal Interpretation")
     with st.spinner("Analyzing signal..."):
-        summary, analysis, formatted_html = analyze_signal(
+        summaries, weak_signal_analysis = analyze_signal(
             bertrend,
             topic_number,
             SessionStateManager.get("current_date"),
+        )
+
+        formatted_html = fill_html_template(
+            summaries, weak_signal_analysis, SessionStateManager.get("language", "fr")
         )
 
         # Display the HTML content
