@@ -135,7 +135,9 @@ def train_new_model_for_period(
     new_data: pd.DataFrame,
     reference_timestamp: pd.Timestamp,
 ):
-    logger.info(f"Training BERTrend model with new data - user: {user_name}, model_id: {model_id}, reference_timestamp: {reference_timestamp}...")
+    logger.info(
+        f"Training BERTrend model with new data - user: {user_name}, model_id: {model_id}, reference_timestamp: {reference_timestamp}..."
+    )
     # Initialization of embedding service
     # TODO: customize service (lang, etc)
     embedding_service = EmbeddingService(local=False)
