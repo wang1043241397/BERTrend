@@ -78,7 +78,7 @@ class BERTopicModel:
             Configuration source, which can be:
             - a `str` representing the TOML file
             - a `Path` to a TOML file
-            - a `dict` (with the same structure of the default config) containing values 
+            - a `dict` (with the same structure of the default config) containing values
               to be overridden compared to the default configuration
 
         Notes

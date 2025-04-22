@@ -86,8 +86,6 @@ def test_generate_with_streaming(mock_api_key):
 
     # Mock streaming response
     mock_stream = MagicMock(spec=Stream)
-    with patch.object(
-        client.llm_client.responses, "create", return_value=mock_stream
-    ):
+    with patch.object(client.llm_client.responses, "create", return_value=mock_stream):
         result = client.generate("What is the weather today?", stream=True)
         assert result == mock_stream
