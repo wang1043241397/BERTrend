@@ -36,7 +36,7 @@ from bertrend_apps.prospective_demo import (
     DEFAULT_ANALYSIS_CFG,
 )
 from bertrend_apps.prospective_demo.perf_utils import get_least_used_gpu
-from bertrend_apps.prospective_demo.regenerate_past_models import regenerate_models
+from bertrend_apps.prospective_demo.process_new_data import regenerate_models
 from bertrend_apps.prospective_demo.streamlit_utils import clickable_df
 
 
