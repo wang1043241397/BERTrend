@@ -135,6 +135,7 @@ def train_new_model_for_period(
     new_data: pd.DataFrame,
     reference_timestamp: pd.Timestamp,
 ):
+    logger.info(f"Training BERTrend model with new data - user: {user_name}, model_id: {model_id}, reference_timestamp: {reference_timestamp}...")
     # Initialization of embedding service
     # TODO: customize service (lang, etc)
     embedding_service = EmbeddingService(local=False)
@@ -236,13 +237,6 @@ def regenerate_models(model_id: str, user: str, with_analysis: bool = True):
         model_id=model_id, user=user
     )
 
-    # Path to saved models
-    bertrend_models_path = get_user_models_path(user, model_id)
-
-    # Initialization of embedding service
-    # TODO: customize service (lang, etc)
-    embedding_service = EmbeddingService(local=False)
-
     # Load model config
     df = load_all_data(model_id=model_id, user=user, language=language)
     logger.info(f"Size of dataset: {len(df)}")
@@ -255,6 +249,13 @@ def regenerate_models(model_id: str, user: str, with_analysis: bool = True):
     grouped_data = group_by_days(df=df, day_granularity=granularity)
 
     if not with_analysis:
+        # Path to saved models
+        bertrend_models_path = get_user_models_path(user, model_id)
+
+        # Initialization of embedding service
+        # TODO: customize service (lang, etc)
+        embedding_service = EmbeddingService(local=False)
+
         # Train BERTrend
         bertrend = BERTrend(
             topic_model=BERTopicModel({"global": {"language": language}})
@@ -325,9 +326,15 @@ if __name__ == "__main__":
         model_id: str = typer.Argument(
             help="ID of the model to be regenerated from scratch"
         ),
+        with_analysis: bool = typer.Option(
+            default=True, help="Regenerate LLM analysis (may take time)"
+        ),
     ):
         """Regenerate past models from scratch"""
-        regenerate_models(model_id=model_id, user=user)
+        logger.info(
+            f"Regenerating models for user '{user}' about '{model_id}', with analysis: {with_analysis}..."
+        )
+        regenerate_models(model_id=model_id, user=user, with_analysis=with_analysis)
 
     # Main app
     app()
