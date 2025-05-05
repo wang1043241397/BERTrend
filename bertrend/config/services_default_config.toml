@@ -28,5 +28,5 @@ api_key = "$AZURE_SE_WATTELSE_OPENAI_API_KEY_DEV"
 endpoint = "$AZURE_SE_WATTELSE_OPENAI_ENDPOINT_DEV"
 model = "$AZURE_SE_WATTELSE_OPENAI_DEFAULT_MODEL_NAME_DEV"
 temperature = 0.1
-max_tokens = 2048
+max_output_tokens = 2048
 system_prompt = "You are a helpful assistant, skilled in detailing topic evolution over time for the detection of emerging trends and signals."

@@ -14,7 +14,7 @@ from pydantic import BaseModel
 MAX_ATTEMPTS = 3
 TIMEOUT = 60.0
 DEFAULT_TEMPERATURE = 0.1
-DEFAULT_MAX_TOKENS = 512
+DEFAULT_MAX_OUTPUT_TOKENS = 512
 
 AZURE_API_VERSION = "2025-01-01-preview"
 
@@ -102,7 +102,7 @@ class OpenAI_Client:
             )
         self.model_name = model or os.getenv("OPENAI_DEFAULT_MODEL_NAME")
         self.temperature = temperature
-        self.max_tokens = DEFAULT_MAX_TOKENS
+        self.max_output_tokens = DEFAULT_MAX_OUTPUT_TOKENS
 
     def generate(
         self,
@@ -129,7 +129,7 @@ class OpenAI_Client:
         """
         # Transform messages into OpenAI API compatible format
         messages = [{"role": "user", "content": user_prompt}]
-        # Add system prompt if one is provided
+        # Add a system prompt if one is provided
         if system_prompt:
             messages.insert(0, {"role": "system", "content": system_prompt})
 
@@ -156,13 +156,13 @@ class OpenAI_Client:
         str or Stream[ChatCompletionChunk]
             Model response as text, or a stream of response chunks if stream=True is passed in kwargs.
         """
-        # For important parameters, set default value if not given
+        # For important parameters, set a default value if not given
         if not kwargs.get("model"):
             kwargs["model"] = self.model_name
         if not kwargs.get("temperature"):
             kwargs["temperature"] = self.temperature
-        if not kwargs.get("max_tokens"):
-            kwargs["max_tokens"] = self.max_tokens
+        if not kwargs.get("max_output_tokens"):
+            kwargs["max_output_tokens"] = self.max_output_tokens
 
         try:
             response = self.llm_client.responses.create(input=messages, **kwargs)
@@ -211,16 +211,16 @@ class OpenAI_Client:
         """
         # Transform messages into OpenAI API compatible format
         messages = [{"role": "user", "content": user_prompt}]
-        # Add system prompt if one is provided
+        # Add a system prompt if one is provided
         if system_prompt:
             messages.insert(0, {"role": "system", "content": system_prompt})
-        # For important parameters, set default value if not given
+        # For important parameters, set a default value if not given
         if not kwargs.get("model"):
             kwargs["model"] = self.model_name
         if not kwargs.get("temperature"):
             kwargs["temperature"] = self.temperature
-        if not kwargs.get("max_tokens"):
-            kwargs["max_tokens"] = self.max_tokens
+        if not kwargs.get("max_output_tokens"):
+            kwargs["max_output_tokens"] = self.max_output_tokens
 
         try:
             # NB. here use beta.chat...parse to support structured outputs
