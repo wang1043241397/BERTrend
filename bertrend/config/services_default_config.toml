@@ -24,9 +24,9 @@ embedding_max_seq_length = 512
 # - local LLM deployed with VLLM or similar libraries
 # - the official OpenAI endpoint
 # - models deployed on Azure cloud
-api_key = "$AZURE_SE_WATTELSE_OPENAI_API_KEY_DEV"
-endpoint = "$AZURE_SE_WATTELSE_OPENAI_ENDPOINT_DEV"
-model = "$AZURE_SE_WATTELSE_OPENAI_DEFAULT_MODEL_NAME_DEV"
+api_key = "$LITELLM_BERTREND_API_KEY"
+endpoint = "$LITELLM_BERTREND_BASE_URL"
+model = "gpt-4o-mini"
 temperature = 0.1
 max_output_tokens = 2048
 system_prompt = "You are a helpful assistant, skilled in detailing topic evolution over time for the detection of emerging trends and signals."
