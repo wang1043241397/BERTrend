@@ -274,10 +274,13 @@ def regenerate_models(model_id: str, user: str, with_analysis: bool = True):
         )
         bertrend.save_model(models_path=bertrend_models_path)
 
-    else:
+    else:  # with analysis
         for ts, df in sorted(grouped_data.items()):
             train_new_model_for_period(
-                model_id=model_id, user_name=user, new_data=df, reference_timestamp=ts
+                model_id=model_id,
+                user_name=user,
+                new_data=df.reset_index(drop=True),
+                reference_timestamp=ts,
             )
 
     logger.success(
