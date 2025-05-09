@@ -33,8 +33,6 @@ from bertrend_apps.prospective_demo.dashboard_signals import signal_analysis
 
 
 # UI Settings
-# PAGE_TITLE = "BERTrend - Prospective Analysis demo"
-PAGE_TITLE = "BERTrend - Démo Veille & Analyse"
 LAYOUT: Literal["centered", "wide"] = "wide"
 
 # TODO: reactivate password
