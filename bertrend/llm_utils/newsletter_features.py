@@ -85,10 +85,16 @@ def generate_newsletter(
 
     # Adapt language for date
     current_local = locale.getlocale()
-    if prompt_language == "en":
-        locale.setlocale(locale.LC_TIME, "en_US.UTF-8")
-    elif prompt_language == "fr":
-        locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
+    locale_set_successfully = True
+    try:
+        if prompt_language == "en":
+            locale.setlocale(locale.LC_TIME, "en_US.UTF-8")
+        elif prompt_language == "fr":
+            locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
+    except locale.Error:
+        logger.warning(f"Locale {prompt_language} not available, falling back to default locale")
+        locale_set_successfully = False
+        # Keep the current locale
 
     # Instantiates summarizer
     summarizer = summarizer_class()
@@ -100,8 +106,13 @@ def generate_newsletter(
         top_n_topics = len(topics_info)
 
     # Date range
-    date_min = df.timestamp.min().strftime("%A %d %b %Y")
-    date_max = df.timestamp.max().strftime("%A %d %b %Y")
+    if locale_set_successfully:
+        date_min = df.timestamp.min().strftime("%A %d %b %Y")
+        date_max = df.timestamp.max().strftime("%A %d %b %Y")
+    else:
+        # Use a locale-independent format if locale setting failed
+        date_min = df.timestamp.min().strftime("%Y-%m-%d")
+        date_max = df.timestamp.max().strftime("%Y-%m-%d")
 
     # Store each line in a list
     md_lines = [f"# {newsletter_title}"]
@@ -194,8 +205,13 @@ def generate_newsletter(
             except:
                 logger.warning(f"Cannot extract URL for {doc}")
                 domain = ""
+            if locale_set_successfully:
+                timestamp_str = doc.timestamp.strftime('%A %d %b %Y')
+            else:
+                # Use a locale-independent format if locale setting failed
+                timestamp_str = doc.timestamp.strftime('%Y-%m-%d')
             md_lines.append(
-                f"<div class='timestamp'>{doc.timestamp.strftime('%A %d %b %Y')} | {domain}</div>"
+                f"<div class='timestamp'>{timestamp_str} | {domain}</div>"
             )
             if summary_mode == "document":
                 md_lines.append(summaries[i])
@@ -209,7 +225,10 @@ def generate_newsletter(
     md_content = "\n\n".join(md_lines)
 
     # Reset locale
-    locale.setlocale(locale.LC_TIME, ".".join(current_local))
+    try:
+        locale.setlocale(locale.LC_TIME, ".".join(current_local))
+    except locale.Error:
+        logger.warning("Could not reset to original locale")
     return md_content, date_min, date_max
 
 
