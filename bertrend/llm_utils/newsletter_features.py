@@ -92,7 +92,9 @@ def generate_newsletter(
         elif prompt_language == "fr":
             locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
     except locale.Error:
-        logger.warning(f"Locale {prompt_language} not available, falling back to default locale")
+        logger.warning(
+            f"Locale {prompt_language} not available, falling back to default locale"
+        )
         locale_set_successfully = False
         # Keep the current locale
 
@@ -206,13 +208,11 @@ def generate_newsletter(
                 logger.warning(f"Cannot extract URL for {doc}")
                 domain = ""
             if locale_set_successfully:
-                timestamp_str = doc.timestamp.strftime('%A %d %b %Y')
+                timestamp_str = doc.timestamp.strftime("%A %d %b %Y")
             else:
                 # Use a locale-independent format if locale setting failed
-                timestamp_str = doc.timestamp.strftime('%Y-%m-%d')
-            md_lines.append(
-                f"<div class='timestamp'>{timestamp_str} | {domain}</div>"
-            )
+                timestamp_str = doc.timestamp.strftime("%Y-%m-%d")
+            md_lines.append(f"<div class='timestamp'>{timestamp_str} | {domain}</div>")
             if summary_mode == "document":
                 md_lines.append(summaries[i])
             elif summary_mode == "none":
