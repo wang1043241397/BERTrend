@@ -205,7 +205,7 @@ def generate_newsletter(
                 )  # Add the full text when no summarization is performed
             i += 1
 
-    # Write full file
+    # Write the full file
     md_content = "\n\n".join(md_lines)
 
     # Reset locale
@@ -214,7 +214,7 @@ def generate_newsletter(
 
 
 def export_md_string(newsletter_md: str, path: Path, output_format="md"):
-    """Save a markdown string to a file."""
+    """Save a Markdown string to a file."""
     path.parent.mkdir(parents=True, exist_ok=True)
     if output_format == "md":
         with open(path, "w") as f:
