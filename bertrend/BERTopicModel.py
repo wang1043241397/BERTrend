@@ -287,6 +287,7 @@ class BERTopicModel:
                     embeddings=embeddings,
                     strategy=self.config["reduce_outliers"]["strategy"],
                 )
+            logger.debug("\tUpdating topics")
             topic_model.update_topics(
                 docs=docs,
                 topics=new_topics,
@@ -299,7 +300,7 @@ class BERTopicModel:
 
             # If OpenAI model is present, apply it after reducing outliers
             if self.use_openai_representation:
-                logger.info("Applying OpenAI representation model...")
+                logger.info("\tApplying OpenAI representation model...")
                 backup_representation_model = topic_model.representation_model
                 topic_model.update_topics(
                     docs=docs,

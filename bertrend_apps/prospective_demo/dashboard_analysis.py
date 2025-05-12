@@ -56,6 +56,9 @@ def display_detailed_analysis(
         interpretation_file_path = (
             model_interpretation_path / f"{df_id}_interpretation.jsonl"
         )
+        if not interpretation_file_path.exists():
+            continue
+
         interpretation_df = pd.read_json(interpretation_file_path, lines=True)
         if not df.empty and not interpretation_df.empty:
             interpretations[df_id] = (
