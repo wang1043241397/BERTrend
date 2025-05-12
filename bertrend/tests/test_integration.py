@@ -32,21 +32,21 @@ class TestEmbeddingServiceIntegration:
         texts = [
             "This is a test document about artificial intelligence.",
             "Machine learning is a subset of artificial intelligence.",
-            "Natural language processing is used in many applications."
+            "Natural language processing is used in many applications.",
         ]
 
         # Initialize the embedding service with local model
-        embedding_service = EmbeddingService(
-            local=True,
-            model_name=model_name
-        )
+        embedding_service = EmbeddingService(local=True, model_name=model_name)
 
         # Generate embeddings
         embeddings, token_strings, token_embeddings = embedding_service.embed(texts)
 
         # Verify the results
         assert embeddings is not None
-        assert embeddings.shape == (len(texts), 384)  # 384 is the dimension for all-MiniLM-L6-v2
+        assert embeddings.shape == (
+            len(texts),
+            384,
+        )  # 384 is the dimension for all-MiniLM-L6-v2
         assert token_strings is not None
         assert token_embeddings is not None
         assert len(token_strings) == len(texts)
@@ -70,33 +70,38 @@ class TestBERTopicModelIntegration:
             "Reinforcement learning is used for decision making.",
             "Supervised learning requires labeled data.",
             "Unsupervised learning finds patterns in unlabeled data.",
-            "Transfer learning uses knowledge from one task for another."
+            "Transfer learning uses knowledge from one task for another.",
         ] * 5  # Duplicate to have enough data for clustering
 
         # Use a small, fast model for testing
         model_name = "all-MiniLM-L6-v2"
 
         # Initialize the embedding service
-        embedding_service = EmbeddingService(
-            local=True,
-            model_name=model_name
-        )
+        embedding_service = EmbeddingService(local=True, model_name=model_name)
 
         # Generate embeddings
         embeddings, _, _ = embedding_service.embed(docs)
 
         # Initialize the BERTopicModel with parameters suitable for small test datasets
-        topic_model = BERTopicModel({
-            "vectorizer_model": {"min_df": 1},  # Reduce min_df to handle small datasets
-            "umap_model": {"n_components": 2, "n_neighbors": 3},  # Reduce dimensions for small datasets
-            "hdbscan_model": {"min_cluster_size": 2, "min_samples": 1}  # Adjust clustering for small datasets
-        })
+        topic_model = BERTopicModel(
+            {
+                "vectorizer_model": {
+                    "min_df": 1
+                },  # Reduce min_df to handle small datasets
+                "umap_model": {
+                    "n_components": 2,
+                    "n_neighbors": 3,
+                },  # Reduce dimensions for small datasets
+                "hdbscan_model": {
+                    "min_cluster_size": 2,
+                    "min_samples": 1,
+                },  # Adjust clustering for small datasets
+            }
+        )
 
         # Fit the model
         output = topic_model.fit(
-            docs=docs,
-            embeddings=embeddings,
-            embedding_model=model_name
+            docs=docs, embeddings=embeddings, embedding_model=model_name
         )
 
         # Verify the results
@@ -121,27 +126,33 @@ class TestBERTrendIntegration:
         # Create sample data with timestamps
         data = []
         for i, date in enumerate(dates):
-            data.append({
-                "text": f"Document {i} about artificial intelligence and machine learning.",
-                "timestamp": date,
-                "document_id": f"doc_{i}",
-                "source": f"source_{i % 3}",
-                "url": f"http://example.com/{i}"
-            })
-            data.append({
-                "text": f"Document {i} about natural language processing and neural networks.",
-                "timestamp": date,
-                "document_id": f"doc_{i+100}",
-                "source": f"source_{i % 3}",
-                "url": f"http://example.com/{i+100}"
-            })
-            data.append({
-                "text": f"Document {i} about computer vision and deep learning.",
-                "timestamp": date,
-                "document_id": f"doc_{i+200}",
-                "source": f"source_{i % 3}",
-                "url": f"http://example.com/{i+200}"
-            })
+            data.append(
+                {
+                    "text": f"Document {i} about artificial intelligence and machine learning.",
+                    "timestamp": date,
+                    "document_id": f"doc_{i}",
+                    "source": f"source_{i % 3}",
+                    "url": f"http://example.com/{i}",
+                }
+            )
+            data.append(
+                {
+                    "text": f"Document {i} about natural language processing and neural networks.",
+                    "timestamp": date,
+                    "document_id": f"doc_{i+100}",
+                    "source": f"source_{i % 3}",
+                    "url": f"http://example.com/{i+100}",
+                }
+            )
+            data.append(
+                {
+                    "text": f"Document {i} about computer vision and deep learning.",
+                    "timestamp": date,
+                    "document_id": f"doc_{i+200}",
+                    "source": f"source_{i % 3}",
+                    "url": f"http://example.com/{i+200}",
+                }
+            )
 
         return pd.DataFrame(data)
 
@@ -152,20 +163,27 @@ class TestBERTrendIntegration:
         model_name = "all-MiniLM-L6-v2"
 
         # Initialize the embedding service
-        embedding_service = EmbeddingService(
-            local=True,
-            model_name=model_name
-        )
+        embedding_service = EmbeddingService(local=True, model_name=model_name)
 
         # Generate embeddings for the entire dataset
         embeddings, _, _ = embedding_service.embed(sample_data["text"])
 
         # Initialize BERTopicModel with parameters suitable for small test datasets
-        topic_model = BERTopicModel({
-            "vectorizer_model": {"min_df": 1},  # Reduce min_df to handle small datasets
-            "umap_model": {"n_components": 2, "n_neighbors": 3},  # Reduce dimensions for small datasets
-            "hdbscan_model": {"min_cluster_size": 2, "min_samples": 1}  # Adjust clustering for small datasets
-        })
+        topic_model = BERTopicModel(
+            {
+                "vectorizer_model": {
+                    "min_df": 1
+                },  # Reduce min_df to handle small datasets
+                "umap_model": {
+                    "n_components": 2,
+                    "n_neighbors": 3,
+                },  # Reduce dimensions for small datasets
+                "hdbscan_model": {
+                    "min_cluster_size": 2,
+                    "min_samples": 1,
+                },  # Adjust clustering for small datasets
+            }
+        )
 
         # Initialize BERTrend
         bertrend = BERTrend(topic_model=topic_model)
@@ -180,7 +198,7 @@ class TestBERTrendIntegration:
                 embedding_model=model_name,
                 embeddings=embeddings,
                 bertrend_models_path=tmp_path,
-                save_topic_models=True
+                save_topic_models=True,
             )
             print("train_topic_models completed successfully")
         except Exception as e:
@@ -200,8 +218,7 @@ class TestBERTrendIntegration:
             current_date = sample_data["timestamp"].max()
             print(f"Current date: {current_date}")
             result = bertrend.classify_signals(
-                window_size=30,
-                current_date=current_date
+                window_size=30, current_date=current_date
             )
             print(f"classify_signals returned: {result}")
             noise_df, weak_signal_df, strong_signal_df = result
@@ -216,7 +233,9 @@ class TestBERTrendIntegration:
         print("Checking last_topic_model:", bertrend.last_topic_model)
         assert bertrend.last_topic_model is not None
 
-        print("Checking last_topic_model_timestamp:", bertrend.last_topic_model_timestamp)
+        print(
+            "Checking last_topic_model_timestamp:", bertrend.last_topic_model_timestamp
+        )
         assert bertrend.last_topic_model_timestamp is not None
 
         print("Checking doc_groups:", len(bertrend.doc_groups))
@@ -265,13 +284,15 @@ class TestDataPipelineIntegration:
         # Create sample data
         data = []
         for i in range(20):
-            data.append({
-                "text": f"Document {i} about artificial intelligence.",
-                "timestamp": f"2023-01-{i+1:02d}",
-                "document_id": f"doc_{i}",
-                "source": f"source_{i % 3}",
-                "url": f"http://example.com/{i}"
-            })
+            data.append(
+                {
+                    "text": f"Document {i} about artificial intelligence.",
+                    "timestamp": f"2023-01-{i+1:02d}",
+                    "document_id": f"doc_{i}",
+                    "source": f"source_{i % 3}",
+                    "url": f"http://example.com/{i}",
+                }
+            )
 
         # Create DataFrame and save to CSV
         df = pd.DataFrame(data)
@@ -321,7 +342,10 @@ class TestNewsletterIntegration:
             pytest.skip("OPENAI_API_KEY not set, skipping newsletter generation test")
 
         # Import here to avoid dependency issues if OpenAI is not available
-        from bertrend.llm_utils.newsletter_features import generate_newsletter, export_md_string
+        from bertrend.llm_utils.newsletter_features import (
+            generate_newsletter,
+            export_md_string,
+        )
 
         # Create a sample dataset
         docs = [
@@ -334,40 +358,49 @@ class TestNewsletterIntegration:
             "Reinforcement learning is used for decision making.",
             "Supervised learning requires labeled data.",
             "Unsupervised learning finds patterns in unlabeled data.",
-            "Transfer learning uses knowledge from one task for another."
+            "Transfer learning uses knowledge from one task for another.",
         ] * 5  # Duplicate to have enough data for clustering
 
         # Create a DataFrame with the necessary columns
-        df = pd.DataFrame({
-            "text": docs,
-            "timestamp": [datetime(2023, 1, 1) + timedelta(days=i) for i in range(len(docs))],
-            "document_id": [f"doc_{i}" for i in range(len(docs))],
-            "source": [f"source_{i % 3}" for i in range(len(docs))],
-            "url": [f"http://example.com/{i}" for i in range(len(docs))]
-        })
+        df = pd.DataFrame(
+            {
+                "text": docs,
+                "timestamp": [
+                    datetime(2023, 1, 1) + timedelta(days=i) for i in range(len(docs))
+                ],
+                "document_id": [f"doc_{i}" for i in range(len(docs))],
+                "source": [f"source_{i % 3}" for i in range(len(docs))],
+                "url": [f"http://example.com/{i}" for i in range(len(docs))],
+            }
+        )
 
         # Use a small, fast model for testing
         model_name = "all-MiniLM-L6-v2"
 
         # Initialize the embedding service
-        embedding_service = EmbeddingService(
-            local=True,
-            model_name=model_name
-        )
+        embedding_service = EmbeddingService(local=True, model_name=model_name)
 
         # Generate embeddings
         embeddings, _, _ = embedding_service.embed(docs)
 
         # Initialize and fit the BERTopicModel with parameters suitable for small test datasets
-        topic_model = BERTopicModel({
-            "vectorizer_model": {"min_df": 1},  # Reduce min_df to handle small datasets
-            "umap_model": {"n_components": 2, "n_neighbors": 3},  # Reduce dimensions for small datasets
-            "hdbscan_model": {"min_cluster_size": 2, "min_samples": 1}  # Adjust clustering for small datasets
-        })
+        topic_model = BERTopicModel(
+            {
+                "vectorizer_model": {
+                    "min_df": 1
+                },  # Reduce min_df to handle small datasets
+                "umap_model": {
+                    "n_components": 2,
+                    "n_neighbors": 3,
+                },  # Reduce dimensions for small datasets
+                "hdbscan_model": {
+                    "min_cluster_size": 2,
+                    "min_samples": 1,
+                },  # Adjust clustering for small datasets
+            }
+        )
         output = topic_model.fit(
-            docs=docs,
-            embeddings=embeddings,
-            embedding_model=model_name
+            docs=docs, embeddings=embeddings, embedding_model=model_name
         )
 
         # Generate a newsletter
@@ -378,7 +411,7 @@ class TestNewsletterIntegration:
             "summary_mode": "document",
             "max_topics": 3,
             "max_docs_per_topic": 2,
-            "language": "English"
+            "language": "English",
         }
 
         try:
@@ -388,7 +421,7 @@ class TestNewsletterIntegration:
                 topics=output.topics,
                 docs=docs,
                 df=df,
-                **newsletter_params
+                **newsletter_params,
             )
 
             # Export the newsletter to markdown
