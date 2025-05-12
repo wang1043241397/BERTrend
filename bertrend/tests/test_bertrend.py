@@ -102,14 +102,15 @@ def test_initialization(bertrend_instance, mock_config, mock_topic_model):
     assert bertrend_instance.merged_df is None
 
 
-def test_load_config():
+def test_load_config(mock_config, mock_topic_model):
     """Test loading configuration from file."""
-    with patch(
-        "bertrend.BERTrend.load_toml_config", return_value={"test_key": "test_value"}
-    ) as mock_load:
-        bertrend = BERTrend(config_file="test_config.toml")
-        mock_load.assert_called_once_with("test_config.toml")
-        assert bertrend.config == {"test_key": "test_value"}
+    # Test with mocked dependencies
+    with patch("bertrend.BERTrend.load_toml_config", return_value=mock_config):
+        bertrend = BERTrend(
+            config_file=BERTREND_DEFAULT_CONFIG_PATH, topic_model=mock_topic_model
+        )
+        assert bertrend.config == mock_config
+        assert bertrend.topic_model == mock_topic_model
 
 
 def test_get_periods(bertrend_instance):
@@ -580,6 +581,89 @@ def test_restore_model_nonexistent_path():
         BERTrend.restore_model(nonexistent_path)
 
 
+def test_save_signal_evolution_data(bertrend_instance, tmp_path):
+    """Test save_signal_evolution_data method."""
+    # Setup
+    save_dir = tmp_path / "signal_evolution_data"
+    save_dir.mkdir(parents=True, exist_ok=True)
+
+    with patch("bertrend.BERTrend.SIGNAL_EVOLUTION_DATA_DIR", save_dir):
+        window_size = 14
+        start_timestamp = pd.Timestamp("2023-01-01")
+        end_timestamp = pd.Timestamp("2023-01-15")
+
+        # Ensure bertrend_instance has necessary config
+        bertrend_instance.config = {"granularity": 7}
+
+        # Mock _compute_popularity_values_and_thresholds and _classify_signals
+        bertrend_instance._compute_popularity_values_and_thresholds = MagicMock(
+            return_value=(
+                pd.Timestamp("2023-01-01"),
+                pd.Timestamp("2023-01-15"),
+                [0.1, 0.2, 0.3, 0.4],
+                0.15,
+                0.35,
+            )
+        )
+
+        mock_noise_df = pd.DataFrame({"Topic": [0], "Popularity": [0.1]})
+        mock_weak_signal_df = pd.DataFrame({"Topic": [1], "Popularity": [0.2]})
+        mock_strong_signal_df = pd.DataFrame({"Topic": [2], "Popularity": [0.4]})
+
+        bertrend_instance._classify_signals = MagicMock(
+            return_value=(mock_noise_df, mock_weak_signal_df, mock_strong_signal_df)
+        )
+
+        # Create the output directory
+        output_dir = save_dir / f"retrospective_{window_size}_days"
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Mock open and pickle.dump
+        mock_file = MagicMock()
+        with patch("builtins.open", mock_open(mock=mock_file)) as mock_open_file:
+            with patch("pickle.dump") as mock_dump:
+                # Execute
+                result_path = bertrend_instance.save_signal_evolution_data(
+                    window_size, start_timestamp, end_timestamp
+                )
+
+                # Assert
+                assert mock_dump.call_count == 4  # 3 dataframes + metadata
+                assert result_path == save_dir / f"retrospective_{window_size}_days"
+
+
+def test_restore_topic_models(bertrend_instance, tmp_path):
+    """Test restore_topic_models method."""
+    # Setup
+    models_path = tmp_path / "models"
+    models_path.mkdir()
+
+    # Create mock periods
+    period1 = pd.Timestamp("2023-01-01")
+    period2 = pd.Timestamp("2023-01-08")
+    bertrend_instance.doc_groups = {
+        period1: ["doc1", "doc2"],
+        period2: ["doc3", "doc4"],
+    }
+
+    # Mock restore_topic_model to return different models for different periods
+    mock_model1 = MagicMock(spec=BERTopic)
+    mock_model2 = MagicMock(spec=BERTopic)
+
+    with patch.object(
+        BERTrend, 'restore_topic_model', 
+        side_effect=lambda period, models_path: 
+            mock_model1 if period == period1 else mock_model2 if period == period2 else None
+    ):
+        # Execute
+        result = bertrend_instance.restore_topic_models(models_path)
+
+        # Assert
+        assert len(result) == 2
+        assert result[period1] == mock_model1
+        assert result[period2] == mock_model2
+
+
 def test_save_and_restore_topic_model(tmp_path):
     """Test save_topic_model and restore_topic_model class methods."""
     # Setup
@@ -622,6 +706,300 @@ def test_save_and_restore_topic_model(tmp_path):
                             # Assert restore
                             assert restored == mock_topic_model
                             assert mock_read_pickle.call_count == 2
+
+
+def test_train_new_data_restore_failure():
+    """Test train_new_data function when restore_model fails."""
+    # Setup
+    reference_timestamp = pd.Timestamp("2023-01-01")
+    new_data = pd.DataFrame({
+        "text": ["Document 1", "Document 2"],
+        "document_id": ["doc1", "doc2"],
+        "source": ["source1", "source2"],
+        "url": ["http://example.com/1", "http://example.com/2"],
+        "timestamp": [reference_timestamp, reference_timestamp]
+    })
+    bertrend_models_path = Path("/tmp/models")
+
+    # Mock EmbeddingService
+    mock_embedding_service = MagicMock()
+    mock_embedding_service.embed.return_value = (
+        np.array([[0.1, 0.2], [0.3, 0.4]]),  # embeddings
+        ["token1", "token2"],  # token_strings
+        np.array([[0.5, 0.6], [0.7, 0.8]])  # token_embeddings
+    )
+    mock_embedding_service.embedding_model_name = "test-model"
+
+    # Create a mock BERTrend instance with necessary attributes
+    mock_bertrend = MagicMock(spec=BERTrend)
+    mock_bertrend.config = {}
+    mock_bertrend.doc_groups = {}
+
+    # Mock BERTrend constructor to return our mock instance
+    with patch("bertrend.BERTrend.BERTrend", return_value=mock_bertrend):
+        # Mock BERTrend.restore_model to raise an exception
+        with patch("bertrend.BERTrend.BERTrend.restore_model", side_effect=Exception("Cannot restore")) as mock_restore:
+            # Mock BERTrend.train_topic_models and BERTrend.save_model
+            with patch.object(mock_bertrend, "train_topic_models") as mock_train:
+                with patch.object(mock_bertrend, "save_model") as mock_save:
+                    with patch("bertrend.BERTrend.BERTopicModel") as mock_bertopic_model:
+
+                            # Execute
+                            from bertrend.BERTrend import train_new_data
+                            result = train_new_data(
+                                reference_timestamp=reference_timestamp,
+                                new_data=new_data,
+                                bertrend_models_path=bertrend_models_path,
+                                embedding_service=mock_embedding_service,
+                                granularity=7,
+                                language="English"
+                            )
+
+                            # Assert
+                            mock_restore.assert_called_once_with(bertrend_models_path)
+                            mock_embedding_service.embed.assert_called_once()
+                            mock_train.assert_called_once()
+                            mock_save.assert_called_once_with(models_path=bertrend_models_path)
+
+
+def test_train_new_data():
+    """Test train_new_data function."""
+    # Setup
+    reference_timestamp = pd.Timestamp("2023-01-01")
+    new_data = pd.DataFrame({
+        "text": ["Document 1", "Document 2"],
+        "document_id": ["doc1", "doc2"],
+        "source": ["source1", "source2"],
+        "url": ["http://example.com/1", "http://example.com/2"],
+        "timestamp": [reference_timestamp, reference_timestamp]
+    })
+    bertrend_models_path = Path("/tmp/models")
+
+    # Mock EmbeddingService
+    mock_embedding_service = MagicMock()
+    mock_embedding_service.embed.return_value = (
+        np.array([[0.1, 0.2], [0.3, 0.4]]),  # embeddings
+        ["token1", "token2"],  # token_strings
+        np.array([[0.5, 0.6], [0.7, 0.8]])  # token_embeddings
+    )
+    mock_embedding_service.embedding_model_name = "test-model"
+
+    # Create a mock BERTrend instance with necessary attributes and methods
+    mock_bertrend = MagicMock(spec=BERTrend)
+    mock_bertrend.doc_groups = {reference_timestamp: ["doc1", "doc2"]}
+    mock_bertrend.config = {"granularity": 7}
+
+    # Create mock methods
+    mock_train = MagicMock()
+    mock_bertrend.train_topic_models = mock_train
+    mock_save = MagicMock()
+    mock_bertrend.save_model = mock_save
+
+    # Mock BERTrend.restore_model to return our mock instance
+    with patch("bertrend.BERTrend.BERTrend.restore_model", return_value=mock_bertrend) as mock_restore:
+        # Execute
+        from bertrend.BERTrend import train_new_data
+        result = train_new_data(
+            reference_timestamp=reference_timestamp,
+            new_data=new_data,
+            bertrend_models_path=bertrend_models_path,
+            embedding_service=mock_embedding_service,
+            granularity=7,
+            language="English"
+        )
+
+        # Assert
+        mock_restore.assert_called_once_with(bertrend_models_path)
+        mock_embedding_service.embed.assert_called_once()
+        mock_train.assert_called_once()
+        mock_save.assert_called_once_with(models_path=bertrend_models_path)
+        assert result == mock_bertrend
+
+
+def test_merge_models():
+    """Test _merge_models function."""
+    # Setup
+    df1 = pd.DataFrame({
+        "Topic": [0, 1],
+        "Count": [2, 3],
+        "Document_Count": [2, 3],
+        "Representation": ["Topic 0", "Topic 1"],
+        "Documents": [["doc1", "doc2"], ["doc3", "doc4"]],
+        "Embedding": [np.array([0.1, 0.2]), np.array([0.3, 0.4])],
+        "DocEmbeddings": [[np.array([0.1, 0.2]), np.array([0.3, 0.4])], [np.array([0.5, 0.6]), np.array([0.7, 0.8])]],
+        "Sources": [["source1", "source1"], ["source2", "source2"]],
+        "URLs": [["url1", "url2"], ["url3", "url4"]],
+    })
+
+    df2 = pd.DataFrame({
+        "Topic": [0, 1],
+        "Count": [1, 2],
+        "Document_Count": [1, 2],
+        "Representation": ["Topic 0 new", "Topic 1 new"],
+        "Documents": [["doc5"], ["doc6", "doc7"]],
+        "Embedding": [np.array([0.15, 0.25]), np.array([0.8, 0.9])],
+        "DocEmbeddings": [[np.array([0.15, 0.25])], [np.array([0.8, 0.9]), np.array([0.85, 0.95])]],
+        "Sources": [["source3"], ["source4", "source4"]],
+        "URLs": [["url5"], ["url6", "url7"]],
+    })
+
+    timestamp = pd.Timestamp("2023-01-01")
+    min_similarity = 0.9  # High threshold to ensure only the first topic is merged
+
+    # Mock cosine_similarity to return a controlled similarity matrix
+    with patch("bertrend.BERTrend.cosine_similarity") as mock_cosine:
+        # First topic in df2 is similar to first topic in df1, second topic is not similar to any
+        mock_cosine.return_value = np.array([[0.95, 0.5], [0.6, 0.6]])
+
+        # Execute
+        from bertrend.BERTrend import _merge_models
+        merged_df, merge_history, new_topics = _merge_models(df1, df2, min_similarity, timestamp)
+
+        # Assert
+        mock_cosine.assert_called_once()
+
+        # Check merged_df
+        assert len(merged_df) == 3  # 2 original topics + 1 new topic
+        assert merged_df["Topic"].tolist() == [0, 1, 2]  # New topic gets ID 2
+
+        # Check the merged topic (Topic 0)
+        merged_topic = merged_df[merged_df["Topic"] == 0].iloc[0]
+        assert merged_topic["Count"] == 3  # 2 from df1 + 1 from df2
+        assert merged_topic["Document_Count"] == 3  # 2 from df1 + 1 from df2
+
+        # Check merge_history
+        assert len(merge_history) == 1  # Only one topic was merged
+        assert merge_history["Topic1"].iloc[0] == 0
+        assert merge_history["Topic2"].iloc[0] == 0
+
+        # Check new_topics
+        assert len(new_topics) == 1  # Only one new topic was added
+        assert new_topics["Topic"].iloc[0] == 2
+
+
+def test_filter_data():
+    """Test _filter_data function."""
+    # Setup
+    from bertrend.trend_analysis.weak_signals import _filter_data
+
+    # Create test data
+    data = {
+        "Timestamps": [
+            pd.Timestamp("2023-01-01"),
+            pd.Timestamp("2023-01-08"),
+            pd.Timestamp("2023-01-15"),
+            pd.Timestamp("2023-01-22"),
+        ],
+        "Popularity": [0.1, 0.2, 0.3, 0.4],
+        "Docs_Count": [1, 2, 3, 4],
+        "Paragraphs_Count": [2, 4, 6, 8],
+        "Source_Diversity": [1, 2, 2, 3],
+        "Representation": ["Topic 1", "Topic 1", "Topic 1", "Topic 1"],
+        "Representations": ["Topic 1", "Topic 1", "Topic 1", "Topic 1"],
+        "Documents": [
+            (pd.Timestamp("2023-01-01"), ["doc1"]),
+            (pd.Timestamp("2023-01-08"), ["doc2", "doc3"]),
+            (pd.Timestamp("2023-01-15"), ["doc4", "doc5", "doc6"]),
+            (pd.Timestamp("2023-01-22"), ["doc7", "doc8", "doc9", "doc10"]),
+        ],
+        "Sources": [
+            (pd.Timestamp("2023-01-01"), ["source1"]),
+            (pd.Timestamp("2023-01-08"), ["source1", "source2"]),
+            (pd.Timestamp("2023-01-15"), ["source1", "source2"]),
+            (pd.Timestamp("2023-01-22"), ["source1", "source2", "source3"]),
+        ],
+    }
+
+    # Test case 1: Filter with window_end after all timestamps, keep documents
+    window_end1 = pd.Timestamp("2023-01-29")
+    keep_documents1 = True
+
+    # Test case 2: Filter with window_end in the middle, keep documents
+    window_end2 = pd.Timestamp("2023-01-15")
+    keep_documents2 = True
+
+    # Test case 3: Filter with window_end after all timestamps, don't keep documents
+    window_end3 = pd.Timestamp("2023-01-29")
+    keep_documents3 = False
+
+    # Execute
+    filtered_data1 = _filter_data(data, window_end1, keep_documents1)
+    filtered_data2 = _filter_data(data, window_end2, keep_documents2)
+    filtered_data3 = _filter_data(data, window_end3, keep_documents3)
+
+    # Assert
+    # Case 1: All data should be included
+    assert len(filtered_data1["Timestamps"]) == 4
+    assert filtered_data1["Popularity"] == data["Popularity"]
+    # Documents are flattened in the output
+    expected_docs1 = ["doc1", "doc2", "doc3", "doc4", "doc5", "doc6", "doc7", "doc8", "doc9", "doc10"]
+    assert filtered_data1["Documents"] == expected_docs1
+
+    # Case 2: Only data up to 2023-01-15 should be included
+    assert len(filtered_data2["Timestamps"]) == 3
+    assert filtered_data2["Popularity"] == data["Popularity"][:3]
+    # Documents are flattened in the output
+    expected_docs2 = ["doc1", "doc2", "doc3", "doc4", "doc5", "doc6"]
+    assert filtered_data2["Documents"] == expected_docs2
+
+    # Case 3: All data should be included, but Documents should be empty
+    assert len(filtered_data3["Timestamps"]) == 4
+    assert filtered_data3["Popularity"] == data["Popularity"]
+    assert filtered_data3["Documents"] == []
+
+
+def test_is_rising_popularity():
+    """Test _is_rising_popularity function."""
+    # Setup
+    from bertrend.trend_analysis.weak_signals import _is_rising_popularity
+
+    # Test case 1: Rising popularity
+    data1 = {
+        "Timestamps": [
+            pd.Timestamp("2023-01-01"),
+            pd.Timestamp("2023-01-08"),
+            pd.Timestamp("2023-01-15"),
+        ],
+        "Popularity": [0.1, 0.2, 0.3],  # Clearly rising
+    }
+
+    # Test case 2: Falling popularity
+    data2 = {
+        "Timestamps": [
+            pd.Timestamp("2023-01-01"),
+            pd.Timestamp("2023-01-08"),
+            pd.Timestamp("2023-01-15"),
+        ],
+        "Popularity": [0.3, 0.2, 0.1],  # Clearly falling
+    }
+
+    # Test case 3: Stable popularity
+    data3 = {
+        "Timestamps": [
+            pd.Timestamp("2023-01-01"),
+            pd.Timestamp("2023-01-08"),
+            pd.Timestamp("2023-01-15"),
+        ],
+        "Popularity": [0.2, 0.2, 0.2],  # Stable
+    }
+
+    # Test case 4: Fluctuating but overall rising
+    data4 = {
+        "Timestamps": [
+            pd.Timestamp("2023-01-01"),
+            pd.Timestamp("2023-01-08"),
+            pd.Timestamp("2023-01-15"),
+            pd.Timestamp("2023-01-22"),
+            pd.Timestamp("2023-01-29"),
+        ],
+        "Popularity": [0.1, 0.05, 0.15, 0.1, 0.2],  # Fluctuating but rising
+    }
+
+    # Execute and Assert
+    assert _is_rising_popularity(data1, data1["Timestamps"][-1]) == True
+    assert _is_rising_popularity(data2, data2["Timestamps"][-1]) == False
+    assert _is_rising_popularity(data3, data3["Timestamps"][-1]) == False
+    assert _is_rising_popularity(data4, data4["Timestamps"][-1]) == True
 
 
 def test_preprocess_model():
