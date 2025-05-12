@@ -967,6 +967,7 @@ class BERTrend:
 
 
 def train_new_data(
+    reference_timestamp: pd.Timestamp,
     new_data: pd.DataFrame,
     bertrend_models_path: Path,
     embedding_service: EmbeddingService,
@@ -978,6 +979,8 @@ def train_new_data(
 
     Parameters
     ----------
+    reference_timestamp: pd.Timestamp
+        Reference timestamp to use for the topic model.
     new_data : pd.DataFrame
         DataFrame containing new text data to process.
     bertrend_models_path : Path
@@ -1005,9 +1008,6 @@ def train_new_data(
     If no previous model exists, a new BERTrend model is created.
     """
     logger.debug(f"Processing new data: {len(new_data)} items")
-
-    # timestamp used to reference the model
-    reference_timestamp = pd.Timestamp(new_data["timestamp"].max().date())
     logger.info(f"Reference timestamp: {reference_timestamp}")
 
     # Restore previous models

@@ -24,7 +24,6 @@ from bertrend.utils.data_loading import (
 from bertrend_apps.prospective_demo import (
     get_user_feed_path,
     get_user_models_path,
-    INTERPRETATION_PATH,
     NOISE,
     WEAK_SIGNALS,
     STRONG_SIGNALS,
@@ -33,6 +32,7 @@ from bertrend_apps.prospective_demo import (
     DEFAULT_ANALYSIS_CFG,
     get_model_cfg_path,
     URLS_COLUMN,
+    get_model_interpretation_path,
 )
 from bertrend_apps.prospective_demo.llm_utils import generate_bertrend_topic_description
 
@@ -153,7 +153,8 @@ def train_new_model_for_period(
 
     # Process new data
     bertrend = train_new_data(
-        new_data,
+        reference_timestamp=reference_timestamp,
+        new_data=new_data,
         bertrend_models_path=bertrend_models_path,
         embedding_service=embedding_service,
         language=language,
@@ -174,10 +175,8 @@ def train_new_model_for_period(
     )
 
     # LLM-based interpretation
-    interpretation_path = (
-        bertrend_models_path
-        / INTERPRETATION_PATH
-        / reference_timestamp.strftime("%Y-%m-%d")
+    interpretation_path = get_model_interpretation_path(
+        user_name, model_id, reference_timestamp
     )
     interpretation_path.mkdir(parents=True, exist_ok=True)
     for df, df_name in zip(
@@ -231,7 +230,7 @@ def train_new_model_for_period(
 
 
 def regenerate_models(model_id: str, user: str, with_analysis: bool = True):
-    """Regenerate from scratch (method retrospective) the models associated to the specified model identifier
+    """Regenerate from scratch (method retrospective) the models associated with the specified model identifier
     for the specified user."""
 
     # Get relevant model info from config
