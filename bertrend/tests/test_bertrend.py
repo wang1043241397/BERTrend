@@ -651,9 +651,13 @@ def test_restore_topic_models(bertrend_instance, tmp_path):
     mock_model2 = MagicMock(spec=BERTopic)
 
     with patch.object(
-        BERTrend, 'restore_topic_model', 
-        side_effect=lambda period, models_path: 
-            mock_model1 if period == period1 else mock_model2 if period == period2 else None
+        BERTrend,
+        "restore_topic_model",
+        side_effect=lambda period, models_path: (
+            mock_model1
+            if period == period1
+            else mock_model2 if period == period2 else None
+        ),
     ):
         # Execute
         result = bertrend_instance.restore_topic_models(models_path)
@@ -712,13 +716,15 @@ def test_train_new_data_restore_failure():
     """Test train_new_data function when restore_model fails."""
     # Setup
     reference_timestamp = pd.Timestamp("2023-01-01")
-    new_data = pd.DataFrame({
-        "text": ["Document 1", "Document 2"],
-        "document_id": ["doc1", "doc2"],
-        "source": ["source1", "source2"],
-        "url": ["http://example.com/1", "http://example.com/2"],
-        "timestamp": [reference_timestamp, reference_timestamp]
-    })
+    new_data = pd.DataFrame(
+        {
+            "text": ["Document 1", "Document 2"],
+            "document_id": ["doc1", "doc2"],
+            "source": ["source1", "source2"],
+            "url": ["http://example.com/1", "http://example.com/2"],
+            "timestamp": [reference_timestamp, reference_timestamp],
+        }
+    )
     bertrend_models_path = Path("/tmp/models")
 
     # Mock EmbeddingService
@@ -726,7 +732,7 @@ def test_train_new_data_restore_failure():
     mock_embedding_service.embed.return_value = (
         np.array([[0.1, 0.2], [0.3, 0.4]]),  # embeddings
         ["token1", "token2"],  # token_strings
-        np.array([[0.5, 0.6], [0.7, 0.8]])  # token_embeddings
+        np.array([[0.5, 0.6], [0.7, 0.8]]),  # token_embeddings
     )
     mock_embedding_service.embedding_model_name = "test-model"
 
@@ -738,41 +744,51 @@ def test_train_new_data_restore_failure():
     # Mock BERTrend constructor to return our mock instance
     with patch("bertrend.BERTrend.BERTrend", return_value=mock_bertrend):
         # Mock BERTrend.restore_model to raise an exception
-        with patch("bertrend.BERTrend.BERTrend.restore_model", side_effect=Exception("Cannot restore")) as mock_restore:
+        with patch(
+            "bertrend.BERTrend.BERTrend.restore_model",
+            side_effect=Exception("Cannot restore"),
+        ) as mock_restore:
             # Mock BERTrend.train_topic_models and BERTrend.save_model
             with patch.object(mock_bertrend, "train_topic_models") as mock_train:
                 with patch.object(mock_bertrend, "save_model") as mock_save:
-                    with patch("bertrend.BERTrend.BERTopicModel") as mock_bertopic_model:
+                    with patch(
+                        "bertrend.BERTrend.BERTopicModel"
+                    ) as mock_bertopic_model:
 
-                            # Execute
-                            from bertrend.BERTrend import train_new_data
-                            result = train_new_data(
-                                reference_timestamp=reference_timestamp,
-                                new_data=new_data,
-                                bertrend_models_path=bertrend_models_path,
-                                embedding_service=mock_embedding_service,
-                                granularity=7,
-                                language="English"
-                            )
+                        # Execute
+                        from bertrend.BERTrend import train_new_data
 
-                            # Assert
-                            mock_restore.assert_called_once_with(bertrend_models_path)
-                            mock_embedding_service.embed.assert_called_once()
-                            mock_train.assert_called_once()
-                            mock_save.assert_called_once_with(models_path=bertrend_models_path)
+                        result = train_new_data(
+                            reference_timestamp=reference_timestamp,
+                            new_data=new_data,
+                            bertrend_models_path=bertrend_models_path,
+                            embedding_service=mock_embedding_service,
+                            granularity=7,
+                            language="English",
+                        )
+
+                        # Assert
+                        mock_restore.assert_called_once_with(bertrend_models_path)
+                        mock_embedding_service.embed.assert_called_once()
+                        mock_train.assert_called_once()
+                        mock_save.assert_called_once_with(
+                            models_path=bertrend_models_path
+                        )
 
 
 def test_train_new_data():
     """Test train_new_data function."""
     # Setup
     reference_timestamp = pd.Timestamp("2023-01-01")
-    new_data = pd.DataFrame({
-        "text": ["Document 1", "Document 2"],
-        "document_id": ["doc1", "doc2"],
-        "source": ["source1", "source2"],
-        "url": ["http://example.com/1", "http://example.com/2"],
-        "timestamp": [reference_timestamp, reference_timestamp]
-    })
+    new_data = pd.DataFrame(
+        {
+            "text": ["Document 1", "Document 2"],
+            "document_id": ["doc1", "doc2"],
+            "source": ["source1", "source2"],
+            "url": ["http://example.com/1", "http://example.com/2"],
+            "timestamp": [reference_timestamp, reference_timestamp],
+        }
+    )
     bertrend_models_path = Path("/tmp/models")
 
     # Mock EmbeddingService
@@ -780,7 +796,7 @@ def test_train_new_data():
     mock_embedding_service.embed.return_value = (
         np.array([[0.1, 0.2], [0.3, 0.4]]),  # embeddings
         ["token1", "token2"],  # token_strings
-        np.array([[0.5, 0.6], [0.7, 0.8]])  # token_embeddings
+        np.array([[0.5, 0.6], [0.7, 0.8]]),  # token_embeddings
     )
     mock_embedding_service.embedding_model_name = "test-model"
 
@@ -796,16 +812,19 @@ def test_train_new_data():
     mock_bertrend.save_model = mock_save
 
     # Mock BERTrend.restore_model to return our mock instance
-    with patch("bertrend.BERTrend.BERTrend.restore_model", return_value=mock_bertrend) as mock_restore:
+    with patch(
+        "bertrend.BERTrend.BERTrend.restore_model", return_value=mock_bertrend
+    ) as mock_restore:
         # Execute
         from bertrend.BERTrend import train_new_data
+
         result = train_new_data(
             reference_timestamp=reference_timestamp,
             new_data=new_data,
             bertrend_models_path=bertrend_models_path,
             embedding_service=mock_embedding_service,
             granularity=7,
-            language="English"
+            language="English",
         )
 
         # Assert
@@ -819,29 +838,39 @@ def test_train_new_data():
 def test_merge_models():
     """Test _merge_models function."""
     # Setup
-    df1 = pd.DataFrame({
-        "Topic": [0, 1],
-        "Count": [2, 3],
-        "Document_Count": [2, 3],
-        "Representation": ["Topic 0", "Topic 1"],
-        "Documents": [["doc1", "doc2"], ["doc3", "doc4"]],
-        "Embedding": [np.array([0.1, 0.2]), np.array([0.3, 0.4])],
-        "DocEmbeddings": [[np.array([0.1, 0.2]), np.array([0.3, 0.4])], [np.array([0.5, 0.6]), np.array([0.7, 0.8])]],
-        "Sources": [["source1", "source1"], ["source2", "source2"]],
-        "URLs": [["url1", "url2"], ["url3", "url4"]],
-    })
+    df1 = pd.DataFrame(
+        {
+            "Topic": [0, 1],
+            "Count": [2, 3],
+            "Document_Count": [2, 3],
+            "Representation": ["Topic 0", "Topic 1"],
+            "Documents": [["doc1", "doc2"], ["doc3", "doc4"]],
+            "Embedding": [np.array([0.1, 0.2]), np.array([0.3, 0.4])],
+            "DocEmbeddings": [
+                [np.array([0.1, 0.2]), np.array([0.3, 0.4])],
+                [np.array([0.5, 0.6]), np.array([0.7, 0.8])],
+            ],
+            "Sources": [["source1", "source1"], ["source2", "source2"]],
+            "URLs": [["url1", "url2"], ["url3", "url4"]],
+        }
+    )
 
-    df2 = pd.DataFrame({
-        "Topic": [0, 1],
-        "Count": [1, 2],
-        "Document_Count": [1, 2],
-        "Representation": ["Topic 0 new", "Topic 1 new"],
-        "Documents": [["doc5"], ["doc6", "doc7"]],
-        "Embedding": [np.array([0.15, 0.25]), np.array([0.8, 0.9])],
-        "DocEmbeddings": [[np.array([0.15, 0.25])], [np.array([0.8, 0.9]), np.array([0.85, 0.95])]],
-        "Sources": [["source3"], ["source4", "source4"]],
-        "URLs": [["url5"], ["url6", "url7"]],
-    })
+    df2 = pd.DataFrame(
+        {
+            "Topic": [0, 1],
+            "Count": [1, 2],
+            "Document_Count": [1, 2],
+            "Representation": ["Topic 0 new", "Topic 1 new"],
+            "Documents": [["doc5"], ["doc6", "doc7"]],
+            "Embedding": [np.array([0.15, 0.25]), np.array([0.8, 0.9])],
+            "DocEmbeddings": [
+                [np.array([0.15, 0.25])],
+                [np.array([0.8, 0.9]), np.array([0.85, 0.95])],
+            ],
+            "Sources": [["source3"], ["source4", "source4"]],
+            "URLs": [["url5"], ["url6", "url7"]],
+        }
+    )
 
     timestamp = pd.Timestamp("2023-01-01")
     min_similarity = 0.9  # High threshold to ensure only the first topic is merged
@@ -853,7 +882,10 @@ def test_merge_models():
 
         # Execute
         from bertrend.BERTrend import _merge_models
-        merged_df, merge_history, new_topics = _merge_models(df1, df2, min_similarity, timestamp)
+
+        merged_df, merge_history, new_topics = _merge_models(
+            df1, df2, min_similarity, timestamp
+        )
 
         # Assert
         mock_cosine.assert_called_once()
@@ -932,7 +964,18 @@ def test_filter_data():
     assert len(filtered_data1["Timestamps"]) == 4
     assert filtered_data1["Popularity"] == data["Popularity"]
     # Documents are flattened in the output
-    expected_docs1 = ["doc1", "doc2", "doc3", "doc4", "doc5", "doc6", "doc7", "doc8", "doc9", "doc10"]
+    expected_docs1 = [
+        "doc1",
+        "doc2",
+        "doc3",
+        "doc4",
+        "doc5",
+        "doc6",
+        "doc7",
+        "doc8",
+        "doc9",
+        "doc10",
+    ]
     assert filtered_data1["Documents"] == expected_docs1
 
     # Case 2: Only data up to 2023-01-15 should be included
