@@ -25,7 +25,7 @@ jobs:
       - name: Bump version
         run: |
           # Extract current version from pyproject.toml
-          CURRENT_VERSION=$(grep -oP '(?<=version = ")[^"]*' pyproject.toml)
+          CURRENT_VERSION=$(grep '^version = ' pyproject.toml | head -n 1 | cut -d'"' -f2)
           echo "Current version: $CURRENT_VERSION"
 
           # Split version into components
