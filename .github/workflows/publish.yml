@@ -1,0 +1,52 @@
+name: Publish to PyPI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  bump-version-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Ensures we have full git history
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+
+      - name: Extract Current Version
+        id: version
+        run: |
+          CURRENT_VERSION=$(poetry version -s)
+          echo "Current version: $CURRENT_VERSION"
+                   
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Create Git Tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git tag "v${{ steps.version.outputs.current_version }}"
+          git push origin "v${{ steps.version.outputs.current_version }}"
+
+      - name: Build Package
+        run: |
+          poetry build
+
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          poetry publish
