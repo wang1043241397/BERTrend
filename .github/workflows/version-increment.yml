@@ -1,88 +1,47 @@
-name: Bump Version and Publish to PyPI
+name: Version Increment
 
 on:
-  push:
+  pull_request:
+    types: [opened, synchronize]
     branches:
-      - main
+      - main  # ou master, selon votre configuration
 
 jobs:
-  bump-version-publish:
+  bump-version:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Ensures we have full git history
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: '3.12'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install build twine poetry toml
+          pip install poetry
 
-      - name: Extract Current Version
-        id: version
+      - name: Bump version
         run: |
-          CURRENT_VERSION=$(python -c "import toml; print(toml.load('pyproject.toml')['tool']['poetry']['version'])")
-          echo "Current version: $CURRENT_VERSION"
-          
-          # Split version into components
-          IFS='.' read -r -a VERSION_PARTS <<< "$CURRENT_VERSION"
-          MAJOR="${VERSION_PARTS[0]}"
-          MINOR="${VERSION_PARTS[1]}"
-          PATCH="${VERSION_PARTS[2]}"
-    
           # Increment patch version
-          NEW_PATCH=$((PATCH + 1))
-          NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
-          
-          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-        shell: bash
+          poetry version patch
+          # Retrieve new version
+          NEW_VERSION=$(poetry version -s)
+          echo "Version upgraded to: $NEW_VERSION"
 
-      - name: Update Version
+      - name: Commit and push changes
         run: |
-          # Use poetry to update version
-          poetry version ${{ steps.version.outputs.new_version }}
-
-      - name: Commit and Push Changes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
           git add pyproject.toml
-          git commit -m "Bump version from ${{ steps.version.outputs.current_version }} to ${{ steps.version.outputs.new_version }} [skip ci]"
-          
-          # Use GitHub CLI to create a pull request to bypass branch protections
-          gh pr create \
-            --base main \
-            --head version-bump \
-            --title "Bump version to ${{ steps.version.outputs.new_version }}" \
-            --body "Automated version bump from GitHub Actions"
-          
-          # Merge the PR
-          gh pr merge --merge
-
-      - name: Create Git Tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git tag "v${{ steps.version.outputs.new_version }}"
-          git push origin "v${{ steps.version.outputs.new_version }}"
-
-      - name: Build Package
-        run: |
-          poetry build
-
-      - name: Publish to PyPI
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: |
-          poetry publish
+          git commit -m "chore: bump version [skip ci]"
+          git push
