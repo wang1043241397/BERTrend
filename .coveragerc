@@ -1,0 +1,7 @@
+[run]
+source = bertrend
+omit =
+    */tests/*
+    */site-packages/*
+    */tmp/*
+    */_remote_module_non_scriptable.py
