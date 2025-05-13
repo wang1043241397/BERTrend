@@ -1,17 +1,15 @@
 # BERTrend
 
 [![rte-france - BERTrend](https://img.shields.io/static/v1?label=rte-france&message=BERTrend&color=blue&logo=github)](https://github.com/rte-france/BERTrend "Go to GitHub repo")
-![GitHub License](https://img.shields.io/github/license/rte-france/BERTrend)
 [![stars - BERTrend](https://img.shields.io/github/stars/rte-france/BERTrend?style=social)](https://github.com/rte-france/BERTrend)
 [![forks - BERTrend](https://img.shields.io/github/forks/rte-france/BERTrend?style=social)](https://github.com/rte-france/BERTrend)
 [![issues - BERTrend](https://img.shields.io/github/issues/rte-france/BERTrend)](https://github.com/rte-france/BERTrend/issues)
-![Static Badge](https://img.shields.io/badge/python-%3E%3D3.12-blue)
+[![Downloads](https://pepy.tech/badge/bertrend)](https://pepy.tech/project/bertrend)
+[![PyPi_Version](https://img.shields.io/pypi/v/bertrend.svg)](https://pypi.org/project/bertrend/)
+[![PyPi_Compat](https://img.shields.io/pypi/pyversions/bertrend.svg)](https://pypi.org/project/bertrend/)
+![GitHub License](https://img.shields.io/github/license/rte-france/BERTrend)
 
 ![BERTrend pipeline](./BERTrend_overview.png)
-
-## Work in progress
-
-- make BERTrend available as a python package in PyPI
 
 ## Paper
 
@@ -91,6 +89,12 @@ BERTrend requires the following environment variables to be set:
 - (Recommended): create a new python environment using `venv` or `conda`: 
 
   `python -m venv <path>/bertrend`
+
+
+- Installation from pypi
+
+  `pip install bertrend` 
+
 
 - Install using pip or poetry in the BERTrend home directory:
 

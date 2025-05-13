@@ -23,16 +23,16 @@ def get_most_representative_docs(
         Returns docs having the most occurrences.
 
     - If df_split is None:
-        Uses mode to determine the method used. Currently, support :
+        Uses mode to determine the method used. Currently, support:
             * cluster_probability : computes the probability for each doc to belong to the topic using the clustering model. Returns most likely docs.
-            * ctfidf_representation : computes c-TF-IDF representation for each doc and compare it to topic c-TF-IDF vector using cosine similarity. Returns highest similarity scores docs.
+            * ctfidf_representation : computes c-TF-IDF representation for each doc and compares it to topic c-TF-IDF vector using cosine similarity. Returns highest similarity scores docs.
 
     """
     # If df_split is not None :
     if isinstance(df_split, pd.DataFrame):
         # Filter docs belonging to the specific topic
         sub_df = df_split.loc[pd.Series(topics) == topic_number]
-        # Most representative docs in a topic are those with the highest number of extracts in this topic
+        # The most representative docs in a topic are those with the highest number of extracts in this topic
         sub_df = (
             sub_df.groupby(["title"])
             .size()
@@ -42,7 +42,7 @@ def get_most_representative_docs(
         )
         return df[df["title"].isin(sub_df["title"])]
 
-    # If no df_split is None, use mode to determine how to return most representative docs :
+    # If no df_split is None, use mode to determine how to return the most representative docs:
     elif mode == "cluster_probability":
         docs_prob = topic_model.get_document_info(df["text"])["Probability"]
         df = df.assign(Probability=docs_prob)
@@ -51,7 +51,8 @@ def get_most_representative_docs(
         return sub_df
 
     elif mode == "ctfidf_representation":
-        # TODO : "get_representative_docs" currently returns maximum 3 docs as implemtented in BERTopic. We should modify the function to return more if needed
+        # TODO : "get_representative_docs" currently returns maximum 3 docs as implemented in BERTopic. We should modify the function to return more if needed
         docs = topic_model.get_representative_docs(topic=topic_number)
         sub_df = df[df["text"].isin(docs)].iloc[0:top_n_docs]
         return sub_df
+    return None

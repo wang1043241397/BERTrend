@@ -22,7 +22,7 @@ class AbstractiveSummarizer(Summarizer):
     def __init__(self, model_name=DEFAULT_ABSTRACTIVE_MODEL):
         self.model_name = model_name
         self.WHITESPACE_HANDLER = lambda k: re.sub(
-            "\s+", " ", re.sub("\n+", " ", k.strip())
+            r"\s+", " ", re.sub(r"\n+", " ", k.strip())
         )
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
