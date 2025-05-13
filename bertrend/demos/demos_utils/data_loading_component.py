@@ -33,6 +33,7 @@ from bertrend.utils.data_loading import (
     load_data,
     split_data,
     TIMESTAMP_COLUMN,
+    DataLoadingError,
 )
 
 NO_DATASET_WARNING = "Please select at least one dataset to proceed."
@@ -47,6 +48,7 @@ FORMAT_ICONS = {
 }
 
 
+@st.cache_data(ttl=60 * 60 * 24)
 def _process_uploaded_files(
     files: list[UploadedFile],
 ) -> list[pd.DataFrame]:
@@ -57,15 +59,23 @@ def _process_uploaded_files(
             with open(tmpdir + "/" + f.name, "wb") as tmp_file:
                 tmp_file.write(f.getvalue())
             if tmp_file is not None:
-                df = load_data(
-                    Path(tmp_file.name),
-                    SessionStateManager.get("language", "French"),
-                )
+                try:
+                    df = load_data(
+                        Path(tmp_file.name),
+                        SessionStateManager.get("language", "French"),
+                    )
+                except DataLoadingError as dle:
+                    st.warning(
+                        f"Error while loading file '{f.name}': {dle}",
+                        icon=WARNING_ICON,
+                    )
+                    df = None
                 if df is not None:
                     dataframes.append(df)
         return dataframes
 
 
+@st.cache_data(ttl=60 * 60 * 24)
 def _load_files(
     files: list[Path],
 ) -> list[pd.DataFrame]:
@@ -73,10 +83,17 @@ def _load_files(
     dfs = []
     for selected_file in files:
         file_path = DATA_PATH / selected_file
-        df = load_data(
-            file_path,
-            SessionStateManager.get("language", "French"),
-        )
+        try:
+            df = load_data(
+                file_path,
+                SessionStateManager.get("language", "French"),
+            )
+        except DataLoadingError as dle:
+            st.warning(
+                f"Error while loading file '{file_path.name}': {dle}",
+                icon=WARNING_ICON,
+            )
+            df = None
         if df is not None:
             dfs.append(df)
     return dfs
@@ -85,7 +102,7 @@ def _load_files(
 # TODO: if loaded data column names do not match our default values, show a popup for column data mapping
 def display_data_loading_component():
     """
-    Component for a streamlit app about topic modelling. It allows to choose data to load and preprocess data.
+    Component for a streamlit app about topic modeling. It allows choosing data to load and preprocess data.
     Preprocessing of data includes:
     - concatenation of data from different files
     - adding potentially missing columns to make all datasets homogeneous
@@ -159,7 +176,7 @@ def display_data_loading_component():
 
         # Save state of initial DF (before split and data selection)
         st.session_state["initial_df"] = df.copy()
-    # If dfs is None and there is no 'initial_df' in session_state, show warining
+    # If dfs is None and there is no 'initial_df' in session_state, show a warning
     elif "initial_df" not in st.session_state:
         st.warning(
             NO_DATA_AFTER_PREPROCESSING_MESSAGE,

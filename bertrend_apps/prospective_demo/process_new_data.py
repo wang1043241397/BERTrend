@@ -229,7 +229,9 @@ def train_new_model_for_period(
             )
 
 
-def regenerate_models(model_id: str, user: str, with_analysis: bool = True):
+def regenerate_models(
+    model_id: str, user: str, with_analysis: bool = True, since: pd.Timestamp = None
+):
     """Regenerate from scratch (method retrospective) the models associated with the specified model identifier
     for the specified user."""
 
@@ -241,6 +243,11 @@ def regenerate_models(model_id: str, user: str, with_analysis: bool = True):
     # Load model config
     df = load_all_data(model_id=model_id, user=user, language=language)
     logger.info(f"Size of dataset: {len(df)}")
+
+    if since:
+        # Keep only the most recent data
+        df = df[df["timestamp"] >= since]
+        logger.info(f"Size of dataset (after date {since}): {len(df)}")
 
     # Split data by paragraphs
     df = split_data(df)
@@ -337,12 +344,23 @@ if __name__ == "__main__":
         with_analysis: bool = typer.Option(
             default=True, help="Regenerate LLM analysis (may take time)"
         ),
+        since: str = typer.Option(
+            default=None,
+            help="Date to be considered as the beginning of the analysis (format: YYYY-MM-dd)",
+        ),
     ):
         """Regenerate past models from scratch"""
         logger.info(
             f"Regenerating models for user '{user}' about '{model_id}', with analysis: {with_analysis}..."
         )
-        regenerate_models(model_id=model_id, user=user, with_analysis=with_analysis)
+        # Convert string date to pd.Timestamp if provided
+        since_timestamp = pd.Timestamp(since) if since else None
+        regenerate_models(
+            model_id=model_id,
+            user=user,
+            with_analysis=with_analysis,
+            since=since_timestamp,
+        )
 
     # Main app
     app()

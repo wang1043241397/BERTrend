@@ -26,6 +26,17 @@ SOURCE_COLUMN = "source"
 CITATION_COUNT_COL = "citation_count"
 
 
+class DataLoadingError(Exception):
+    """Exception raised when an error occurs during data loading"""
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f"DataLoadingError: {self.message}"
+
+
 def find_compatible_files(path: Path, extensions: list[str]) -> list[Path]:
     return [f.relative_to(path) for f in path.rglob("*") if f.suffix[1:] in extensions]
 
@@ -47,6 +58,13 @@ def load_data(
     df = _file_to_pd(selected_file)
     if df is None:
         return None
+
+    if TIMESTAMP_COLUMN not in df.columns:
+        raise DataLoadingError(
+            f"Missing {TIMESTAMP_COLUMN} column in {selected_file.name}"
+        )
+    if TEXT_COLUMN not in df.columns:
+        raise DataLoadingError(f"Missing {TEXT_COLUMN} column in {selected_file.name}")
 
     # Convert timestamp column to datetime
     df[TIMESTAMP_COLUMN] = pd.to_datetime(df[TIMESTAMP_COLUMN], errors="coerce")
@@ -141,9 +159,10 @@ def group_by_days(
     return dict_of_dfs
 
 
-def _file_to_pd(file_name: Path, base_dir: Path = None) -> pd.DataFrame | None:
+def _file_to_pd(file_name: Path) -> pd.DataFrame | None:
     """
     Read data in various formats and convert it to a DataFrame.
+    Note that all data are supposed to be read from the DATA_PATH directory.
 
     Args:
         file_name (str): The name of the file to read.
@@ -152,6 +171,7 @@ def _file_to_pd(file_name: Path, base_dir: Path = None) -> pd.DataFrame | None:
     Returns:
         pd.DataFrame: The loaded data.
     """
+    logger.debug(f"Loading data from {file_name}")
     file_ext = file_name.suffix.lower()
     if file_ext == ".csv":
         return pd.read_csv(DATA_PATH / file_name)
@@ -164,7 +184,7 @@ def _file_to_pd(file_name: Path, base_dir: Path = None) -> pd.DataFrame | None:
     elif file_ext == ".jsonl.gz" or file_ext == ".jsonlines.gz":
         with gzip.open(file_name, "rt") as f_in:
             return pd.read_json(f_in, lines=True)
-    elif file_ext == ".xslsx":
+    elif file_ext == ".xlsx":
         return pd.read_excel(DATA_PATH / file_name)
     else:
         return None
