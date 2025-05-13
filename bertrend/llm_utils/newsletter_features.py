@@ -126,9 +126,9 @@ def generate_newsletter(
     # Iterate over topics
     for i in tqdm(range(top_n_topics), desc="Processing topics..."):
         sub_df = get_most_representative_docs(
-            topic_model,
-            df,
-            topics,
+            topic_model=topic_model,
+            df=df,
+            topics=topics,
             mode=top_n_docs_mode,
             df_split=df_split,
             topic_number=i,
