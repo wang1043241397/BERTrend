@@ -2,7 +2,7 @@ name: Version Increment
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened]
     branches:
       - main  # ou master, selon votre configuration
 
