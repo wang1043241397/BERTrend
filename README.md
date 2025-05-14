@@ -188,6 +188,13 @@ CUDA_VISIBLE_DEVICES=<gpu_number> streamlit run app.py
 - `Parameters`: Include all BERTopic parameters. Choose the embedding model carefully based on your data language.
 The embedding model can run locally (a GPU is recommended); it is also possible to use a remote embedding service.
 
+We recommend to use a remote embedding service (this is now the default config) as it simplifies the computing.
+
+The change of configuration can be done in: [services_default_config.toml](bertrend/config/services_default_config.toml).
+
+An example of a very simple implementation to deploy a separate embedding service can be found here: https://github.com/rte-france/wattelse/tree/main/wattelse/api/embedding. (this implementation is compatible with our code)
+
+
 ![parameters](docs/images/parameters.png)
 
 Please refer to the [BERTopic documentation](https://maartengr.github.io/BERTopic/algorithm/algorithm.html) for parameter details.

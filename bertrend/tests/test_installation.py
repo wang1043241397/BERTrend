@@ -47,9 +47,7 @@ def test_nlp_dependencies():
 def test_llm_dependencies():
     """Test that LLM integration dependencies are installed correctly."""
     try:
-        import langchain_community
-        import langchain_chroma
-        import langchain_openai
+        import langchain_core
         import openai
         import tiktoken
 
