@@ -103,13 +103,14 @@ BERTrend requires the following environment variables to be set:
   pip install .  # or poetry install
 
   # Installation with test dependencies
-  pip install ".[tests]"  # or poetry install --with test
+  pip install ".[tests]"  # or poetry install --extras tests
 
   # Installation with apps dependencies
-  pip install ".[apps]"  # or poetry install --with apps
+  pip install ".[apps]"  # or poetry install --extras apps
 
   # Installation with all optional dependencies
-  pip install ".[tests,apps]"  # or poetry install --with test,apps
+  pip install ".[tests,apps]"  # or poetry install --all-extras
+
   ```
 
 - (Use `pip install -e .` for a local installation)

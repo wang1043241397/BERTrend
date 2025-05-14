@@ -27,7 +27,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -e .[tests,apps]
+        pip install poetry
+        poetry install --all-extras
 
     - name: Run pytests
       run: |
@@ -50,8 +51,9 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -e .[tests,apps]
-
+        pip install poetry
+        poetry install --all-extras
+        
     - name: Run integration tests
       run: |
         pytest -m integration bertrend/tests/test_integration.py -v
