@@ -65,7 +65,7 @@ https://github.com/user-attachments/assets/d79368d9-d4e0-4324-8a98-a888f0ab3b65
 - Categorization of signals into three different dataframes: noise, weak and strong signals
   (each dataframe contains useful information about the signals)
 - Interpretation of these signals using LLMs
-- Inspection of topic merging process using Sankey diagram
+- Inspection of the topic merging process using Sankey diagram
 
 ## Installation
 
@@ -102,20 +102,14 @@ BERTrend requires the following environment variables to be set:
   # Basic installation with core dependencies
   pip install .  # or poetry install
 
-  # Installation with test dependencies
-  pip install ".[tests]"  # or poetry install --extras tests
-
-  # Installation with apps dependencies
+    # Installation with apps dependencies
   pip install ".[apps]"  # or poetry install --extras apps
-
-  # Installation with all optional dependencies
-  pip install ".[tests,apps]"  # or poetry install --all-extras
 
   ```
 
 - (Use `pip install -e .` for a local installation)
 
-NB. Due to the number of dependencies, the installation may take some time on an empty environement.
+NB. Due to the number of dependencies, the installation may take some time on an empty environment.
 
 ### Dependency Management
 
@@ -161,7 +155,7 @@ For custom dataset creation, please refer to the documentation page about [data 
 
 In order to use the provided demos, datasets :
 - can be stored on the server in: `$BERTREND_BASE_DIR/data/bertrend/`
-- or can be uploaded from the client device on which is displayed the Streamlit apps.
+- or can be uploaded from the client device on which are displayed the Streamlit apps.
 
 #### Dataset Format
 Required columns:
@@ -188,7 +182,7 @@ CUDA_VISIBLE_DEVICES=<gpu_number> streamlit run app.py
 - `Parameters`: Include all BERTopic parameters. Choose the embedding model carefully based on your data language.
 The embedding model can run locally (a GPU is recommended); it is also possible to use a remote embedding service.
 
-We recommend to use a remote embedding service (this is now the default config) as it simplifies the computing.
+We recommend using a remote embedding service (this is now the default config) as it simplifies the computing.
 
 The change of configuration can be done in: [services_default_config.toml](bertrend/config/services_default_config.toml).
 
@@ -213,7 +207,7 @@ The application is split into several pages:
   - Computes topics over time
   ![exploration_over_time](./docs/images/explore1.png)
 
-  - Allow to select sources and generate short descriptions for each theme
+  - Allow selecting sources and generating short descriptions for each theme
   ![topic_exploration](./docs/images/explore2.png)
 
 - `Topic visualization`: Several visualization types available:
@@ -231,7 +225,7 @@ The application is split into several pages:
   ![temptopic_metrics](./docs/images/temptopic_metrics.png)  
 
 - `Generate Newsletters`
-  - This is an example of application combining topic analysis and LLMs
+  - This is an example of an application combining topic analysis and LLMs
   - Generates newsletters based on prominent topics
   - Uses LLMs to generate topic descriptions and summarize representative documents
 
@@ -280,8 +274,8 @@ Provides various statistics about topics:
 - As topics are hard to interprete by humans, we showcase how it can be
 done using LLMs.
 - Choose a specific topic and click on the button to generate an interpretation
-- LLM-based in-depth signal analysis is done using predefined templates for example:
-  - describe what happens since last timestamp (summary of main events)
+- LLM-based in-depth signal analysis is done using predefined templates, for example:
+  - describe what's happened since the last timestamp (summary of main events)
   - present through a multi-faceted description info about key developments, foreseen changes, potential impact, etc.
 
 
@@ -309,7 +303,7 @@ See [AUTHORS](./AUTHORS.txt) for the full list of contributors.
 
 ## License Information
 
-Copyright 2023-2025 RTE France RTE: http://www.rte-france.com
+Copyright 2023–2025 RTE France RTE: http://www.rte-france.com
 
 This Source Code is subject to the terms of the Mozilla Public License (MPL) v2 also available here: https://www.mozilla.org/en-US/MPL/2.0/
 
