@@ -36,12 +36,15 @@ def mock_model():
 @pytest.fixture
 def mock_abstractive_summarizer(mock_tokenizer, mock_model):
     """Create a mock AbstractiveSummarizer with mocked dependencies."""
-    with patch(
-        "bertrend.services.summary.abstractive_summarizer.AutoTokenizer.from_pretrained",
-        return_value=mock_tokenizer,
-    ), patch(
-        "bertrend.services.summary.abstractive_summarizer.AutoModelForSeq2SeqLM.from_pretrained",
-        return_value=mock_model,
+    with (
+        patch(
+            "bertrend.services.summary.abstractive_summarizer.AutoTokenizer.from_pretrained",
+            return_value=mock_tokenizer,
+        ),
+        patch(
+            "bertrend.services.summary.abstractive_summarizer.AutoModelForSeq2SeqLM.from_pretrained",
+            return_value=mock_model,
+        ),
     ):
         summarizer = AbstractiveSummarizer()
         # Set the mocks directly to ensure they're used
@@ -52,11 +55,14 @@ def mock_abstractive_summarizer(mock_tokenizer, mock_model):
 
 def test_initialization():
     """Test that the AbstractiveSummarizer initializes with the correct model."""
-    with patch(
-        "bertrend.services.summary.abstractive_summarizer.AutoTokenizer.from_pretrained"
-    ) as mock_tokenizer, patch(
-        "bertrend.services.summary.abstractive_summarizer.AutoModelForSeq2SeqLM.from_pretrained"
-    ) as mock_model:
+    with (
+        patch(
+            "bertrend.services.summary.abstractive_summarizer.AutoTokenizer.from_pretrained"
+        ) as mock_tokenizer,
+        patch(
+            "bertrend.services.summary.abstractive_summarizer.AutoModelForSeq2SeqLM.from_pretrained"
+        ) as mock_model,
+    ):
 
         # Mock the to() method to avoid device-related issues
         mock_model.return_value.to.return_value = mock_model.return_value
@@ -124,11 +130,14 @@ def test_custom_model():
     """Test initialization with a custom model."""
     custom_model = "custom/model"
 
-    with patch(
-        "bertrend.services.summary.abstractive_summarizer.AutoTokenizer.from_pretrained"
-    ) as mock_tokenizer, patch(
-        "bertrend.services.summary.abstractive_summarizer.AutoModelForSeq2SeqLM.from_pretrained"
-    ) as mock_model:
+    with (
+        patch(
+            "bertrend.services.summary.abstractive_summarizer.AutoTokenizer.from_pretrained"
+        ) as mock_tokenizer,
+        patch(
+            "bertrend.services.summary.abstractive_summarizer.AutoModelForSeq2SeqLM.from_pretrained"
+        ) as mock_model,
+    ):
 
         # Mock the to() method to avoid device-related issues
         mock_model.return_value.to.return_value = mock_model.return_value

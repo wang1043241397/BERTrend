@@ -166,13 +166,15 @@ def test_get_diversity_value_invalid_type(mock_bertopic, sample_data):
 
 def test_compute_cluster_metrics(mock_bertopic, sample_data):
     """Test the compute_cluster_metrics function."""
-    with patch(
-        "bertrend.metrics.topic_metrics.get_coherence_value", return_value=0.75
-    ) as mock_coherence, patch(
-        "bertrend.metrics.topic_metrics.get_diversity_value", return_value=0.6
-    ) as mock_diversity, patch(
-        "bertrend.metrics.topic_metrics.logger"
-    ) as mock_logger:
+    with (
+        patch(
+            "bertrend.metrics.topic_metrics.get_coherence_value", return_value=0.75
+        ) as mock_coherence,
+        patch(
+            "bertrend.metrics.topic_metrics.get_diversity_value", return_value=0.6
+        ) as mock_diversity,
+        patch("bertrend.metrics.topic_metrics.logger") as mock_logger,
+    ):
 
         compute_cluster_metrics(
             mock_bertopic, sample_data["topics"], sample_data["docs"]
@@ -197,14 +199,16 @@ def test_compute_cluster_metrics(mock_bertopic, sample_data):
 
 def test_compute_cluster_metrics_coherence_error(mock_bertopic, sample_data):
     """Test the compute_cluster_metrics function when coherence calculation raises an error."""
-    with patch(
-        "bertrend.metrics.topic_metrics.get_coherence_value",
-        side_effect=IndexError("Test error"),
-    ) as mock_coherence, patch(
-        "bertrend.metrics.topic_metrics.get_diversity_value", return_value=0.6
-    ) as mock_diversity, patch(
-        "bertrend.metrics.topic_metrics.logger"
-    ) as mock_logger:
+    with (
+        patch(
+            "bertrend.metrics.topic_metrics.get_coherence_value",
+            side_effect=IndexError("Test error"),
+        ) as mock_coherence,
+        patch(
+            "bertrend.metrics.topic_metrics.get_diversity_value", return_value=0.6
+        ) as mock_diversity,
+        patch("bertrend.metrics.topic_metrics.logger") as mock_logger,
+    ):
 
         compute_cluster_metrics(
             mock_bertopic, sample_data["topics"], sample_data["docs"]
@@ -216,14 +220,16 @@ def test_compute_cluster_metrics_coherence_error(mock_bertopic, sample_data):
 
 def test_compute_cluster_metrics_diversity_error(mock_bertopic, sample_data):
     """Test the compute_cluster_metrics function when diversity calculation raises an error."""
-    with patch(
-        "bertrend.metrics.topic_metrics.get_coherence_value", return_value=0.75
-    ) as mock_coherence, patch(
-        "bertrend.metrics.topic_metrics.get_diversity_value",
-        side_effect=IndexError("Test error"),
-    ) as mock_diversity, patch(
-        "bertrend.metrics.topic_metrics.logger"
-    ) as mock_logger:
+    with (
+        patch(
+            "bertrend.metrics.topic_metrics.get_coherence_value", return_value=0.75
+        ) as mock_coherence,
+        patch(
+            "bertrend.metrics.topic_metrics.get_diversity_value",
+            side_effect=IndexError("Test error"),
+        ) as mock_diversity,
+        patch("bertrend.metrics.topic_metrics.logger") as mock_logger,
+    ):
 
         compute_cluster_metrics(
             mock_bertopic, sample_data["topics"], sample_data["docs"]

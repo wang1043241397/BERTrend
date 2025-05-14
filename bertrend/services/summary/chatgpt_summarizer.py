@@ -35,7 +35,7 @@ class GPTSummarizer(Summarizer):
         prompt_language: str = "fr",
         max_article_length: int = 1500,
         model_name: str = None,
-        **kwargs
+        **kwargs,
     ) -> str:
         # Limit input length in case the text is large
         article_text = keep_first_n_words(article_text, max_article_length)
