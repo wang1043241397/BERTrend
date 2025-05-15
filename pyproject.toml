@@ -1,90 +1,95 @@
-[tool.poetry]
+[project]
 name = "bertrend"
-version = "0.3.2"
+version = "0.3.3"
 description = "BERTrend analyses topic evolution over time using state-of-the-art transformer models: topic modelling and LLM"
-authors = ["Jérôme Picault <jerome.picault@rte-france.com>", "Guillaume Grosjean <guillaume.grosjean@rte-france.com>", "Allaa Boutaleb <allaa.boutaleb@lip6.fr>"]
 license = "LICENSE.md"
 readme = "README.md"
+requires-python = ">=3.12,<4.0"
+authors = [
+    { name = "Jérôme Picault", email = "jerome.picault@rte-france.com" },
+    { name="Guillaume Grosjean", email="guillaume.grosjean@rte-france.com>" },
+    { name="Allaa Boutaleb", email="allaa.boutaleb@lip6.fr>"}
+]
+maintainers = [
+    { name = "Jérôme Picault", email = "jerome.picault@rte-france.com" },
+    { name="Guillaume Grosjean", email="guillaume.grosjean@rte-france.com>" },
+]
+keywords = ["topics", "BERTopic", "transformers", "weak signals", "LLM"]
+classifiers = [ "Topic :: Scientific/Engineering :: Artificial Intelligence"]
+
+dependencies = [
+    "ipython (>=8.28.0)",
+    "bertopic (==0.16.2)", # not fully tested with more recent versions
+    "black (>=24.10.0)",
+    "coverage>=7.6.9",
+    "cron-descriptor (>=1.4.5)",
+    "datamapplot (==0.3.0)",
+    "dateparser (>=1.2.0)",
+    "dask (==2024.12.0)", # issues with >=2025.x (https://github.com/dask/dask/issues/11678)
+    "dill (>=0.4.0)",
+    "gensim (>=4.3.3)",
+    "hdbscan (>=0.8.40)",
+    "joblib (>=1.4.2)",
+    "jsonlines (>=4.0.0)",
+    "langdetect (>=1.0.9)",
+    "langchain-core (>=0.3.59)",
+    "loguru (>=0.7.3)",
+    "lxml-html-clean (>=0.2.2)",
+    "markdown (>=3.7)",
+    "nltk (>=3.9.1)",
+    "numpy (<2)",
+    "openai (>=1.77.0)",
+    "opentelemetry-exporter-otlp-proto-grpc (==1.25.0)",  # to avoid error chroma with protobuf
+    "pandas (>=2.2.2)",
+    "plotly (>=5.24.1)",
+    "plotly-resampler (>=0.10.0)",
+    "pylabeladjust (==0.1.13)",
+    "Pyqtree (==1.0.0)",
+    "pytest>=8.3.3",
+    "scipy (==1.12)",
+    "scikit-learn (>=1.5.2)",
+    "sentence-transformers (==3.0.1)",
+    "starlette (>=0.46.2)",
+    "requests (>=2.32.3)",
+    "seaborn (>=0.13.2)",
+    "sentencepiece (>=0.2.0)",
+    "streamlit (>=1.45.0)",
+    "streamlit-code-editor (>=0.1.22)",
+    "tldextract (>=2.0.1)",
+    "thefuzz (>=0.22.1)",
+    "torch (>=2.7.0)",
+    "tqdm (>=4.67.1)",
+    "tiktoken (>=0.8.0)",
+    "tokenizers (<0.20.0)",
+    "umap-learn (>=0.5.7)"
+]
+
+[project.optional-dependencies]
+apps = [
+    "arxiv>=2.2.0",
+    "feedparser>=6.0.11",
+    "googlenewsdecoder>=0.1.7",
+    "google-api-python-client>=2.148.0",
+    "google-auth-oauthlib>=1.2.1",
+    "goose3>=3.1.19",
+    "newscatcherapi>=0.7.3",
+    "newspaper4k>=0.9.3.1",
+    "pygooglenews>=0.1.3"
+]
+
+[project.urls]
+homepage = "https://github.com/rte-france/BERTrend"
 repository = "https://github.com/rte-france/BERTrend"
-keywords = ["topics", "BERTopic", "transformers", "weak signals"]
+documentation = "https://github.com/rte-france/BERTrend"
+"Bug Tracker" = "https://github.com/rte-france/BERTrend/issues"
+
+[tool.poetry]
 packages = [
     { include = "bertrend" },
     { include = "bertrend_apps" },
 ]
 exclude = [ "data" ]
-
-[tool.poetry.dependencies]
-python = "^3.12"
-ipython = "^8.28.0"
-
-# These packages are mandatory and form the core of this package’s distribution.
-#accelerate = "^0.34.2" # required?
-bertopic = "0.16.2"
-black = "^24.10.0"
-cron-descriptor = "^1.4.5"
-datamapplot = "0.3.0"
-dateparser = "^1.2.0"
-dask = "2024.12.0" # issues with >=2025.x (https://github.com/dask/dask/issues/11678)
-dill = "^0.4.0"
-gensim = "4.3.2"
-hdbscan = "^0.8.40"
-joblib = "^1.4.2"
-jsonlines = "^4.0.0"
-langdetect = "^1.0.9"
-langchain-community = "^0.3.21"
-langchain-chroma = "^0.2.2"
-langchain-openai = "^0.3.12"
-loguru = "^0.7.3"
-lxml-html-clean = "^0.2.2"
-markdown = "^3.7"
-nltk = "^3.9.1"
-numpy = "<2"
-openai = "^1.77.0"
-opentelemetry-exporter-otlp-proto-grpc = "1.25.0" # to avoid error chroma with protobuf
-pandas = "^2.2.2"
-plotly = "^5.24.1"
-plotly-resampler = "^0.10.0"
-pylabeladjust = "0.1.13"
-Pyqtree = "1.0.0"
-scipy = {version = "1.12", python=""}
-scikit-learn = "^1.5.2"
-sentence-transformers = "3.0.1"
-requests = "^2.32.3"
-seaborn = "^0.13.2"
-sentencepiece = "^0.2.0"
-streamlit = "^1.45.0"
-streamlit-code-editor = "^0.1.22"
-tldextract = ">=2.0.1"
-thefuzz = "^0.22.1"
-torch = "2.7.0"
-tqdm = "^4.67.1"
-tiktoken = "^0.8.0"
-tokenizers = "<0.20.0"
-umap-learn = "^0.5.7"
-
-# A list of all the optional dependencies, some of which are included in the
-# below `extras`. They can be opted into by apps.
-# tests
-pytest = { version = "^8.3.3", optional = true}
-coverage = { version = "^7.6.9", optional = true}
-# BERTrend apps
-arxiv = { version = "^2.2.0", optional = true }
-feedparser = { version = "^6.0.11", optional = true }
-googlenewsdecoder = { version = "^0.1.7", optional = true }
-google-api-python-client = { version = "^2.148.0", optional = true }
-#google-auth-httplib2 = { version = "^0.2.0", optional = true } #required?
-google-auth-oauthlib = { version = "^1.2.1", optional = true }
-goose3 = { version = "^3.1.19", optional = true }
-newscatcherapi = { version = "^0.7.3", optional = true }
-newspaper4k = { version = "^0.9.3.1", optional = true }
-pygooglenews = { version = "^0.1.3", optional = true }
-
-
-[tool.poetry.extras]
-tests = ["pytest", "coverage"]
-apps = ["arxiv", "feedparser", "googlenewsdecoder", "google-api-python-client", "google-auth-httplib2",
-        "google-auth-oauthlib", "goose3", "newscatcherapi", "newspaper4k", "pygooglenews"]
-
+requires-poetry = ">=2.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

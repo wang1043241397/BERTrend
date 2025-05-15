@@ -55,12 +55,15 @@ def mock_openai_client():
 @pytest.fixture
 def mock_enhanced_summarizer(mock_sentence_transformer, mock_openai_client):
     """Create a mock EnhancedExtractiveSummarizer with mocked dependencies."""
-    with patch(
-        "bertrend.services.summary.extractive_summarizer.SentenceTransformer",
-        return_value=mock_sentence_transformer,
-    ), patch(
-        "bertrend.services.summary.extractive_summarizer.OpenAI_Client",
-        return_value=mock_openai_client,
+    with (
+        patch(
+            "bertrend.services.summary.extractive_summarizer.SentenceTransformer",
+            return_value=mock_sentence_transformer,
+        ),
+        patch(
+            "bertrend.services.summary.extractive_summarizer.OpenAI_Client",
+            return_value=mock_openai_client,
+        ),
     ):
         summarizer = EnhancedExtractiveSummarizer(
             api_key="test_key", endpoint="test_endpoint"
@@ -82,11 +85,14 @@ def test_extractive_summarizer_initialization():
 
 def test_enhanced_summarizer_initialization():
     """Test that the EnhancedExtractiveSummarizer initializes correctly."""
-    with patch(
-        "bertrend.services.summary.extractive_summarizer.SentenceTransformer"
-    ) as mock_transformer, patch(
-        "bertrend.services.summary.extractive_summarizer.OpenAI_Client"
-    ) as mock_client:
+    with (
+        patch(
+            "bertrend.services.summary.extractive_summarizer.SentenceTransformer"
+        ) as mock_transformer,
+        patch(
+            "bertrend.services.summary.extractive_summarizer.OpenAI_Client"
+        ) as mock_client,
+    ):
         summarizer = EnhancedExtractiveSummarizer(
             api_key="test_key", endpoint="test_endpoint"
         )
@@ -128,13 +134,17 @@ def test_get_sentences_embeddings(
 def test_summarize_text(mock_extractive_summarizer):
     """Test the summarize_text method."""
     # Mock the necessary methods
-    with patch.object(
-        mock_extractive_summarizer,
-        "get_sentences",
-        return_value=["Sentence 1.", "Sentence 2.", "Sentence 3."],
-    ), patch.object(mock_extractive_summarizer, "get_sentences_embeddings"), patch(
-        "bertrend.services.summary.extractive_summarizer.summarize_embeddings",
-        return_value=[0, 2],
+    with (
+        patch.object(
+            mock_extractive_summarizer,
+            "get_sentences",
+            return_value=["Sentence 1.", "Sentence 2.", "Sentence 3."],
+        ),
+        patch.object(mock_extractive_summarizer, "get_sentences_embeddings"),
+        patch(
+            "bertrend.services.summary.extractive_summarizer.summarize_embeddings",
+            return_value=[0, 2],
+        ),
     ):
 
         summary = mock_extractive_summarizer.summarize_text("This is a test text.")
@@ -207,9 +217,12 @@ def test_summarize_embeddings():
 def test_summarize_chunks(mock_extractive_summarizer):
     """Test the summarize_chunks method."""
     # Mock the necessary methods
-    with patch.object(mock_extractive_summarizer, "get_chunks_embeddings"), patch(
-        "bertrend.services.summary.extractive_summarizer.summarize_embeddings",
-        return_value=np.array([0, 2]),
+    with (
+        patch.object(mock_extractive_summarizer, "get_chunks_embeddings"),
+        patch(
+            "bertrend.services.summary.extractive_summarizer.summarize_embeddings",
+            return_value=np.array([0, 2]),
+        ),
     ):
 
         chunks = ["Chunk 1", "Chunk 2", "Chunk 3", "Chunk 4", "Chunk 5"]
