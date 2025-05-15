@@ -61,16 +61,20 @@ def load_data(
 
     if TIMESTAMP_COLUMN not in df.columns:
         raise DataLoadingError(
-            f"Missing {TIMESTAMP_COLUMN} column in {selected_file.name}"
+            f"Missing '{TIMESTAMP_COLUMN}' column in {selected_file.name}"
         )
     if TEXT_COLUMN not in df.columns:
-        raise DataLoadingError(f"Missing {TEXT_COLUMN} column in {selected_file.name}")
+        raise DataLoadingError(f"Missing '{TEXT_COLUMN}' column in {selected_file.name}")
 
     # Convert timestamp column to datetime
     df[TIMESTAMP_COLUMN] = pd.to_datetime(df[TIMESTAMP_COLUMN], errors="coerce")
 
     # Drop rows with invalid timestamps
     df = df.dropna(subset=[TIMESTAMP_COLUMN])
+
+    df.drop_duplicates(
+        subset=[TIMESTAMP_COLUMN, TEXT_COLUMN], keep="first", inplace=True
+    )
 
     df = df.sort_values(by=TIMESTAMP_COLUMN, ascending=True).reset_index(drop=True)
     df[DOCUMENT_ID_COLUMN] = df.index
