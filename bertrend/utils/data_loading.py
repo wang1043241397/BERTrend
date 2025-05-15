@@ -64,7 +64,9 @@ def load_data(
             f"Missing '{TIMESTAMP_COLUMN}' column in {selected_file.name}"
         )
     if TEXT_COLUMN not in df.columns:
-        raise DataLoadingError(f"Missing '{TEXT_COLUMN}' column in {selected_file.name}")
+        raise DataLoadingError(
+            f"Missing '{TEXT_COLUMN}' column in {selected_file.name}"
+        )
 
     # Convert timestamp column to datetime
     df[TIMESTAMP_COLUMN] = pd.to_datetime(df[TIMESTAMP_COLUMN], errors="coerce")

@@ -6,7 +6,7 @@
 [![issues - BERTrend](https://img.shields.io/github/issues/rte-france/BERTrend)](https://github.com/rte-france/BERTrend/issues)
 [![Downloads](https://pepy.tech/badge/bertrend)](https://pepy.tech/project/bertrend)
 [![PyPi_Version](https://img.shields.io/pypi/v/bertrend.svg)](https://pypi.org/project/bertrend/)
-[![PyPi_Compat](https://img.shields.io/pypi/pyversions/bertrend.svg)](https://pypi.org/project/bertrend/)
+![Static Badge](https://img.shields.io/badge/python-%3E%3D3.12-blue)
 ![GitHub License](https://img.shields.io/github/license/rte-france/BERTrend)
 
 ![BERTrend pipeline](./BERTrend_overview.png)

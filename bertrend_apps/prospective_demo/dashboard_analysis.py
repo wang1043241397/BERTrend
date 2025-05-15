@@ -21,7 +21,10 @@ from bertrend_apps.prospective_demo.dashboard_common import (
     choose_id_and_ts,
     get_df_topics,
 )
-from bertrend_apps.prospective_demo.i18n import translate, get_current_language
+from bertrend.demos.demos_utils.i18n import (
+    translate,
+    get_current_internationalization_language,
+)
 
 
 @st.fragment()
@@ -115,7 +118,7 @@ def display_detailed_analysis(
         desc["analysis"]
     )
     # Use current language for HTML template
-    lang = get_current_language()
+    lang = get_current_internationalization_language()
     formatted_html = fill_html_template(summaries, signal_analysis, lang)
     st.html(formatted_html)
 
