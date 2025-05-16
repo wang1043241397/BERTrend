@@ -29,6 +29,7 @@ from bertrend_apps.prospective_demo.feeds_data import display_data_status
 from bertrend.demos.demos_utils.i18n import (
     translate,
     create_internationalization_language_selector,
+    set_default_internationalization_language,
 )
 from bertrend_apps.prospective_demo.models_info import models_monitoring
 from bertrend_apps.prospective_demo.report_generation import reporting
@@ -67,7 +68,8 @@ def main():
 
     # Sidebar
     with st.sidebar:
-        st.header(SETTINGS_ICON + " Settings and Controls")
+        set_default_internationalization_language("fr")
+        st.header(SETTINGS_ICON + " " + translate("settings_and_controls"))
         create_internationalization_language_selector()
 
     # Main content

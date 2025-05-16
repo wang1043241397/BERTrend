@@ -10,6 +10,7 @@ from pandas import Timestamp
 from plotly import graph_objects as go
 
 from bertrend import SIGNAL_EVOLUTION_DATA_DIR
+from bertrend.demos.demos_utils.i18n import translate
 from bertrend.demos.demos_utils.icons import (
     SUCCESS_ICON,
     INFO_ICON,
@@ -57,11 +58,11 @@ def display_sankey_diagram(all_merge_histories_df: pd.DataFrame) -> None:
         go.Figure: The Plotly figure representing the Sankey diagram.
     """
 
-    with st.expander("Topic Merging Process", expanded=False):
-        # Create search box and slider using Streamlit
-        search_term = st.text_input("Search topics by keyword:")
+    with st.expander(translate("topic_merging_process"), expanded=False):
+        # Create a search box and slider using Streamlit
+        search_term = st.text_input(translate("search_topics_by_keywords"))
         max_pairs = st.slider(
-            "Max number of topic pairs to display",
+            translate("max_topic_pairs"),
             min_value=1,
             max_value=1000,
             value=20,
@@ -103,8 +104,10 @@ def display_signal_categories_df(
     if column_order is None:
         column_order = columns
 
-    with st.expander(f":orange[{WEAK_SIGNAL_ICON} Weak Signals]", expanded=True):
-        st.subheader(":orange[Weak Signals]")
+    with st.expander(
+        f":orange[{WEAK_SIGNAL_ICON} {translate('weak_signals')}]", expanded=True
+    ):
+        st.subheader(f":orange[{translate('weak_signals')}]")
         if not weak_signal_topics_df.empty:
             displayed_df = weak_signal_topics_df[columns].sort_values(
                 by=["Latest_Popularity"], ascending=False
@@ -119,12 +122,14 @@ def display_signal_categories_df(
 
         else:
             st.info(
-                f"No weak signals were detected at timestamp {window_end}.",
+                translate("no_weak_signals").format(timestamp=window_end),
                 icon=INFO_ICON,
             )
 
-    with st.expander(f":green[{STRONG_SIGNAL_ICON} Strong Signals]", expanded=True):
-        st.subheader(":green[Strong Signals]")
+    with st.expander(
+        f":green[{STRONG_SIGNAL_ICON} {translate('strong_signals')}]", expanded=True
+    ):
+        st.subheader(f":green[{translate('strong_signals')}]")
         if not strong_signal_topics_df.empty:
             displayed_df = strong_signal_topics_df[columns].sort_values(
                 by=["Latest_Popularity"], ascending=False
@@ -138,12 +143,12 @@ def display_signal_categories_df(
             )
         else:
             st.info(
-                f"No strong signals were detected at timestamp {window_end}.",
+                translate("no_strong_signals").format(timestamp=window_end),
                 icon=INFO_ICON,
             )
 
-    with st.expander(f":grey[{NOISE_ICON} Noise]", expanded=True):
-        st.subheader(":grey[Noise]")
+    with st.expander(f":grey[{NOISE_ICON} {translate('noise')}]", expanded=True):
+        st.subheader(f":grey[{translate('noise')}]")
         if not noise_topics_df.empty:
             displayed_df = noise_topics_df[columns].sort_values(
                 by=["Latest_Popularity"], ascending=False
@@ -157,7 +162,7 @@ def display_signal_categories_df(
             )
         else:
             st.info(
-                f"No noisy signals were detected at timestamp {window_end}.",
+                translate("no_noise_signals").format(timestamp=window_end),
                 icon=INFO_ICON,
             )
 
@@ -165,7 +170,7 @@ def display_signal_categories_df(
 def display_popularity_evolution():
     """Display the popularity evolution diagram."""
     window_size = st.number_input(
-        "Retrospective Period (days)",
+        translate("retrospective_period"),
         min_value=1,
         max_value=MAX_WINDOW_SIZE,
         value=DEFAULT_WINDOW_SIZE,
@@ -183,15 +188,12 @@ def display_popularity_evolution():
 
     # Slider to select the date
     current_date = st.slider(
-        "Current date",
+        translate("current_date"),
         min_value=min_datetime,
         max_value=max_datetime,
         step=pd.Timedelta(days=granularity),
         format="YYYY-MM-DD",
-        help="""The earliest selectable date corresponds to the earliest timestamp when topics were merged 
-        (with the smallest possible value being the earliest timestamp in the provided data). 
-        The latest selectable date corresponds to the most recent topic merges, which is at most equal 
-        to the latest timestamp in the data minus the provided granularity.""",
+        help=translate("current_date_help"),
         key="current_date",
     )
 
@@ -207,9 +209,13 @@ def display_popularity_evolution():
     # Display threshold values for noise and strong signals
     col1, col2 = st.columns(2)
     with col1:
-        st.write(f"### Noise Threshold : {'{:.3f}'.format(q1)}")
+        st.write(
+            f"### {translate('noise_threshold').format(value='{:.3f}'.format(q1))}"
+        )
     with col2:
-        st.write(f"### Strong Signal Threshold : {'{:.3f}'.format(q3)}")
+        st.write(
+            f"### {translate('strong_signal_threshold').format(value='{:.3f}'.format(q3))}"
+        )
 
     # Plot popularity evolution with thresholds
     fig = plot_topic_size_evolution(
@@ -255,7 +261,7 @@ def save_signal_evolution():
 
     # Save Signal Evolution Data to investigate later on in a separate notebook
     start_date, end_date = st.select_slider(
-        "Select date range for saving signal evolution data:",
+        translate("select_date_range"),
         options=pd.date_range(
             start=min_datetime,
             end=max_datetime,
@@ -265,7 +271,7 @@ def save_signal_evolution():
         format_func=lambda x: x.strftime("%Y-%m-%d"),
     )
 
-    if st.button("Save Signal Evolution Data"):
+    if st.button(translate("save_signal_evolution_data")):
         try:
             save_path = bertrend.save_signal_evolution_data(
                 window_size=SessionStateManager.get("window_size"),
@@ -273,11 +279,11 @@ def save_signal_evolution():
                 end_timestamp=pd.Timestamp(end_date),
             )
             st.success(
-                f"Signal evolution data saved successfully at {save_path}",
+                translate("data_saved_success").format(path=save_path),
                 icon=SUCCESS_ICON,
             )
         except Exception as e:
-            st.error(f"Error encountered while saving signal evolution data: {e}")
+            st.error(translate("data_saved_error").format(error=e))
 
 
 def display_newly_emerged_topics(all_new_topics_df: pd.DataFrame) -> None:
@@ -289,7 +295,7 @@ def display_newly_emerged_topics(all_new_topics_df: pd.DataFrame) -> None:
     """
     fig_new_topics = plot_newly_emerged_topics(all_new_topics_df)
 
-    with st.expander("Newly Emerged Topics", expanded=False):
+    with st.expander(translate("newly_emerged_topics"), expanded=False):
         st.dataframe(
             all_new_topics_df[
                 [
@@ -315,10 +321,10 @@ def display_topics_per_timestamp(topic_models: dict[pd.Timestamp, BERTopic]) -> 
         topic_models (Dict[pd.Timestamp, BERTopic]): A dictionary of BERTopic models, where the key is the timestamp
         and the value is the corresponding model.
     """
-    with st.expander("Explore topic models"):
+    with st.expander(translate("explore_topic_models")):
         model_periods = sorted(topic_models.keys())
         selected_model_period = st.select_slider(
-            "Select Model", options=model_periods, key="model_slider"
+            translate("select_model"), options=model_periods, key="model_slider"
         )
         selected_model = topic_models[selected_model_period]
 
@@ -339,8 +345,8 @@ def display_signal_analysis(topic_number: int):
     """Display a LLM-based analyis of a specific topic."""
     bertrend = SessionStateManager.get("bertrend")
 
-    st.subheader("Signal Interpretation")
-    with st.spinner("Analyzing signal..."):
+    st.subheader(translate("signal_interpretation"))
+    with st.spinner(translate("analyzing_signal")):
         summaries, weak_signal_analysis = analyze_signal(
             bertrend,
             topic_number,
@@ -398,6 +404,6 @@ def retrieve_topic_counts(topic_models: dict[pd.Timestamp, BERTopic]) -> None:
         json_cumulative_merged
     )
     st.success(
-        f"Topic counts for individual and cumulative merged models saved to {json_file_path}",
+        translate("topic_counts_saved").format(path=json_file_path),
         icon=SUCCESS_ICON,
     )

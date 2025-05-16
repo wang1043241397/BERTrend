@@ -15,7 +15,6 @@ from bertrend import (
 from bertrend.demos.demos_utils.state_utils import (
     register_widget,
     save_widget_state,
-    SessionStateManager,
     register_multiple_widget,
     reset_widget_state,
 )

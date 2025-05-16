@@ -11,13 +11,38 @@ Provides functionality for translating text between French and English.
 import streamlit as st
 from typing import Optional
 
-from bertrend_apps.prospective_demo.i18n_translations import TRANSLATIONS
+from bertrend_apps.prospective_demo.i18n_translations import (
+    TRANSLATIONS as PROSPECTIVE_TRANSLATIONS,
+)
+from bertrend.demos.topic_analysis.i18n_translations import (
+    TRANSLATIONS as TOPIC_ANALYSIS_TRANSLATIONS,
+)
+from bertrend.demos.demos_utils.i18n_translations import (
+    TRANSLATIONS as DEMOS_UTILS_TRANSLATIONS,
+)
+from bertrend.demos.weak_signals.i18n_translations import (
+    TRANSLATIONS as WEAK_SIGNALS_TRANSLATIONS,
+)
+
+# Merge all translations
+TRANSLATIONS = {
+    **PROSPECTIVE_TRANSLATIONS,
+    **TOPIC_ANALYSIS_TRANSLATIONS,
+    **DEMOS_UTILS_TRANSLATIONS,
+    **WEAK_SIGNALS_TRANSLATIONS,
+}
 
 # Available languages
 LANGUAGES = {"fr": "Français", "en": "English"}
 
 # Default language
-DEFAULT_LANGUAGE = "fr"
+DEFAULT_LANGUAGE = "en"
+
+
+def set_default_internationalization_language(language: str) -> None:
+    """Set the default language for the application."""
+    global DEFAULT_LANGUAGE
+    DEFAULT_LANGUAGE = language
 
 
 def get_current_internationalization_language() -> str:
@@ -64,7 +89,7 @@ def translate(key: str, default: Optional[str] = None) -> str:
     if key in TRANSLATIONS and lang in TRANSLATIONS[key]:
         return TRANSLATIONS[key][lang]
 
-    # If the key doesn't exist or the language is not available for this key
+    # If the key doesn't exist, or the language is not available for this key
     if default:
         return default
     return key  # Return the key itself as fallback

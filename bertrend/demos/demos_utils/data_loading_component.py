@@ -11,6 +11,10 @@ import streamlit as st
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 from bertrend import DATA_PATH
+from bertrend.demos.demos_utils.i18n import (
+    translate,
+    get_current_internationalization_language,
+)
 from bertrend.demos.demos_utils.icons import (
     WARNING_ICON,
     JSON_ICON,
@@ -20,7 +24,6 @@ from bertrend.demos.demos_utils.icons import (
     CLIENT_STORAGE_ICON,
     SERVER_STORAGE_ICON,
 )
-from bertrend.demos.demos_utils.messages import NO_DATA_AFTER_PREPROCESSING_MESSAGE
 from bertrend.demos.demos_utils.state_utils import (
     save_widget_state,
     register_widget,
@@ -36,7 +39,6 @@ from bertrend.utils.data_loading import (
     DataLoadingError,
 )
 
-NO_DATASET_WARNING = "Please select at least one dataset to proceed."
 FORMAT_ICONS = {
     "xlsx": XLSX_ICON,
     "csv": CSV_ICON,
@@ -66,7 +68,9 @@ def _process_uploaded_files(
                     )
                 except DataLoadingError as dle:
                     st.warning(
-                        f"Error while loading file '{f.name}': {dle}",
+                        translate("error_loading_file").format(
+                            file_name=f.name, error=dle
+                        ),
                         icon=WARNING_ICON,
                     )
                     df = None
@@ -90,7 +94,9 @@ def _load_files(
             )
         except DataLoadingError as dle:
             st.warning(
-                f"Error while loading file '{file_path.name}': {dle}",
+                translate("error_loading_file").format(
+                    file_name=file_path.name, error=dle
+                ),
                 icon=WARNING_ICON,
             )
             df = None
@@ -117,23 +123,23 @@ def display_data_loading_component():
     state variable "time_filtered_df".
     """
     # Data loading section
-    st.header("Data loading")
+    st.header(translate("data_loading"))
 
     # Find files in the current directory and subdirectories
     tab1, tab2 = st.tabs(
         [
-            CLIENT_STORAGE_ICON + " Data from local storage",
-            SERVER_STORAGE_ICON + " Data from server data",
+            CLIENT_STORAGE_ICON + " " + translate("local_data"),
+            SERVER_STORAGE_ICON + " " + translate("remote_data"),
         ]
     )
     compatible_extensions = FORMAT_ICONS.keys()
 
     with tab1:
         st.file_uploader(
-            label="Select dataset from local storage (.xlsx, .csv, .json, .jsonl, .parquet)",
+            label=translate("select_from_local_storage"),
             type=compatible_extensions,
             accept_multiple_files=True,
-            help="Drag and drop files to be used as dataset in this area",
+            help=translate("drag_drop_help"),
             on_change=save_widget_state,
             key="uploaded_files",
         )
@@ -141,7 +147,7 @@ def display_data_loading_component():
     with tab2:
         register_widget("selected_files")
         st.multiselect(
-            label="Select one or more datasets from the server data",
+            label=translate("select_from_remote_storage"),
             options=find_compatible_files(DATA_PATH, compatible_extensions),
             default=SessionStateManager.get("selected_files", []),
             key="selected_files",
@@ -154,7 +160,7 @@ def display_data_loading_component():
         and not SessionStateManager.get("selected_files")
         and "initial_df" not in st.session_state
     ):
-        st.warning(NO_DATASET_WARNING, icon=WARNING_ICON)
+        st.warning(translate("no_dataset_warning"), icon=WARNING_ICON)
         st.stop()
 
     # Load each selected file, then concatenate them
@@ -179,7 +185,7 @@ def display_data_loading_component():
     # If dfs is None and there is no 'initial_df' in session_state, show a warning
     elif "initial_df" not in st.session_state:
         st.warning(
-            NO_DATA_AFTER_PREPROCESSING_MESSAGE,
+            translate("no_data_after_preprocessing_message"),
             icon=WARNING_ICON,
         )
         st.stop()
@@ -189,54 +195,68 @@ def display_data_loading_component():
 
     # Show raw data info
     st.write(
-        f"Number of documents in raw data: **{len(st.session_state['initial_df'])}**"
+        translate("raw_documents_count").format(
+            count=len(st.session_state["initial_df"])
+        )
     )
 
     # Data filtering section
-    st.header("Data filtering")
+    st.header(translate("data_filtering"))
 
     # Display number input and checkbox for preprocessing options
     col1, col2, col3 = st.columns(3)
     with col1:
         register_widget("min_chars")
         st.number_input(
-            "Minimum Characters",
+            translate("minimum_characters"),
             value=MIN_CHARS_DEFAULT,
             min_value=0,
             max_value=1000,
             key="min_chars",
             on_change=save_widget_state,
-            help="Minimum number of characters each document must contain.",
+            help=translate("minimum_characters_help"),
         )
     with col2:
         register_widget("sample_size")
         sample_size = st.number_input(
-            "Sample ratio",
+            translate("sample_ratio"),
             value=SAMPLE_SIZE_DEFAULT,
             min_value=0.0,
             max_value=1.0,
             key="sample_size",
             on_change=save_widget_state,
-            help="Fraction of raw data to use for computing topics. Randomly samples documents from raw data.",
+            help=translate("sample_ratio_help"),
         )
     with col3:
         register_widget("split_by_paragraph")
         SessionStateManager.get_or_set("split_by_paragraph", "no")
         st.segmented_control(
-            "Split text by paragraphs",
+            translate("split_by_paragraphs"),
             key="split_by_paragraph",
-            options=["no", "yes", "enhanced"],
+            options=translate("split_options"),
             selection_mode="single",
-            help="'No split': No splitting on the documents ; 'Split by paragraphs': Split documents into paragraphs ; "
-            "'Enhanced split': uses a more advanced but slower method for splitting that considers the embedding "
-            "model's maximum input length.",
+            help=translate("split_help"),
             on_change=save_widget_state,
         )
 
+    if get_current_internationalization_language() == "en":
+        split_by_paragraph_param = SessionStateManager.get("split_by_paragraph")
+    else:
+        # option has been translated
+        split_by_paragraph_param = (
+            "no"
+            if SessionStateManager.get("split_by_paragraph") == "non"
+            else (
+                "enhanced"
+                if SessionStateManager.get("split_by_paragraph") == "amélioré"
+                else "yes"
+            )
+        )
+
     df = split_data(
-        df,
-        SessionStateManager.get("min_chars"),
-        SessionStateManager.get("split_by_paragraph"),
+        df=df,
+        min_chars=SessionStateManager.get("min_chars"),
+        split_by_paragraph=split_by_paragraph_param,
         embedding_model_name=SessionStateManager.get("embedding_model_name"),
     )
 
@@ -252,7 +272,7 @@ def display_data_loading_component():
     )
     register_widget("timeframe_slider")
     start_date, end_date = st.slider(
-        "Select Timeframe",
+        translate("select_timeframe"),
         min_value=min_date,
         max_value=max_date,
         value=(min_date, max_date),
@@ -274,7 +294,9 @@ def display_data_loading_component():
 
     SessionStateManager.set("time_filtered_df", df_filtered)
     st.write(
-        f"Number of documents in filtered data: **{len(SessionStateManager.get_dataframe('time_filtered_df'))}**"
+        translate("filtered_documents_count").format(
+            count=len(SessionStateManager.get_dataframe("time_filtered_df"))
+        )
     )
     st.dataframe(
         SessionStateManager.get_dataframe("time_filtered_df")[

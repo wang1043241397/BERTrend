@@ -8,11 +8,8 @@ from datetime import timedelta
 import pandas as pd
 import streamlit as st
 
+from bertrend.demos.demos_utils.i18n import translate
 from bertrend.demos.demos_utils.icons import ERROR_ICON, INFO_ICON
-from bertrend.demos.topic_analysis.messages import (
-    TRAIN_MODEL_FIRST_ERROR,
-    REMOTE_EMBEDDING_SEVICE_TYPE_NOT_SUPPORTED_ERROR,
-)
 from bertrend.metrics.temporal_metrics_embedding import TempTopic
 from bertrend.demos.topic_analysis.app_utils import (
     compute_topics_over_time,
@@ -42,7 +39,7 @@ def check_model_trained():
     """Check if a model is trained and display an error if not."""
     if "topic_model" not in st.session_state:
         st.error(
-            TRAIN_MODEL_FIRST_ERROR,
+            translate("train_model_first_error"),
             icon=ERROR_ICON,
         )
         st.stop()
@@ -52,7 +49,7 @@ def check_embedding_type():
     """Check the embedding service type. Remote embedding service currently not support these visualizations."""
     if SessionStateManager.get("embedding_service_type", "remote") != "local":
         st.error(
-            REMOTE_EMBEDDING_SEVICE_TYPE_NOT_SUPPORTED_ERROR,
+            translate("remote_embedding_service_type_not_supported_error"),
             icon=ERROR_ICON,
         )
         st.stop()
@@ -90,9 +87,9 @@ def display_sidebar():
             "evolution_tuning",
             "global_tuning",
         )
-        with st.expander("TEMPTopic Parameters", expanded=False):
+        with st.expander(translate("temptopic_parameters"), expanded=False):
             st.number_input(
-                "Window Size",
+                translate("window_size"),
                 min_value=2,
                 value=2,
                 step=1,
@@ -100,51 +97,51 @@ def display_sidebar():
                 on_change=save_widget_state,
             )
             st.number_input(
-                "Number of Nearest Embeddings (k)",
+                translate("k_nearest_embeddings"),
                 min_value=1,
                 value=1,
                 step=1,
                 key="k",
                 on_change=save_widget_state,
-                help="The k-th nearest neighbor used for Topic Representation Stability calculation.",
+                help=translate("k_nearest_help"),
             )
             st.number_input(
-                "Alpha (Topic vs Representation Stability Weight)",
+                translate("alpha_weight"),
                 min_value=0.0,
                 max_value=1.0,
                 value=0.8,
                 step=0.01,
                 key="alpha",
-                help="Closer to 1 gives more weight given to Topic Embedding Stability, Closer to 0 gives more weight to topic representation stability.",
+                help=translate("alpha_help"),
                 on_change=save_widget_state,
             )
             st.checkbox(
-                "Use Double Aggregation",
+                translate("use_double_agg"),
                 value=True,
                 key="double_agg",
                 on_change=save_widget_state,
-                help="If unchecked, only Document Aggregation Method will be globally used.",
+                help=translate("double_agg_help"),
             )
             st.selectbox(
-                "Document Aggregation Method",
+                translate("doc_agg_method"),
                 ["mean", "max"],
                 key="doc_agg",
                 on_change=save_widget_state,
             )
             st.selectbox(
-                "Global Aggregation Method",
+                translate("global_agg_method"),
                 ["max", "mean"],
                 key="global_agg",
                 on_change=save_widget_state,
             )
             st.checkbox(
-                "Use Evolution Tuning",
+                translate("use_evolution_tuning"),
                 value=True,
                 key="evolution_tuning",
                 on_change=save_widget_state,
             )
             st.checkbox(
-                "Use Global Tuning",
+                translate("use_global_tuning"),
                 value=False,
                 key="global_tuning",
                 on_change=save_widget_state,
@@ -179,10 +176,10 @@ def select_time_granularity(max_granularity: timedelta) -> timedelta:
         "granularity_days", "granularity_hours", "granularity_minutes"
     )
     with col0:
-        st.write("Select custom time granularity")
+        st.write(translate("select_time_granularity"))
     with col1:
         days = st.slider(
-            "Days",
+            translate("days"),
             min_value=0,
             max_value=max_days,
             value=min(1, max_days),
@@ -191,7 +188,7 @@ def select_time_granularity(max_granularity: timedelta) -> timedelta:
         )
     with col2:
         hours = st.slider(
-            "Hours",
+            translate("hours"),
             min_value=0,
             max_value=23,
             value=0,
@@ -200,7 +197,7 @@ def select_time_granularity(max_granularity: timedelta) -> timedelta:
         )
     with col3:
         minutes = st.slider(
-            "Minutes",
+            translate("minutes"),
             min_value=0,
             max_value=59,
             value=0,
@@ -209,7 +206,7 @@ def select_time_granularity(max_granularity: timedelta) -> timedelta:
         )
     with col4:
         seconds = st.slider(
-            "Seconds",
+            translate("seconds"),
             min_value=0,
             max_value=59,
             value=0,
@@ -223,7 +220,7 @@ def select_time_granularity(max_granularity: timedelta) -> timedelta:
     formatted_max = _format_timedelta(max_granularity)
 
     st.info(
-        f"Granularity must be greater than zero and less than or equal to {formatted_max}.",
+        translate("granularity_info").format(max_granularity=formatted_max),
         icon=INFO_ICON,
     )
 
@@ -294,7 +291,7 @@ def process_data_and_fit_temptopic(time_granularity: timedelta):
     ]
 
     # Initialize and fit TempTopic
-    with st.spinner("Fitting TempTopic..."):
+    with st.spinner(translate("fitting_temptopic")):
         temptopic = TempTopic(
             st.session_state["topic_model"],
             docs,
@@ -332,7 +329,7 @@ def process_data_and_fit_temptopic(time_granularity: timedelta):
 
 def display_topic_evolution_dataframe():
     """Display the Topic Evolution Dataframe."""
-    with st.expander("Topic Evolution Dataframe"):
+    with st.expander(translate("topic_evolution_dataframe")):
         columns_to_display = ["Topic", "Words", "Frequency", "Timestamp"]
         columns_present = [
             col
@@ -349,7 +346,7 @@ def display_topic_evolution_dataframe():
 
 def display_topic_info_dataframe():
     """Display the Topic Info Dataframe."""
-    with st.expander("Topic Info Dataframe"):
+    with st.expander(translate("topic_info_dataframe")):
         st.dataframe(
             st.session_state.temptopic.topic_model.get_topic_info(),
             use_container_width=True,
@@ -358,13 +355,13 @@ def display_topic_info_dataframe():
 
 def display_documents_per_date_dataframe():
     """Display the Documents per Date Dataframe."""
-    with st.expander("Documents per Date Dataframe"):
+    with st.expander(translate("documents_per_date_dataframe")):
         st.dataframe(st.session_state.aggregated_df, use_container_width=True)
 
 
 def display_temptopic_visualizations():
     """Display TempTopic Visualizations."""
-    with st.expander("TempTopic Visualizations"):
+    with st.expander(translate("temptopic_visualizations")):
         # Create a list of topics with their representations
         topic_options = sorted(
             [
@@ -386,7 +383,7 @@ def display_temptopic_visualizations():
         topic_dict = {f"Topic {topic}: {repr}": topic for topic, repr in topic_options}
 
         selected_topics = st.multiselect(
-            "Topics to Show",
+            translate("topics_to_show"),
             options=list(topic_dict.keys()),
             format_func=lambda x: x,
             default=None,
@@ -402,15 +399,19 @@ def display_temptopic_visualizations():
 
 def display_topic_evolution(topics_to_show):
     """Display Topic Evolution in Time and Semantic Space."""
-    st.header("Topic Evolution in Time and Semantic Space")
+    st.header(translate("topic_evolution_header"))
     n_neighbors = st.slider(
-        "UMAP n_neighbors", min_value=2, max_value=100, value=15, step=1
+        translate("umap_n_neighbors"), min_value=2, max_value=100, value=15, step=1
     )
     min_dist = st.slider(
-        "UMAP min_dist", min_value=0.0, max_value=0.99, value=0.1, step=0.01
+        translate("umap_min_dist"), min_value=0.0, max_value=0.99, value=0.1, step=0.01
     )
-    metric = st.selectbox("UMAP Metric", ["cosine", "euclidean", "manhattan"])
-    color_palette = st.selectbox("Color Palette", ["Plotly", "D3", "Alphabet"])
+    metric = st.selectbox(
+        translate("umap_metric"), ["cosine", "euclidean", "manhattan"]
+    )
+    color_palette = st.selectbox(
+        translate("color_palette"), ["Plotly", "D3", "Alphabet"]
+    )
 
     fig_topic_evolution = plot_topic_evolution(
         st.session_state.temptopic,
@@ -430,8 +431,8 @@ def display_topic_evolution(topics_to_show):
 
 def display_overall_topic_stability(topics_to_show):
     """Display Overall Topic Stability."""
-    st.header("Overall Topic Stability")
-    normalize_overall_stability = st.checkbox("Normalize", value=False)
+    st.header(translate("overall_topic_stability"))
+    normalize_overall_stability = st.checkbox(translate("normalize"), value=False)
     overall_stability_df = st.session_state.temptopic.calculate_overall_topic_stability(
         window_size=st.session_state.window_size,
         k=st.session_state.k,
@@ -454,7 +455,7 @@ def display_overall_topic_stability(topics_to_show):
 
 def display_temporal_stability_metrics(topics_to_show):
     """Display Temporal Stability Metrics."""
-    st.header("Temporal Stability Metrics")
+    st.header(translate("temporal_stability_metrics"))
 
     fig_topic_stability = plot_temporal_stability_metrics(
         st.session_state.temptopic,
@@ -479,19 +480,21 @@ def display_temporal_stability_metrics(topics_to_show):
 
 def display_topics_popularity():
     """Display the popularity of topics over time."""
-    with st.spinner("Computing topics over time..."):
-        with st.expander("Popularity of topics over time"):
+    with st.spinner(translate("computing_topics")):
+        with st.expander(translate("popularity_of_topics")):
             if TIMESTAMP_COLUMN in st.session_state["time_filtered_df"]:
-                st.write("## Popularity of topics over time")
+                st.write("## " + translate("popularity_of_topics"))
 
                 # Parameters
                 st.text_input(
-                    "Topics list (format 1,12,52 or 1:20)",
+                    translate("topics_list_format"),
                     key="dynamic_topics_list",
                     value="0:10",
                 )
 
-                st.number_input("nr_bins", min_value=1, value=10, key="nr_bins")
+                st.number_input(
+                    translate("nr_bins"), min_value=1, value=10, key="nr_bins"
+                )
 
                 # Compute topics over time
                 st.session_state["topics_over_time"] = compute_topics_over_time(
@@ -518,7 +521,7 @@ def main():
     check_model_trained()
     check_embedding_type()
 
-    st.title("Temporal visualizations of topics")
+    st.title(translate("temporal_visualizations"))
 
     # Display sidebar
     display_sidebar()
@@ -532,15 +535,19 @@ def main():
     col1, col2 = st.columns(2)
     with col1:
         # Add Apply button
-        apply_button = st.button("Apply Granularity and Parameters", type="primary")
+        apply_button = st.button(translate("apply_granularity"), type="primary")
     with col2:
         register_widget("temptopic_visualizations")
         st.segmented_control(
-            "Show table results",
+            translate("show_table_results"),
             selection_mode="multi",
             key="temptopic_visualizations",
             on_change=save_widget_state,
-            options=["Topic evolution", "Topic info", "Documents per date"],
+            options=[
+                translate("topic_evolution"),
+                translate("topic_info"),
+                translate("documents_per_date"),
+            ],
         )
 
     if apply_button:
@@ -548,20 +555,23 @@ def main():
             st.session_state.granularity = time_granularity
             process_data_and_fit_temptopic(time_granularity)
         else:
-            st.error("Please select a valid granularity before applying.")
+            st.error(translate("select_valid_granularity"))
 
     # Display visualizations only if TempTopic has been fitted
     if "temptopic" in st.session_state:
-        if "Topic evolution" in st.session_state["temptopic_visualizations"]:
+        if translate("topic_evolution") in st.session_state["temptopic_visualizations"]:
             display_topic_evolution_dataframe()
-        if "Topic info" in st.session_state["temptopic_visualizations"]:
+        if translate("topic_info") in st.session_state["temptopic_visualizations"]:
             display_topic_info_dataframe()
-        if "Documents per date" in st.session_state["temptopic_visualizations"]:
+        if (
+            translate("documents_per_date")
+            in st.session_state["temptopic_visualizations"]
+        ):
             display_documents_per_date_dataframe()
         display_temptopic_visualizations()
     else:
         st.info(
-            "Please apply granularity and parameters to view the temporal visualizations.",
+            translate("apply_granularity_message"),
             icon=INFO_ICON,
         )
 
@@ -569,5 +579,3 @@ def main():
 # Restore widget state
 restore_widget_state()
 main()
-
-# FIXME: Popularity of topics over time visualization is based on the number of paragraphs instead of original articles, since it's the default BERTopic method
