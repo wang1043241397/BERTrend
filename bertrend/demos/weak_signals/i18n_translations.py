@@ -183,11 +183,11 @@ TRANSLATIONS = {
         "en": "No cache found.",
     },
     "embed_warning": {
-        "fr": "Veuillez intégrer les données avant de procéder à l'entraînement du modèle.",
+        "fr": "Veuillez vectoriser les données avant de procéder à l'entraînement du modèle.",
         "en": "Please embed data before proceeding to model training.",
     },
     "embed_train_warning": {
-        "fr": "Veuillez intégrer les données et entraîner les modèles avant de procéder à l'analyse.",
+        "fr": "Veuillez vectoriser les données et entraîner les modèles avant de procéder à l'analyse.",
         "en": "Please embed data and train models before proceeding to analysis.",
     },
     "train_warning": {

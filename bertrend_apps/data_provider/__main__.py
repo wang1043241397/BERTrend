@@ -15,7 +15,7 @@ from bertrend import FEED_BASE_PATH, load_toml_config
 from bertrend_apps.common.crontab_utils import schedule_scrapping
 from bertrend_apps.data_provider.arxiv_provider import ArxivProvider
 from bertrend_apps.data_provider.bing_news_provider import BingNewsProvider
-from bertrend_apps.data_provider.curebot_provider import CurebotProvider
+from bertrend_apps.data_provider.atom_feed_provider import ATOMFeedProvider
 from bertrend_apps.data_provider.google_news_provider import GoogleNewsProvider
 from bertrend_apps.data_provider.newscatcher_provider import NewsCatcherProvider
 
@@ -24,7 +24,7 @@ os.umask(0o002)
 
 PROVIDERS = {
     "arxiv": ArxivProvider,
-    "curebot": CurebotProvider,
+    "atom": ATOMFeedProvider,
     "google": GoogleNewsProvider,
     "bing": BingNewsProvider,
     "newscatcher": NewsCatcherProvider,
@@ -204,7 +204,7 @@ if __name__ == "__main__":
 
         # Generate a query file
         with tempfile.NamedTemporaryFile() as query_file:
-            if provider == "arxiv" or provider == "curebot":  # already returns batches
+            if provider == "arxiv" or provider == "atom":  # already returns batches
                 scrape(
                     keywords=keywords,
                     provider=provider,

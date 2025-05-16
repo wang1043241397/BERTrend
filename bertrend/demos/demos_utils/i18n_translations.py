@@ -5,9 +5,23 @@
 
 # Translation dictionaries for demos_utils
 TRANSLATIONS = {
+    "ctrl_enter": {
+        "fr": "CTRL + Entrée pour mettre à jour",
+        "en": "CTRL + Enter to update",
+    },
+    "select_language": {"fr": "Choisir une langue", "en": "Select Language"},
+    "embedding_model": {"fr": "Modèle d'embedding", "en": "Embedding Model"},
+    "embedding_service_url": {
+        "fr": "URL du service d'embedding",
+        "en": "Embedding service URL",
+    },
     "embedding_hyperparameters": {
-        "fr": "Hyperparamètres d'embedding",
-        "en": "Embedding Hyperparameters",
+        "fr": "Paramètres d'embedding",
+        "en": "Embedding settings",
+    },
+    "embedding_service": {
+        "fr": "Service d'embedding",
+        "en": "Embedding Service",
     },
     "bertopic_hyperparameters": {
         "fr": "Hyperparamètres BERTopic",
@@ -22,7 +36,7 @@ TRANSLATIONS = {
         "en": "Embeddings calculated successfully!",
     },
     "no_embeddings_warning_message": {
-        "fr": "Veuillez intégrer les données et entraîner les modèles avant de procéder à l'analyse.",
+        "fr": "Veuillez vectoriser les données et entraîner les modèles avant de procéder à l'analyse.",
         "en": "Please embed data and train models before proceeding to analysis.",
     },
     "model_training_complete_message": {

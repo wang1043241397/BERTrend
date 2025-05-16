@@ -20,7 +20,7 @@ from bertrend.utils.data_loading import (
     clean_dataset,
 )
 
-from bertrend_apps.data_provider.curebot_provider import CurebotProvider
+from bertrend_apps.data_provider.atom_feed_provider import ATOMFeedProvider
 from bertrend.llm_utils.newsletter_features import generate_newsletter, md2html
 
 COLUMN_URL = "url"
@@ -54,7 +54,7 @@ def parse_data_from_files(files: list[UploadedFile]) -> pd.DataFrame:
 
             if tmp_file is not None:
                 with st.spinner(f"Analyse des articles de: {f.name}"):
-                    provider = CurebotProvider(curebot_export_file=Path(tmp_file.name))
+                    provider = ATOMFeedProvider(curebot_export_file=Path(tmp_file.name))
                     articles = provider.get_articles()
                     articles_path = Path(tmpdir) / (f.name + ".jsonl")
                     provider.store_articles(articles, articles_path)
@@ -77,7 +77,7 @@ def parse_data_from_feed(feed_url):
     """Return a single dataframe containing the data obtained from the feed"""
     with TemporaryDirectory() as tmpdir:
         with st.spinner(f"Analyse des articles de: {feed_url}"):
-            provider = CurebotProvider(feed_url=feed_url)
+            provider = ATOMFeedProvider(feed_url=feed_url)
             articles = provider.get_articles()
             articles_path = Path(tmpdir) / "feed.jsonl"
             provider.store_articles(articles, articles_path)
