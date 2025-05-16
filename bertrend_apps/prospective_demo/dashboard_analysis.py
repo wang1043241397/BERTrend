@@ -86,8 +86,8 @@ def display_detailed_analysis(
         label=translate("topic_selection"),
         label_visibility="hidden",
         options=signal_list,
-        format_func=lambda signal_id: f"[{translate('topic')} {translate('emerging_topic') if signal_id in signal_topics[WEAK_SIGNALS] else translate('strong_topic')} "
-        f"{signal_id}]: {get_row(signal_id, interpretations[WEAK_SIGNALS] if signal_id in signal_topics[WEAK_SIGNALS] else interpretations[STRONG_SIGNALS])[LLM_TOPIC_TITLE_COLUMN]}",
+        format_func=lambda signal_id: f"{'📈 [' + translate('emerging_topic') if signal_id in signal_topics[WEAK_SIGNALS] else '🌟 [' + translate('strong_topic')} "
+        f"{signal_id}] {get_row(signal_id, interpretations[WEAK_SIGNALS] if signal_id in signal_topics[WEAK_SIGNALS] else interpretations[STRONG_SIGNALS])[LLM_TOPIC_TITLE_COLUMN]}",
     )
     # Summary of the topic
     desc = get_row(
@@ -103,7 +103,7 @@ def display_detailed_analysis(
         ),
     )
     if desc is None:
-        st.error(f"{ERROR_ICON} {translate('nothing_to_display')}")
+        st.error(translate("nothing_to_display"), icon=ERROR_ICON)
         return
     if selected_signal in list(signal_topics[WEAK_SIGNALS]):
         color = "orange"
@@ -132,4 +132,5 @@ def get_row(signal_id: int, df: pd.DataFrame) -> str | None:
     if not filtered_df.empty:
         return filtered_df.iloc[0]  # Return the Series (row)
     else:
-        st.warning(f"No data found for signal ID: {signal_id}")
+        st.warning(translate("no_data_for_signal").format(signal_id=signal_id))
+        return None

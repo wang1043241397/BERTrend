@@ -25,7 +25,7 @@ TRANSLATIONS = {
     },
     "model_status_by_monitoring": {
         "fr": "Statut des modèles par veille",
-        "en": "Model Status by Monitoring",
+        "en": "Model Status by Monitoring Feed",
     },
     # dashboard_analysis.py translations
     "detailed_analysis_by_topic": {
@@ -36,6 +36,20 @@ TRANSLATIONS = {
     "emerging_topic": {"fr": "Sujet émergent", "en": "Emerging Topic"},
     "strong_topic": {"fr": "Sujet fort", "en": "Strong Topic"},
     "nothing_to_display": {"fr": "Rien à afficher", "en": "Nothing to display"},
+    "select_feed": {"fr": "Sélection de la veille", "en": "Select monitored feed"},
+    "no_available_model_warning": {
+        "fr": "Pas de modèle disponible",
+        "en": "No model available",
+    },
+    "at_least_2models_warning": {
+        "fr": "2 modèles minimum pour analyser les tendances !",
+        "en": "At least 2 models are required for trend analysis!",
+    },
+    "analysis_date": {"fr": "Date d'analyse", "en": "Analysis Date"},
+    "analysis_date_help": {
+        "fr": "Sélection de la date d'analyse parmi celles disponibles",
+        "en": "Selection of the analysis date from those available",
+    },
     # dashboard_signals.py translations
     "title": {"fr": "Titre", "en": "Title"},
     "todo_message": {
@@ -69,5 +83,9 @@ TRANSLATIONS = {
     "no_noise_signals": {
         "fr": "Aucun signal de bruit n'a été détecté à l'horodatage {timestamp}.",
         "en": "No noisy signals were detected at timestamp {timestamp}.",
+    },
+    "no_data_for_signal": {
+        "en": "No data found for signal ID: {signal_id}",
+        "fr": "Aucune donnée trouvée pour l'identifiant de signal : {signal_id}",
     },
 }
