@@ -95,9 +95,17 @@ TRANSLATIONS = {
         "fr": "Diviser le texte par paragraphes",
         "en": "Split text by paragraphs",
     },
-    "split_options": {
-        "fr": ["non", "oui", "amélioré"],
-        "en": ["no", "yes", "enhanced"],
+    "split_option_yes": {
+        "fr": "oui",
+        "en": "yes",
+    },
+    "split_option_no": {
+        "fr": "non",
+        "en": "no",
+    },
+    "split_option_enhanced": {
+        "fr": "amélioré",
+        "en": "enhanced",
     },
     "split_help": {
         "fr": "'Pas de division': Pas de division sur les documents ; 'Division par paragraphes': Divise les documents en paragraphes ; 'Division améliorée': utilise une méthode plus avancée mais plus lente pour la division qui prend en compte la longueur d'entrée maximale du modèle d'embedding.",

@@ -231,12 +231,13 @@ def display_data_loading_component():
         register_widget("split_by_paragraph")
         SessionStateManager.get_or_set("split_by_paragraph", "no")
         st.segmented_control(
-            translate("split_by_paragraphs"),
+            translate("split_by_paragraph"),
             key="split_by_paragraph",
-            options=translate("split_options"),
+            options=["yes", "no", "enhanced"],
             selection_mode="single",
             help=translate("split_help"),
             on_change=save_widget_state,
+            format_func=lambda x: translate("split_option_" + x),
         )
 
     if get_current_internationalization_language() == "en":
@@ -256,7 +257,7 @@ def display_data_loading_component():
     df = split_data(
         df=df,
         min_chars=SessionStateManager.get("min_chars"),
-        split_by_paragraph=split_by_paragraph_param,
+        split_by_paragraph=SessionStateManager.get("split_by_paragraph"),
         embedding_model_name=SessionStateManager.get("embedding_model_name"),
     )
 

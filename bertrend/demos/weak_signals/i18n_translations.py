@@ -115,7 +115,7 @@ TRANSLATIONS = {
         "en": "Error while trying to generate signal summary: {e}",
     },
     "error_embedding_documents": {
-        "fr": "Une erreur s'est produite lors de l'intégration des documents : {e}",
+        "fr": "Une erreur s'est produite lors de la vectorisation : {e}",
         "en": "An error occurred while embedding documents: {e}",
     },
     "topic_evolution": {

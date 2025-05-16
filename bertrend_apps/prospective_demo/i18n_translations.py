@@ -51,6 +51,7 @@ TRANSLATIONS = {
     "strong_topics": {"fr": "Sujets forts", "en": "Strong Topics"},
     "no_data": {"fr": "Pas de données", "en": "No data"},
     "topic": {"fr": "Sujet", "en": "Topic"},
+    "untitled_topic": {"fr": "???Titre???", "en": "???Title???"},
     "explore_sources": {"fr": "Exploration des sources", "en": "Explore Sources"},
     "reference_articles": {"fr": "Articles de référence", "en": "Reference Articles"},
     # Signal categories

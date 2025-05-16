@@ -121,7 +121,10 @@ def explore_topic_sources(dfs_topics):
             label_visibility="hidden",
             options=options,
             format_func=lambda x: f"{translate('topic')} {x}: "
-            + selected_df[selected_df["Topic"] == x][LLM_TOPIC_TITLE_COLUMN].values[0],
+            + (
+                selected_df[selected_df["Topic"] == x][LLM_TOPIC_TITLE_COLUMN].values[0]
+                or translate("untitled_topic")
+            ),
         )
         if topic_id is None:
             return
