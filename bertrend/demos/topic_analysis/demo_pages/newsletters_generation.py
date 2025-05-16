@@ -8,14 +8,13 @@ import pandas as pd
 import streamlit as st
 from pathlib import Path
 
+from bertrend.demos.demos_utils.i18n import translate
 from bertrend.demos.demos_utils.icons import ERROR_ICON
 from bertrend.demos.demos_utils.state_utils import (
-    register_widget,
     save_widget_state,
     restore_widget_state,
     register_multiple_widget,
 )
-from bertrend.demos.topic_analysis.messages import TRAIN_MODEL_FIRST_ERROR
 from bertrend.services.summary.abstractive_summarizer import AbstractiveSummarizer
 from bertrend.services.summary.chatgpt_summarizer import GPTSummarizer
 from bertrend.services.summary.extractive_summarizer import (
@@ -67,11 +66,11 @@ def generate_newsletter_wrapper(
 def main():
     # Check if a topic model exists
     if "topic_model" not in st.session_state:
-        st.error(TRAIN_MODEL_FIRST_ERROR, icon=ERROR_ICON)
+        st.error(translate("train_model_first_error"), icon=ERROR_ICON)
         st.stop()
 
     # Title
-    st.title("Automatic newsletters generation")
+    st.title(translate("newsletter_generation_title"))
 
     # Initialize session state variables
     default_values = {
@@ -99,12 +98,12 @@ def main():
             "summary_mode",
         )
         all_topics = st.checkbox(
-            "Include all topics",
+            translate("include_all_topics"),
             on_change=save_widget_state,
             key="newsletter_all_topics",
         )
         st.slider(
-            "Number of topics",
+            translate("number_of_topics"),
             min_value=1,
             max_value=20,
             on_change=save_widget_state,
@@ -113,12 +112,12 @@ def main():
         )
 
         all_documents = st.checkbox(
-            "Include all documents per topic",
+            translate("include_all_documents"),
             on_change=save_widget_state,
             key="newsletter_all_docs",
         )
         st.slider(
-            "Number of docs per topic",
+            translate("number_of_docs_per_topic"),
             min_value=1,
             max_value=10,
             on_change=save_widget_state,
@@ -127,26 +126,28 @@ def main():
         )
 
         st.toggle(
-            "Improve topic description",
+            translate("improve_topic_description"),
             value=True,
             on_change=save_widget_state,
             key="newsletter_improve_description",
         )
         st.selectbox(
-            "Summary mode",
+            translate("summary_mode"),
             ["topic", "document", "none"],
             on_change=save_widget_state,
             key="summary_mode",
         )
         st.selectbox(
-            "Summarizer class",
+            translate("summarizer_class"),
             list(SUMMARIZER_OPTIONS_MAPPER.keys()),
             on_change=save_widget_state,
             key="summarizer_classname",
         )
 
         generate_newsletter_clicked = st.button(
-            "Generate newsletter", type="primary", use_container_width=True
+            translate("generate_newsletter_button"),
+            type="primary",
+            use_container_width=True,
         )
 
     # Generate newsletters when button is clicked
@@ -158,7 +159,7 @@ def main():
             df = st.session_state["time_filtered_df"]
             df_split = None
 
-        with st.spinner("Generating newsletters..."):
+        with st.spinner(translate("generating_newsletters")):
             st.session_state["newsletters"] = generate_newsletter_wrapper(df, df_split)
 
     # Display generated newsletters

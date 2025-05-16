@@ -9,6 +9,7 @@ from typing import Any
 import pandas as pd
 import streamlit as st
 
+from bertrend.demos.demos_utils.i18n import translate
 from bertrend.demos.demos_utils.icons import WARNING_ICON
 from bertrend_apps.prospective_demo import NOISE, WEAK_SIGNALS, STRONG_SIGNALS
 from bertrend_apps.prospective_demo.models_info import get_models_info
@@ -47,7 +48,7 @@ def choose_id_and_ts():
             st.session_state.model_id = options[0]
         model_id_key = uuid.uuid4()
         model_id = st.selectbox(
-            "Sélection de la veille",
+            translate("select_feed"),
             options=options,
             index=options.index(st.session_state.model_id),
             key=model_id_key,  # to avoid pb of unicity if displayed on several places
@@ -58,22 +59,20 @@ def choose_id_and_ts():
     with col2:
         list_models = get_models_info(model_id)
         if not list_models:
-            st.warning(f"{WARNING_ICON} Pas de modèle disponible")
+            st.warning(translate("no_available_model_warning"), icon=WARNING_ICON)
             st.stop()
         elif len(list_models) < 2:
-            st.warning(
-                f"{WARNING_ICON} 2 modèles minimum pour analyser les tendances !"
-            )
+            st.warning("at_least_2models_warning", icon=WARNING_ICON)
             st.stop()
         if "reference_ts" not in st.session_state:
             st.session_state.reference_ts = list_models[-1]
         ts_key = uuid.uuid4()
         st.select_slider(
-            "Date d'analyse",
+            translate("analysis_date"),
             options=list_models,
             value=st.session_state.reference_ts,
             format_func=lambda ts: ts.strftime("%d/%m/%Y"),
-            help="Sélection de la date d'analyse parmi celles disponibles",
+            help=translate("analysis_date_help"),
             key=ts_key,  # to avoid pb of unicity if displayed on several places
             on_change=lambda: update_key("reference_ts", st.session_state[ts_key]),
         )

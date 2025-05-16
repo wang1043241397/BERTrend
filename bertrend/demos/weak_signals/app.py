@@ -39,32 +39,16 @@ from bertrend.demos.demos_utils.icons import (
     DATA_LOADING_ICON,
     EMBEDDING_ICON,
 )
-from bertrend.demos.demos_utils.messages import (
-    NO_EMBEDDINGS_WARNING_MESSAGE,
-    MODEL_TRAINING_COMPLETE_MESSAGE,
-)
 from bertrend.demos.demos_utils.parameters_component import (
     display_bertopic_hyperparameters,
     display_bertrend_hyperparameters,
     display_embedding_hyperparameters,
 )
-from bertrend.BERTopicModel import BERTopicModel
-from bertrend.demos.weak_signals.messages import (
-    MODEL_MERGING_COMPLETE_MESSAGE,
-    NO_CACHE_WARNING,
-    CACHE_PURGED_MESSAGE,
-    MODELS_RESTORED_MESSAGE,
-    NO_DATA_WARNING,
-    STATE_SAVED_MESSAGE,
-    STATE_RESTORED_MESSAGE,
-    MODELS_SAVED_MESSAGE,
-    NO_MODELS_WARNING,
-    NO_STATE_WARNING,
-    EMBED_WARNING,
-    EMBED_TRAIN_WARNING,
-    TRAIN_WARNING,
-    MERGE_WARNING,
+from bertrend.demos.demos_utils.i18n import (
+    translate,
+    create_internationalization_language_selector,
 )
+from bertrend.BERTopicModel import BERTopicModel
 from bertrend.trend_analysis.weak_signals import detect_weak_signals_zeroshot
 
 from bertrend.utils.data_loading import (
@@ -89,8 +73,12 @@ from bertrend.demos.weak_signals.visualizations_utils import (
     display_signal_types,
 )
 
+
 # UI Settings
-PAGE_TITLE = "BERTrend - Retrospective Trend Analysis demo"
+def PAGE_TITLE():
+    return translate("page_title")
+
+
 LAYOUT: Literal["centered", "wide"] = "wide"
 
 
@@ -124,7 +112,7 @@ def save_state():
         pickle.dump(state, f)
 
     np.save(embeddings_file, SessionStateManager.get_embeddings())
-    st.success(STATE_SAVED_MESSAGE, icon=SUCCESS_ICON)
+    st.success(translate("state_saved_message"), icon=SUCCESS_ICON)
 
 
 # TODO: handle uploaded files
@@ -144,25 +132,25 @@ def restore_state():
         # Restore other states
         SessionStateManager.set_multiple(**state)
         SessionStateManager.set("embeddings", np.load(embeddings_file))
-        st.success(STATE_RESTORED_MESSAGE, icon=SUCCESS_ICON)
+        st.success(translate("state_restored_message"), icon=SUCCESS_ICON)
 
         # Update the multiselect widget with restored selected files
         st.session_state["selected_files"] = selected_files
     else:
-        st.warning(NO_STATE_WARNING, icon=WARNING_ICON)
+        st.warning(translate("no_state_warning"), icon=WARNING_ICON)
 
 
 def purge_cache():
     """Purge cache data"""
     if CACHE_PATH.exists():
         shutil.rmtree(CACHE_PATH)
-        st.success(CACHE_PURGED_MESSAGE, icon=SUCCESS_ICON)
+        st.success(translate("cache_purged_message"), icon=SUCCESS_ICON)
     else:
-        st.warning(NO_CACHE_WARNING, icon=WARNING_ICON)
+        st.warning(translate("no_cache_warning"), icon=WARNING_ICON)
 
 
 def load_data_page():
-    st.header("Data Loading and Preprocessing")
+    st.header(translate("data_loading_and_preprocessing"))
 
     display_data_loading_component()
 
@@ -174,21 +162,21 @@ def load_data_page():
         except Exception as e:
             logger.error(f"An error occurred while embedding documents: {e}")
             st.error(
-                f"An error occurred while embedding documents: {e}",
+                translate("error_embedding_documents").format(e=e),
                 icon=ERROR_ICON,
             )
 
 
 def training_page():
-    st.header("Model Training")
+    st.header(translate("model_training"))
 
     if not SessionStateManager.get("data_embedded"):
-        st.warning(NO_EMBEDDINGS_WARNING_MESSAGE, icon=WARNING_ICON)
+        st.warning(translate("no_embeddings_warning_message"), icon=WARNING_ICON)
         st.stop()
 
     # Show documents per grouped timestamp
-    with st.expander("Documents per Timestamp", expanded=True):
-        st.write(f"Granularity: {st.session_state['granularity']}")
+    with st.expander(translate("documents_per_timestamp"), expanded=True):
+        st.write(f"{translate('granularity')}: {st.session_state['granularity']}")
         grouped_data = group_by_days(
             SessionStateManager.get_dataframe("time_filtered_df"),
             day_granularity=st.session_state["granularity"],
@@ -198,7 +186,7 @@ def training_page():
         ]
         if non_empty_timestamps:
             selected_timestamp = st.select_slider(
-                "Select Timestamp",
+                translate("select_timestamp"),
                 options=non_empty_timestamps,
                 key="timestamp_slider",
             )
@@ -210,26 +198,26 @@ def training_page():
                 use_container_width=True,
             )
         else:
-            st.warning(NO_DATA_WARNING, icon=WARNING_ICON)
+            st.warning(translate("no_data_warning"), icon=WARNING_ICON)
 
     if not SessionStateManager.get("data_embedded", False):
         st.warning(
-            EMBED_WARNING,
+            translate("embed_warning"),
             icon=WARNING_ICON,
         )
         st.stop()
     else:
         # Zero-shot topic definition
         zeroshot_topic_list = st.text_input(
-            "Enter zero-shot topics (separated by /)", value=""
+            translate("enter_zeroshot_topics"), value=""
         )
         zeroshot_topic_list = [
             topic.strip() for topic in zeroshot_topic_list.split("/") if topic.strip()
         ]
         SessionStateManager.set("zeroshot_topic_list", zeroshot_topic_list)
 
-        if st.button("Train Models", type="primary"):
-            with st.spinner("Training models..."):
+        if st.button(translate("train_models"), type="primary"):
+            with st.spinner(translate("training_models")):
                 # FIXME: called twice (see above)
                 grouped_data = group_by_days(
                     SessionStateManager.get_dataframe("time_filtered_df"),
@@ -250,11 +238,13 @@ def training_page():
                     embedding_model=SessionStateManager.get("embedding_model"),
                     embeddings=SessionStateManager.get_embeddings(),
                 )
-                st.success(MODEL_TRAINING_COMPLETE_MESSAGE, icon=SUCCESS_ICON)
+                st.success(
+                    translate("model_training_complete_message"), icon=SUCCESS_ICON
+                )
 
                 # Save trained models
                 bertrend.save_model()
-                st.success(MODELS_SAVED_MESSAGE, icon=SUCCESS_ICON)
+                st.success(translate("models_saved_message"), icon=SUCCESS_ICON)
 
                 # Compute signal popularity
                 bertrend.calculate_signal_popularity()
@@ -263,15 +253,17 @@ def training_page():
                 # Store bertrend object
                 SessionStateManager.set("bertrend", bertrend)
 
-                st.success(MODEL_MERGING_COMPLETE_MESSAGE, icon=SUCCESS_ICON)
+                st.success(
+                    translate("model_merging_complete_message"), icon=SUCCESS_ICON
+                )
 
 
 def analysis_page():
-    st.header("Results Analysis")
+    st.header(translate("results_analysis"))
 
     if not SessionStateManager.get("data_embedded"):
         st.warning(
-            EMBED_TRAIN_WARNING,
+            translate("embed_train_warning"),
             icon=WARNING_ICON,
         )
         st.stop()
@@ -281,14 +273,14 @@ def analysis_page():
         or not SessionStateManager.get("bertrend")._is_fitted
     ):
         st.warning(
-            TRAIN_WARNING,
+            translate("train_warning"),
             icon=WARNING_ICON,
         )
         st.stop()
 
     else:
         topic_models = SessionStateManager.get("bertrend").restore_topic_models()
-        with st.expander("Topic Overview", expanded=False):
+        with st.expander(translate("topic_overview"), expanded=False):
             # Number of Topics Detected for each topic model
             st.plotly_chart(
                 plot_num_topics(topic_models),
@@ -307,13 +299,13 @@ def analysis_page():
         # Display zeroshot signal trend
         zeroshot_topic_list = SessionStateManager.get("zeroshot_topic_list", None)
         if zeroshot_topic_list:
-            st.subheader("Zero-shot Weak Signal Trends")
+            st.subheader(translate("zeroshot_weak_signal_trends"))
             weak_signal_trends = detect_weak_signals_zeroshot(
                 topic_models,
                 zeroshot_topic_list,
                 st.session_state["granularity"],
             )
-            with st.expander("Zero-shot Weak Signal Trends", expanded=False):
+            with st.expander(translate("zeroshot_weak_signal_trends"), expanded=False):
                 fig_trend = go.Figure()
                 for topic, weak_signal_trend in weak_signal_trends.items():
                     timestamps = list(weak_signal_trend.keys())
@@ -322,7 +314,7 @@ def analysis_page():
                         for timestamp in timestamps
                     ]
                     hovertext = [
-                        f"Topic: {topic}<br>Timestamp: {timestamp}<br>Popularity: {weak_signal_trend[timestamp]['Document_Count']}<br>Representation: {weak_signal_trend[timestamp]['Representation']}"
+                        f"Topic: {topic}<br>{translate('timestamp')}: {timestamp}<br>{translate('popularity')}: {weak_signal_trend[timestamp]['Document_Count']}<br>Representation: {weak_signal_trend[timestamp]['Representation']}"
                         for timestamp in timestamps
                     ]
                     fig_trend.add_trace(
@@ -336,9 +328,9 @@ def analysis_page():
                         )
                     )
                 fig_trend.update_layout(
-                    title="Popularity of Zero-Shot Topics",
-                    xaxis_title="Timestamp",
-                    yaxis_title="Popularity",
+                    title=translate("popularity_of_zeroshot_topics"),
+                    xaxis_title=translate("timestamp"),
+                    yaxis_title=translate("popularity"),
                 )
                 st.plotly_chart(
                     fig_trend,
@@ -373,20 +365,22 @@ def analysis_page():
                     indent=4,
                 )
                 st.success(
-                    f"Zeroshot topics data saved to {json_file_path}",
+                    translate("zeroshot_topics_data_saved").format(
+                        json_file_path=json_file_path
+                    ),
                     icon=SUCCESS_ICON,
                 )
 
         if not SessionStateManager.get("popularity_computed", False):
             st.warning(
-                MERGE_WARNING,
+                translate("merge_warning"),
                 icon=WARNING_ICON,
             )
             st.stop()
 
         else:
             # Display merged signal trend
-            with st.expander("Topic Size Evolution", expanded=False):
+            with st.expander(translate("topic_size_evolution"), expanded=False):
                 st.dataframe(
                     SessionStateManager.get("bertrend").all_merge_histories_df[
                         [
@@ -402,7 +396,7 @@ def analysis_page():
                 )
 
             # Display topic popularity evolution
-            with st.expander("Topic Popularity Evolution", expanded=True):
+            with st.expander(translate("topic_popularity_evolution"), expanded=True):
                 display_popularity_evolution()
                 # Save Signal Evolution Data to investigate later on in a separate notebook
                 save_signal_evolution()
@@ -411,48 +405,48 @@ def analysis_page():
             display_signal_types()
 
             # Analyze signal
-            with st.expander("Signal Analysis", expanded=True):
-                st.subheader("Signal Analysis")
+            with st.expander(translate("signal_analysis"), expanded=True):
+                st.subheader(translate("signal_analysis"))
                 topic_number = st.number_input(
-                    "Enter a topic number to take a closer look:", min_value=0, step=1
+                    translate("enter_topic_number"), min_value=0, step=1
                 )
-                if st.button("Analyze signal", type="primary"):
+                if st.button(translate("analyze_signal"), type="primary"):
                     try:
                         display_signal_analysis(topic_number)
                     except Exception as e:
                         st.error(
-                            f"Error while trying to generate signal summary: {e}",
+                            translate("error_generating_signal_summary").format(e=e),
                             icon=ERROR_ICON,
                         )
 
             # Create the Sankey Diagram
-            st.subheader("Topic Evolution")
+            st.subheader(translate("topic_evolution"))
             display_sankey_diagram(
                 SessionStateManager.get("bertrend").all_merge_histories_df
             )
 
             # Newly emerged topics
             if SessionStateManager.get("bertrend").all_new_topics_df is not None:
-                st.subheader("Newly Emerged Topics")
+                st.subheader(translate("newly_emerged_topics"))
                 display_newly_emerged_topics(
                     SessionStateManager.get("bertrend").all_new_topics_df
                 )
 
-            if st.button("Retrieve Topic Counts"):
-                with st.spinner("Retrieving topic counts..."):
+            if st.button(translate("retrieve_topic_counts")):
+                with st.spinner(translate("retrieving_topic_counts")):
                     # Number of topics per individual topic model
                     retrieve_topic_counts(topic_models)
 
 
 def main():
     st.set_page_config(
-        page_title=PAGE_TITLE,
+        page_title=PAGE_TITLE(),
         layout=LAYOUT,
         initial_sidebar_state="expanded" if is_admin_mode() else "collapsed",
         page_icon=":part_alternation_mark:",
     )
 
-    st.title(":part_alternation_mark: " + PAGE_TITLE)
+    st.title(":part_alternation_mark: " + PAGE_TITLE())
 
     # Set the main flags
     SessionStateManager.get_or_set("data_embedded", False)
@@ -460,39 +454,42 @@ def main():
 
     # Sidebar
     with st.sidebar:
-        st.header(SETTINGS_ICON + " Settings and Controls")
+        # Add language selector
+        create_internationalization_language_selector()
+
+        st.header(SETTINGS_ICON + " " + translate("settings_and_controls"))
 
         # State Management
-        st.subheader("State Management")
+        st.subheader(translate("state_management"))
 
-        if st.button("Restore Previous Run", use_container_width=True):
+        if st.button(translate("restore_previous_run"), use_container_width=True):
             restore_state()
             try:
                 SessionStateManager.set("bertrend", BERTrend.restore_model())
-                st.success(MODELS_RESTORED_MESSAGE, icon=SUCCESS_ICON)
-            except Exception as e:
-                st.warning(NO_MODELS_WARNING, icon=WARNING_ICON)
+                st.success(translate("models_restored_message"), icon=SUCCESS_ICON)
+            except Exception:
+                st.warning(translate("no_models_warning"), icon=WARNING_ICON)
 
-        if st.button("Purge Cache", use_container_width=True):
+        if st.button(translate("purge_cache"), use_container_width=True):
             purge_cache()
 
-        if st.button("Clear session state", use_container_width=True):
+        if st.button(translate("clear_session_state"), use_container_width=True):
             SessionStateManager.clear()
 
         # BERTopic Hyperparameters
-        st.subheader(EMBEDDING_ICON + " Embedding Hyperparameters")
+        st.subheader(EMBEDDING_ICON + " " + translate("embedding_hyperparameters"))
         display_embedding_hyperparameters()
-        st.subheader(TOPIC_ICON + " BERTopic Hyperparameters")
+        st.subheader(TOPIC_ICON + " " + translate("bertopic_hyperparameters"))
         display_bertopic_hyperparameters()
-        st.subheader(TREND_ICON + " BERTrend Hyperparameters")
+        st.subheader(TREND_ICON + " " + translate("bertrend_hyperparameters"))
         display_bertrend_hyperparameters()
 
     # Main content
     tab1, tab2, tab3 = st.tabs(
         [
-            DATA_LOADING_ICON + " Data Loading",
-            MODEL_TRAINING_ICON + " Model Training",
-            ANALYSIS_ICON + " Results Analysis",
+            DATA_LOADING_ICON + " " + translate("data_loading"),
+            MODEL_TRAINING_ICON + " " + translate("model_training"),
+            ANALYSIS_ICON + " " + translate("results_analysis"),
         ]
     )
 

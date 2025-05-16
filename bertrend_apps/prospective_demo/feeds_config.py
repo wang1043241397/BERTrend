@@ -40,10 +40,10 @@ from bertrend_apps.prospective_demo.streamlit_utils import clickable_df
 
 # Default feed configs
 DEFAULT_GNEWS_CRONTAB_EXPRESSION = "1 0 * * 1"
-DEFAULT_CUREBOT_CRONTAB_EXPRESSION = "42 0,6,12,18 * * *"  # 4 times a day
+DEFAULT_ATOM_CRONTAB_EXPRESSION = "42 0,6,12,18 * * *"  # 4 times a day
 DEFAULT_MAX_RESULTS = 20
 DEFAULT_NUMBER_OF_DAYS = 14
-FEED_SOURCES = ["google", "curebot"]
+FEED_SOURCES = ["google", "atom"]
 TRANSLATION = {"English": "Anglais", "French": "Français"}
 
 
@@ -91,11 +91,11 @@ def edit_feed_monitoring(config: dict | None = None):
         st.session_state.update_frequency = new_freq
         st.write(display_crontab_description(st.session_state.update_frequency))
 
-    elif provider == "curebot":
+    elif provider == "atom":
         query = st.text_input(
             "ATOM feed :red[*]",
             value="" if not config else config["query"],
-            help="URL du flux de données Curebot",
+            help="URL du flux de données ATOM",
         )
 
     try:
@@ -108,7 +108,7 @@ def edit_feed_monitoring(config: dict | None = None):
         "OK",
         disabled=not chosen_id
         or not query
-        or (query and provider == "curebot" and not re.match(URL_PATTERN, query)),
+        or (query and provider == "atom" and not re.match(URL_PATTERN, query)),
     ):
         if not config:
             config = {}
@@ -129,9 +129,9 @@ def edit_feed_monitoring(config: dict | None = None):
                 if valid_cron
                 else DEFAULT_GNEWS_CRONTAB_EXPRESSION
             )
-        elif provider == "curebot":
+        elif provider == "atom":
             config["language"] = "fr"
-            config["update_frequency"] = DEFAULT_CUREBOT_CRONTAB_EXPRESSION
+            config["update_frequency"] = DEFAULT_ATOM_CRONTAB_EXPRESSION
 
         if "update_frequency" in st.session_state:
             del st.session_state["update_frequency"]  # to avoid memory effect

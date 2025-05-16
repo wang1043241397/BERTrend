@@ -13,7 +13,7 @@ from bertrend_apps.data_provider.data_provider import DataProvider
 import feedparser
 
 
-class CurebotProvider(DataProvider):
+class ATOMFeedProvider(DataProvider):
     """Class used to process exports from Curebot tool"""
 
     def __init__(self, curebot_export_file: Path = None, feed_url: str = None):

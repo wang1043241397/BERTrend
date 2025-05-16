@@ -20,8 +20,11 @@ from bertrend.demos.demos_utils.icons import (
     NEWSLETTER_ICON,
 )
 from bertrend.demos.demos_utils.state_utils import restore_widget_state
+from bertrend.demos.demos_utils.i18n import (
+    translate,
+    create_internationalization_language_selector,
+)
 
-TITLE = "BERTrend - Topic Analysis demo"
 LAYOUT = "wide"
 
 
@@ -32,39 +35,39 @@ locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
 def define_pages():
     data_page = st.Page(
         page="demo_pages/training_page.py",
-        title="Data loading & model training",
+        title=translate("data_loading_training"),
         icon=SAVE_ICON,
     )
     topic_exploration_page = st.Page(
         page="demo_pages/explore_topics.py",
-        title="Topic exploration",
+        title=translate("topic_exploration"),
         icon=TOPIC_EXPLORATION_ICON,
     )
     topic_visualization_page = st.Page(
         page="demo_pages/topic_visualizations.py",
-        title="Topic visualization",
+        title=translate("topic_visualization"),
         icon=TOPIC_VISUALIZATION_ICON,
     )
     temporal_visualization_page = st.Page(
         page="demo_pages/temporal_visualizations.py",
-        title="Temporal visualization",
+        title=translate("temporal_visualization"),
         icon=TEMPORAL_VISUALIZATION_ICON,
     )
     newsletter_page = st.Page(
         page="demo_pages/newsletters_generation.py",
-        title="Newsletter generation",
+        title=translate("newsletter_generation"),
         icon=NEWSLETTER_ICON,
     )
 
     pg = st.navigation(
         {
-            "Topic Analysis": [
+            translate("topic_analysis"): [
                 data_page,
                 topic_exploration_page,
                 topic_visualization_page,
                 temporal_visualization_page,
             ],
-            "Application example": [newsletter_page],
+            translate("application_example"): [newsletter_page],
         }
     )
     return pg
@@ -73,13 +76,17 @@ def define_pages():
 def main():
     pg = define_pages()
     st.set_page_config(
-        page_title=TITLE,
+        page_title=translate("app_title"),
         layout=LAYOUT,
         initial_sidebar_state="expanded",
         page_icon=":part_alternation_mark:",
     )
     # Restore widget state
     restore_widget_state()
+
+    # Add language selector to sidebar
+    create_internationalization_language_selector()
+
     pg.run()
 
 

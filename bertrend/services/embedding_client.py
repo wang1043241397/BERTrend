@@ -125,7 +125,7 @@ class EmbeddingAPIClient(SecureAPIClient, Embeddings):
 
         # Split texts into chunks
         batches = [texts[i : i + batch_size] for i in range(0, len(texts), batch_size)]
-        logger.debug(
+        logger.info(
             f"Computing embeddings on {len(texts)} documents using ({len(batches)}) batches..."
         )
 

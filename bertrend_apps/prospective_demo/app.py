@@ -26,7 +26,11 @@ from bertrend_apps.prospective_demo.authentication import check_password
 from bertrend_apps.prospective_demo.dashboard_analysis import dashboard_analysis
 from bertrend_apps.prospective_demo.feeds_config import configure_information_sources
 from bertrend_apps.prospective_demo.feeds_data import display_data_status
-from bertrend_apps.prospective_demo.i18n import translate, create_language_selector
+from bertrend.demos.demos_utils.i18n import (
+    translate,
+    create_internationalization_language_selector,
+    set_default_internationalization_language,
+)
 from bertrend_apps.prospective_demo.models_info import models_monitoring
 from bertrend_apps.prospective_demo.report_generation import reporting
 from bertrend_apps.prospective_demo.dashboard_signals import signal_analysis
@@ -35,7 +39,6 @@ from bertrend_apps.prospective_demo.dashboard_signals import signal_analysis
 # UI Settings
 LAYOUT: Literal["centered", "wide"] = "wide"
 
-# TODO: reactivate password
 AUTHENTIFICATION = True
 # AUTHENTIFICATION = False
 
@@ -65,8 +68,9 @@ def main():
 
     # Sidebar
     with st.sidebar:
-        st.header(SETTINGS_ICON + " Settings and Controls")
-        create_language_selector()
+        set_default_internationalization_language("fr")
+        st.header(SETTINGS_ICON + " " + translate("settings_and_controls"))
+        create_internationalization_language_selector()
 
     # Main content
     tab1, tab2, tab3, tab4, tab5 = st.tabs(

@@ -14,9 +14,9 @@ from loguru import logger
 from umap import UMAP
 
 from bertrend import OUTPUT_PATH
+from bertrend.demos.demos_utils.i18n import translate
 from bertrend.demos.demos_utils.icons import ERROR_ICON, WARNING_ICON
 from bertrend.demos.demos_utils.state_utils import restore_widget_state
-from bertrend.demos.topic_analysis.messages import TRAIN_MODEL_FIRST_ERROR
 from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_CONFIG
 from bertrend.utils.data_loading import TEXT_COLUMN
 
@@ -214,18 +214,18 @@ def create_datamap(include_outliers):
 def main():
     # Check if a model is trained
     if "topic_model" not in st.session_state:
-        st.error(TRAIN_MODEL_FIRST_ERROR, icon=ERROR_ICON)
+        st.error(translate("train_model_first_error"), icon=ERROR_ICON)
         st.stop()
 
     # Main execution
-    st.title("Visualizations")
+    st.title(translate("visualizations"))
 
     # Sidebar
     with st.sidebar:
-        include_outliers = st.checkbox("Include outliers (Topic = -1)", value=True)
+        include_outliers = st.checkbox(translate("include_outliers"), value=True)
 
     # Overall Results
-    with st.expander("Overall Results", expanded=False):
+    with st.expander(translate("overall_results"), expanded=False):
         overall_results_plot = overall_results()
         if overall_results_plot is not None:
             st.plotly_chart(
@@ -234,20 +234,20 @@ def main():
                 use_container_width=True,
             )
         else:
-            st.error("Cannot display overall results", icon=ERROR_ICON)
-            st.warning("Try to change the UMAP parameters", icon=WARNING_ICON)
+            st.error(translate("overall_results_display_error"), icon=ERROR_ICON)
+            st.warning(translate("change_umap_params_warning"), icon=WARNING_ICON)
 
     # Topics Treemap
-    with st.expander("Topics Treemap", expanded=False):
-        with st.spinner("Computing topics treemap..."):
+    with st.expander(translate("topics_treemap"), expanded=False):
+        with st.spinner(translate("topics_treemap_computation")):
             treemap_plot = create_treemap()
             st.plotly_chart(
                 treemap_plot, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True
             )
 
     # Data Map
-    with st.expander("Data Map", expanded=True):
-        with st.spinner("Loading Data-map plot..."):
+    with st.expander(translate("data_map"), expanded=True):
+        with st.spinner(translate("data_map_loading")):
             datamap_html = create_datamap(include_outliers)
             if datamap_html is not None:
                 # Using st.html does fix the width and height issue by making it adaptive, but the html never loads (it loops indefinitely)
@@ -259,7 +259,7 @@ def main():
 
                 # Create a download button
                 st.download_button(
-                    label="View in fullscreen",
+                    label=translate("full_screen"),
                     data=get_binary_file_downloader_html(save_path),
                     file_name="datamapplot.html",
                     mime="text/html",
@@ -268,7 +268,7 @@ def main():
                 )
             else:
                 st.warning(
-                    "No valid topics to visualize. All documents might be classified as outliers.",
+                    translate("no_data_map_warning"),
                     icon=WARNING_ICON,
                 )
 

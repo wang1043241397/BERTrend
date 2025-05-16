@@ -24,7 +24,7 @@ from bertrend_apps.prospective_demo.dashboard_common import (
     choose_id_and_ts,
     get_df_topics,
 )
-from bertrend_apps.prospective_demo.i18n import translate
+from bertrend.demos.demos_utils.i18n import translate
 
 COLS_RATIO = [4 / 7, 3 / 7]
 
@@ -93,7 +93,6 @@ def signal_analysis():
         )
 
     with col2:
-        st.info(translate("todo_message"))
         explore_topic_sources(dfs_topics)
 
 
@@ -121,8 +120,11 @@ def explore_topic_sources(dfs_topics):
             label=translate("topic_selection"),
             label_visibility="hidden",
             options=options,
-            format_func=lambda x: f"{translate('topic')} {x}: "
-            + selected_df[selected_df["Topic"] == x][LLM_TOPIC_TITLE_COLUMN].values[0],
+            format_func=lambda x: f"{'📈 [' + translate('emerging_topic') if selected_signal_type== translate('emerging_topics') else '🌟 [' + translate('strong_topic')} {x}] "
+            + (
+                selected_df[selected_df["Topic"] == x][LLM_TOPIC_TITLE_COLUMN].values[0]
+                or translate("untitled_topic")
+            ),
         )
         if topic_id is None:
             return

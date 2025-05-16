@@ -41,6 +41,8 @@ The main application (`app.py`) provides a Streamlit-based web interface with mu
 - "Analyses" - for dashboard analysis
 - "Génération de rapports" (Report Generation) - for creating reports
 
+The application includes internationalization support, allowing users to switch between French (default) and English interfaces.
+
 ### Data Processing
 
 The package includes utilities for processing new data (`process_new_data.py`):
@@ -105,6 +107,47 @@ python -m bertrend_apps.prospective_demo.process_new_data train-new-model <user_
 
 Or through the web interface in the "Modèles" tab.
 
+### Data Regeneration
+
+The application provides functionality to regenerate data from scratch, which can be useful for rebuilding models or refreshing analyses. This can be done with or without LLM analysis.
+
+#### Command-line Interface
+
+To regenerate data using the command-line interface:
+
+```bash
+python -m bertrend_apps.prospective_demo.process_new_data regenerate <user_name> <model_id> [--with-analysis/--no-with-analysis] [--since <YYYY-MM-dd>]
+```
+
+Parameters:
+- `<user_name>`: Identifier of the user
+- `<model_id>`: ID of the model to be regenerated from scratch
+- `--with-analysis/--no-with-analysis`: Whether to include LLM analysis (default: `--with-analysis`)
+- `--since <YYYY-MM-dd>`: Optional date to be considered as the beginning of the analysis
+
+#### Examples
+
+Regenerate all data with LLM analysis:
+```bash
+python -m bertrend_apps.prospective_demo.process_new_data regenerate user1 model123
+```
+
+Regenerate data without LLM analysis (faster):
+```bash
+python -m bertrend_apps.prospective_demo.process_new_data regenerate user1 model123 --no-with-analysis
+```
+
+Regenerate data since a specific date:
+```bash
+python -m bertrend_apps.prospective_demo.process_new_data regenerate user1 model123 --since 2023-01-01
+```
+
+#### Notes
+
+- Regenerating data with LLM analysis may take significant time depending on the volume of data.
+- The regeneration process loads all data for the specified model, optionally filters by date, and rebuilds all models from scratch.
+- When regenerating without LLM analysis (`--no-with-analysis`), only the topic models are rebuilt without generating topic descriptions or signal analyses.
+
 ### Analysis
 
 The application provides multiple analysis options:
@@ -122,6 +165,22 @@ The package uses several configuration settings defined in `__init__.py`:
 - `BASE_MODELS_DIR` - Path for user models
 - `DEFAULT_GRANULARITY` - Default time granularity for analysis
 - `DEFAULT_WINDOW_SIZE` - Default window size for analysis
+
+## Utilities
+
+The package includes several utility modules to enhance functionality:
+
+### Internationalization
+
+The `i18n.py` module provides internationalization support, allowing users to switch between French (default) and English interfaces. The language selector is available in the sidebar.
+
+### Performance Utilities
+
+The `perf_utils.py` module includes utilities for optimizing performance, such as a function for selecting the least used GPU on systems with multiple GPUs.
+
+### UI Enhancements
+
+The `streamlit_utils.py` module provides enhanced UI components for the Streamlit interface, such as clickable dataframes with interactive buttons.
 
 ## Dependencies
 

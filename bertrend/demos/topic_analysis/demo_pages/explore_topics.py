@@ -16,14 +16,11 @@ from urllib.parse import urlparse
 from bertopic import BERTopic
 
 from bertrend import OUTPUT_PATH
+from bertrend.demos.demos_utils.i18n import translate
 from bertrend.demos.demos_utils.icons import ERROR_ICON, WARNING_ICON
 from bertrend.demos.demos_utils.state_utils import (
     restore_widget_state,
     SessionStateManager,
-)
-from bertrend.demos.topic_analysis.messages import (
-    NO_DOCUMENT_FOR_TOPIC,
-    TRAIN_MODEL_FIRST_ERROR,
 )
 from bertrend.demos.weak_signals.visualizations_utils import PLOTLY_BUTTON_SAVE_CONFIG
 from bertrend.topic_analysis.topic_description import generate_topic_description
@@ -45,7 +42,7 @@ def check_model_and_prepare_topics():
     Check if a model is trained and prepare topics over time if necessary.
     """
     if "topic_model" not in st.session_state:
-        st.error(TRAIN_MODEL_FIRST_ERROR, icon=ERROR_ICON)
+        st.error(translate("train_model_first_error"), icon=ERROR_ICON)
         st.stop()
 
     if (
@@ -77,7 +74,7 @@ def display_sidebar():
     with st.sidebar:
         # Search bar
         search_terms = st.text_input(
-            "Search topic", on_change=find_similar_topic, key="search_terms"
+            translate("search_topic"), on_change=find_similar_topic, key="search_terms"
         )
 
         # Topics list
@@ -106,7 +103,7 @@ def display_topic_info():
     ]["Representation"]
 
     st.write(
-        f"## Topic {st.session_state['selected_topic_number']} : {topic_docs_number} documents"
+        f"## {translate('topic')} {st.session_state['selected_topic_number']} : {topic_docs_number} {translate('documents_lowercase')}"
     )
     st.markdown(f"### #{' #'.join(topic_words)}")
 
@@ -184,7 +181,7 @@ def display_source_distribution(
 
     # Determine which slices should be pulled out
     for source in source_counts.index:
-        if source in selected_sources and "All" not in selected_sources:
+        if source in selected_sources and translate("all") not in selected_sources:
             pull.append(0.2)
         else:
             pull.append(0)
@@ -212,14 +209,13 @@ def display_source_distribution(
 def get_website_name(url):
     """Extract website name from URL, handling None, NaN, and invalid URLs."""
     if pd.isna(url) or url is None or isinstance(url, float):
-        return "Unknown Source"
+        return translate("unknown_source")
     try:
-        return (
-            urlparse(str(url)).netloc.replace("www.", "").split(".")[0]
-            or "Unknown Source"
+        return urlparse(str(url)).netloc.replace("www.", "").split(".")[0] or translate(
+            "unknown_source"
         )
     except:
-        return "Unknown Source"
+        return translate("unknown_source")
 
 
 def display_representative_documents(filtered_df: pd.DataFrame):
@@ -230,9 +226,9 @@ def display_representative_documents(filtered_df: pd.DataFrame):
             date = doc.timestamp.strftime("%A %d %b %Y %H:%M:%S")
             snippet = doc.text[:200] + "..." if len(doc.text) > 150 else doc.text
 
-            content = f"""**{doc.title}**\n\n{date} | {'Unknown Source' if website_name == 'Unknown Source' else website_name}\n\n{snippet}"""
+            content = f"""**{doc.title}**\n\n{date} | {translate('unknown_source') if website_name == translate('unknown_source') else website_name}\n\n{snippet}"""
 
-            if website_name != "Unknown Source":
+            if website_name != translate("unknown_source"):
                 st.link_button(content, doc.url)
             else:
                 st.markdown(content)
@@ -241,7 +237,7 @@ def display_representative_documents(filtered_df: pd.DataFrame):
 def display_new_documents():
     """Display new documents if remaining data is processed."""
     if "new_topics_over_time" in st.session_state:
-        st.write("## New documents")
+        st.write(f"## {translate('new_documents')}")
         print_docs_for_specific_topic(
             st.session_state["remaining_df"],
             st.session_state["new_topics"],
@@ -289,11 +285,11 @@ def create_topic_documents(
 def _display_topic_description(filtered_df: pd.DataFrame):
     """Display a human-readable description of the selected topic using a LLM."""
     if st.button(
-        "Generate a short description of the topic",
+        translate("generate_topic_description"),
         type="primary",
         use_container_width=True,
     ):
-        with st.spinner("Génération de la description en cours..."):
+        with st.spinner(translate("generating_description")):
             language_code = (
                 "fr" if SessionStateManager.get("language") == "French" else "en"
             )
@@ -311,7 +307,7 @@ def main():
     """Main function to run the Streamlit topic_analysis."""
     check_model_and_prepare_topics()
 
-    st.title("Topics exploration")
+    st.title(translate("topics_exploration"))
 
     display_sidebar()
 
@@ -328,7 +324,7 @@ def main():
     with col1:
         # Number of articles to display
         top_n_docs = st.number_input(
-            "Number of articles to display",
+            translate("number_of_articles_to_display"),
             min_value=1,
             max_value=st.session_state["topics_info"].iloc[
                 st.session_state["selected_topic_number"]
@@ -349,9 +345,9 @@ def main():
 
         # Multi-select for sources
         selected_sources = st.multiselect(
-            "Select the sources to display",
-            options=["All"] + list(sources),
-            default=["All"],
+            translate("select_sources_to_display"),
+            options=[translate("all")] + list(sources),
+            default=[translate("all")],
         )
 
     # Create two columns
@@ -363,7 +359,7 @@ def main():
 
     with col2:
         # Filter the dataframe only for document display
-        if "All" not in selected_sources:
+        if translate("all") not in selected_sources:
             filtered_df = representative_df[
                 representative_df[URL_COLUMN]
                 .apply(get_website_name)
@@ -381,19 +377,22 @@ def main():
     st.divider()
 
     # Export configuration
-    st.subheader("Export Configuration")
+    st.subheader(translate("export_configuration"))
     export_method = st.radio(
-        "Choose export method:",
-        ("Download as ZIP", "Save to folder"),
+        translate("choose_export_method"),
+        (translate("download_as_zip"), translate("save_to_folder")),
         index=0,
-        help="Select whether to download documents as a ZIP file or save them directly to a folder on the server.",
+        help=translate("export_method_help"),
     )
 
     granularity_days = st.number_input(
-        "Granularity (number of days)", min_value=1, value=3, step=1
+        translate("granularity_days"),
+        min_value=1,
+        value=3,
+        step=1,
     )
 
-    if export_method == "Download as ZIP":
+    if export_method == translate("download_as_zip"):
         # Prepare ZIP file
         folder_name, documents = create_topic_documents(
             filtered_df,
@@ -413,15 +412,15 @@ def main():
             zip_filename = f"{folder_name}.zip"
 
             st.download_button(
-                label="Export Topic Documents",
+                label=translate("export_topic_documents"),
                 data=zip_buffer,
                 file_name=zip_filename,
                 mime="application/zip",
             )
         else:
-            st.warning(NO_DOCUMENT_FOR_TOPIC, icon=WARNING_ICON)
+            st.warning(translate("no_document_for_topic"), icon=WARNING_ICON)
     else:
-        if st.button("Export Topic Documents"):
+        if st.button(translate("export_topic_documents")):
             folder_name, documents = create_topic_documents(
                 filtered_df,
                 st.session_state["topic_model"],
@@ -438,11 +437,11 @@ def main():
                         f.write(content)
 
                 st.success(
-                    f"Successfully exported documents to folder: {export_folder}"
+                    translate("export_success").format(export_folder=export_folder)
                 )
             else:
                 st.warning(
-                    NO_DOCUMENT_FOR_TOPIC,
+                    translate("no_document_for_topic"),
                     icon=WARNING_ICON,
                 )
 

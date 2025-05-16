@@ -1,8 +1,3 @@
-#  Copyright (c) 2024, RTE (https://www.rte-france.com)
-#  See AUTHORS.txt
-#  SPDX-License-Identifier: MPL-2.0
-#  This file is part of BERTrend.
-
 import datetime
 
 import pandas as pd
@@ -16,6 +11,7 @@ from bertrend.demos.demos_utils.data_loading_component import (
 from bertrend.demos.demos_utils.embed_documents_component import (
     display_embed_documents_component,
 )
+from bertrend.demos.demos_utils.i18n import translate
 from bertrend.demos.demos_utils.icons import (
     WARNING_ICON,
     SUCCESS_ICON,
@@ -23,19 +19,11 @@ from bertrend.demos.demos_utils.icons import (
     SETTINGS_ICON,
     INFO_ICON,
     EMBEDDING_ICON,
-)
-from bertrend.demos.demos_utils.messages import (
-    NO_EMBEDDINGS_WARNING_MESSAGE,
-    MODEL_TRAINING_COMPLETE_MESSAGE,
+    TOPIC_ICON,
 )
 from bertrend.demos.demos_utils.state_utils import (
     restore_widget_state,
     SessionStateManager,
-)
-from bertrend.demos.topic_analysis.messages import (
-    EMBEDDINGS_CACHE_INFO,
-    SAVE_MODEL_REMINDER,
-    NO_MODEL_AVAILABLE_ERROR,
 )
 from bertrend.demos.demos_utils.parameters_component import (
     display_bertopic_hyperparameters,
@@ -64,11 +52,11 @@ def generate_model_name(base_name="topic_model"):
 def data_distribution(df: pd.DataFrame):
     """Display the distribution of data over time."""
     with st.expander(
-        label="Data distribution",
+        label=translate("data_distribution"),
         expanded=False,
     ):
         freq = st.select_slider(
-            "Time aggregation",
+            translate("time_aggregation"),
             options=(
                 "1D",
                 "2D",
@@ -87,15 +75,15 @@ def data_distribution(df: pd.DataFrame):
 
 def save_model_interface():
     """Save the generated topic model to disk."""
-    st.write("## Save Model")
+    st.write("## " + translate("save_model"))
 
     # Optional text box for custom model name
     base_model_name = st.text_input(
-        "Enter a name for the model (optional):", key="base_model_name_input"
+        translate("enter_model_name"), key="base_model_name_input"
     )
 
     # Button to save the model
-    if st.button("Save Model", key="save_model_button"):
+    if st.button(translate("save_model"), key="save_model_button"):
         if "topic_model" in st.session_state:
             dynamic_model_name = generate_model_name(base_model_name or "topic_model")
             model_save_path = OUTPUT_PATH / "saved_models" / dynamic_model_name
@@ -110,7 +98,10 @@ def save_model_interface():
                     save_embedding_model=True,
                 )
                 st.success(
-                    f"Model saved successfully as {model_save_path}", icon=SUCCESS_ICON
+                    translate("model_saved_successfully").format(
+                        model_save_path=model_save_path
+                    ),
+                    icon=SUCCESS_ICON,
                 )
                 st.session_state["model_saved"] = True
                 logger.success(f"Model saved successfully!", icon=SUCCESS_ICON)
@@ -119,14 +110,14 @@ def save_model_interface():
                 logger.error(f"Failed to save the model: {e}")
         else:
             st.error(
-                NO_MODEL_AVAILABLE_ERROR,
+                translate("no_model_available_error"),
                 icon=ERROR_ICON,
             )
 
 
 def train_model():
     """Train a BERTopic model based on provided data."""
-    with st.spinner("Training model..."):
+    with st.spinner(translate("training_model")):
         dataset = st.session_state["time_filtered_df"][TEXT_COLUMN]
         # indices = full_dataset.index.tolist()
 
@@ -143,9 +134,9 @@ def train_model():
         st.session_state["topic_model"] = bertopic
         st.session_state["topics"] = topic_model_output.topics
 
-    st.success(MODEL_TRAINING_COMPLETE_MESSAGE, icon=SUCCESS_ICON)
+    st.success(translate("model_training_complete_message"), icon=SUCCESS_ICON)
     st.info(
-        EMBEDDINGS_CACHE_INFO,
+        translate("embeddings_cache_info"),
         icon=INFO_ICON,
     )
 
@@ -160,11 +151,11 @@ def train_model():
     # update state
     st.session_state["model_trained"] = True
     if not st.session_state["model_saved"]:
-        st.warning(SAVE_MODEL_REMINDER, icon=WARNING_ICON)
+        st.warning(translate("save_model_reminder"), icon=WARNING_ICON)
 
 
 def main():
-    st.title(":part_alternation_mark: Topic analysis demo")
+    st.title(translate("topic_analysis_demo_title"))
 
     if "model_trained" not in st.session_state:
         st.session_state["model_trained"] = False
@@ -173,9 +164,10 @@ def main():
 
     # In the sidebar form
     with st.sidebar:
-        st.header(SETTINGS_ICON + " Settings")
-        st.subheader(EMBEDDING_ICON + " Embedding Hyperparameters")
+        st.header(SETTINGS_ICON + " " + translate("settings_and_controls"))
+        st.subheader(EMBEDDING_ICON + " " + translate("embedding_hyperparameters"))
         display_embedding_hyperparameters()
+        st.subheader(TOPIC_ICON + " " + translate("bertopic_hyperparameters"))
         display_bertopic_hyperparameters()
 
     # Load data
@@ -192,18 +184,18 @@ def main():
         display_embed_documents_component()
     except Exception as e:
         logger.error(f"An error occurred while embedding documents: {e}")
-        st.error(f"An error occurred while embedding documents: {e}", icon=ERROR_ICON)
+        st.error(translate("error_embedding_documents").format(e=e), icon=ERROR_ICON)
 
     if not SessionStateManager.get("data_embedded", False):
-        st.warning(NO_EMBEDDINGS_WARNING_MESSAGE, icon=WARNING_ICON)
+        st.warning(translate("no_embeddings_warning_message"), icon=WARNING_ICON)
         st.stop()
 
     # Train the model
     if st.button(
-        "Train Model",
+        translate("train_model"),
         type="primary",
         key="train_model_button",
-        help="Make sure to review the settings before clicking on this button.",
+        help=translate("review_settings_help"),
     ):
         train_model()
 
