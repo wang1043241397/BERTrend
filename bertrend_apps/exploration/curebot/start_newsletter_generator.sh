@@ -5,4 +5,4 @@
 # This file is part of BERTrend.
 #
 
-OPENAI_API_KEY=$OPENAI_API_KEY_VEILLE CUDA_VISIBLE_DEVICES=0 streamlit run  --theme.primaryColor royalblue --server.port 8686 veille_analyse.py
+OPENAI_API_KEY=$OPENAI_API_KEY_VEILLE CUDA_VISIBLE_DEVICES=0 streamlit run  --theme.primaryColor royalblue --server.port 8686 app.py
