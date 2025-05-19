@@ -6,6 +6,7 @@ import pandas as pd
 from pathlib import Path
 
 import streamlit as st
+from pydantic import BaseModel
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 import plotly.graph_objects as go
 from urllib.parse import urlparse
@@ -38,6 +39,13 @@ NEWSLETTER_TEMPLATE = CONFIG["newsletter"]["template"]
 
 # Load embdding model
 EMBEDDING_SERVICE = EmbeddingService(local=False)
+
+
+class TopicDescription(BaseModel):
+    """Description of topic during a time period"""
+
+    # Title of the topic
+    title: str
 
 
 @st.cache_data(show_spinner=False)
@@ -147,12 +155,12 @@ def get_improved_topic_description(
                 axis=1,
             )
         )
-        response = llm_client.generate(
+        response = llm_client.parse(
             user_prompt=user_prompt,
             system_prompt=TOPIC_DESCRIPTION_SYSTEM_PROMPT,
-            response_format={"type": "json_object"},
+            response_format=TopicDescription,
         )
-        improved_descriptions.append(json.loads(response)["titre"])
+        improved_descriptions.append(response.title)
 
     return improved_descriptions
 
