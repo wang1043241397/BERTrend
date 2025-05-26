@@ -75,7 +75,7 @@ def load_data(
     df[TEXT_COLUMN] = df[TEXT_COLUMN].astype(str)
 
     # Drop rows with invalid timestamps
-    df = df.dropna(subset=[TIMESTAMP_COLUMN])
+    df = df.dropna(subset=[TIMESTAMP_COLUMN, TEXT_COLUMN])
 
     df.drop_duplicates(
         subset=[TIMESTAMP_COLUMN, TEXT_COLUMN], keep="first", inplace=True
