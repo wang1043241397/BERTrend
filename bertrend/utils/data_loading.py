@@ -72,10 +72,11 @@ def load_data(
     df[TIMESTAMP_COLUMN] = pd.to_datetime(df[TIMESTAMP_COLUMN], errors="coerce")
 
     # ensures the correct type of text column
+    df = df.dropna(subset=[TEXT_COLUMN])
     df[TEXT_COLUMN] = df[TEXT_COLUMN].astype(str)
 
     # Drop rows with invalid timestamps
-    df = df.dropna(subset=[TIMESTAMP_COLUMN, TEXT_COLUMN])
+    df = df.dropna(subset=[TIMESTAMP_COLUMN])
 
     df.drop_duplicates(
         subset=[TIMESTAMP_COLUMN, TEXT_COLUMN], keep="first", inplace=True
