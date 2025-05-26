@@ -71,6 +71,9 @@ def load_data(
     # Convert timestamp column to datetime
     df[TIMESTAMP_COLUMN] = pd.to_datetime(df[TIMESTAMP_COLUMN], errors="coerce")
 
+    # ensures the correct type of text column
+    df[TEXT_COLUMN] = df[TEXT_COLUMN].astype(str)
+
     # Drop rows with invalid timestamps
     df = df.dropna(subset=[TIMESTAMP_COLUMN])
 
