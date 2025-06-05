@@ -190,7 +190,7 @@ def configure_information_sources():
 
     clickable_df_buttons = [
         (EDIT_ICON, edit_feed_monitoring, "secondary"),
-        (lambda x: toggle_icon(df, x), toggle_feed, "secondary"),
+        (lambda x: toggle_icon(df, x), handle_toggle_feed, "secondary"),
         (DELETE_ICON, handle_delete, "primary"),
     ]
     clickable_df(df, clickable_df_buttons)
@@ -259,3 +259,27 @@ def handle_delete(row_dict: dict):
     with col2:
         if st.button("Non"):
             st.rerun()
+
+
+@st.dialog("Confirmation")
+def handle_toggle_feed(row_dict: dict):
+    """Function to handle remove click events"""
+    feed_id = row_dict["id"]
+    if check_if_scrapping_active_for_user(
+        feed_id=feed_id, user=st.session_state.username
+    ):
+        st.write(
+            f":orange[{WARNING_ICON}] Voulez-vous vraiment désactiver le flux de veille **{feed_id}** ?"
+        )
+        col1, col2, _ = st.columns([2, 2, 8])
+        with col1:
+            if st.button("Oui", type="primary"):
+                toggle_feed(row_dict)
+                st.rerun()
+        with col2:
+            if st.button("Non"):
+                st.rerun()
+    else:
+        st.write(f":blue[{INFO_ICON}] Activation du flux de veille **{feed_id}**")
+        toggle_feed(row_dict)
+        st.rerun()

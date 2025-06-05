@@ -2,6 +2,7 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
+import locale
 import os
 import re
 import subprocess
@@ -17,16 +18,38 @@ from cron_descriptor import (
 from loguru import logger
 
 from bertrend import BEST_CUDA_DEVICE, BERTREND_LOG_PATH, load_toml_config
+from bertrend.demos.demos_utils.i18n import get_current_internationalization_language
 
 
 def get_understandable_cron_description(cron_expression: str) -> str:
     """Returns a human understandable crontab description."""
+    # Save current locale
+    saved_locale = locale.setlocale(locale.LC_ALL)
+
     options = Options()
     options.casing_type = CasingTypeEnum.Sentence
     options.use_24hour_time_format = True
-    options.locale_code = "fr_FR"
-    descriptor = ExpressionDescriptor(cron_expression, options)
-    return descriptor.get_description(DescriptionTypeEnum.FULL)
+
+    locale_code = (
+        "fr_FR.UTF-8"
+        if get_current_internationalization_language() == "fr"
+        else "en_US.UTF-8"
+    )
+
+    options.locale_code = locale_code
+
+    try:
+        # Set temporary locale to French (France)
+        locale.setlocale(locale.LC_ALL, locale_code)
+        descriptor = ExpressionDescriptor(cron_expression, options)
+        description = descriptor.get_description(DescriptionTypeEnum.FULL)
+
+    finally:
+        # Restore original locale
+        locale.setlocale(locale.LC_ALL, saved_locale)
+
+    print(description)
+    return description
 
 
 def add_job_to_crontab(schedule, command, env_vars="") -> bool:

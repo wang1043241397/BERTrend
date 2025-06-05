@@ -8,7 +8,6 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from bertrend import FEED_BASE_PATH
 from bertrend.utils.data_loading import (
     load_data,
     TIMESTAMP_COLUMN,
