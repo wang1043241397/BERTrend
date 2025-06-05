@@ -84,7 +84,7 @@ def models_monitoring():
 
     clickable_df_buttons = [
         (EDIT_ICON, edit_model_parameters, "secondary"),
-        (lambda x: toggle_icon(df, x), toggle_learning, "secondary"),
+        (lambda x: toggle_icon(df, x), handle_toggle_learning, "secondary"),
         (DELETE_ICON, handle_delete_models, "primary"),
         (RESTART_ICON, handle_regenerate_models, "primary"),
     ]
@@ -278,8 +278,34 @@ def toggle_learning(cfg: dict):
     st.rerun()
 
 
+@st.dialog("Confirmation")
+def handle_toggle_learning(cfg: dict):
+    """Function to handle remove click events"""
+    model_id = cfg["id"]
+    if check_if_learning_active_for_user(
+        model_id=model_id, user=st.session_state.username
+    ):
+        st.write(
+            f":orange[{WARNING_ICON}] Voulez-vous vraiment l'apprentissage pour le flux de veille **{model_id}** ?"
+        )
+        col1, col2, _ = st.columns([2, 2, 8])
+        with col1:
+            if st.button("Oui", type="primary"):
+                toggle_learning(cfg)
+                st.rerun()
+        with col2:
+            if st.button("Non"):
+                st.rerun()
+    else:
+        st.write(
+            f":blue[{INFO_ICON}] Activation de l'apprentissage pour le flux de veille **{model_id}**"
+        )
+        toggle_learning(cfg)
+        st.rerun()
+
+
 def toggle_icon(df: pd.DataFrame, index: int) -> str:
-    """Switch the toggle icon depending on the statis of the scrapping feed in the crontab"""
+    """Switch the toggle icon depending on the status of the scrapping feed in the crontab"""
     model_id = df["id"][index]
     return (
         f":green[{TOGGLE_ON_ICON}]"
@@ -304,6 +330,7 @@ def remove_scheduled_training_for_user(model_id: str, user: str):
         return remove_from_crontab(
             rf"process_new_data train-new-model.*{user}.*{model_id}"
         )
+    return False
 
 
 def schedule_training_for_user(model_id: str, user: str):

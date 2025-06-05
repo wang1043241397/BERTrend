@@ -35,11 +35,14 @@ def get_understandable_cron_description(cron_expression: str) -> str:
         if get_current_internationalization_language() == "fr"
         else "en_US.UTF-8"
     )
+    crontab_locale_code = (
+        "fr_FR" if get_current_internationalization_language() == "fr" else "en"
+    )
 
-    options.locale_code = locale_code
+    options.locale_code = crontab_locale_code
 
     try:
-        # Set temporary locale to French (France)
+        # Set temporary locale to specific locale
         locale.setlocale(locale.LC_ALL, locale_code)
         descriptor = ExpressionDescriptor(cron_expression, options)
         description = descriptor.get_description(DescriptionTypeEnum.FULL)
@@ -48,7 +51,6 @@ def get_understandable_cron_description(cron_expression: str) -> str:
         # Restore original locale
         locale.setlocale(locale.LC_ALL, saved_locale)
 
-    print(description)
     return description
 
 
