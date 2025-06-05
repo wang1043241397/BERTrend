@@ -12,6 +12,7 @@ from pathlib import Path
 from google.auth.exceptions import RefreshError
 from loguru import logger
 
+from bertrend.demos.demos_utils.i18n import translate
 from bertrend.demos.demos_utils.icons import (
     NEWSLETTER_ICON,
     TOPIC_ICON,
@@ -39,8 +40,8 @@ def reporting():
 
     tab1, tab2 = st.tabs(
         [
-            TOPIC_ICON + " Etape 1: Sélection des sujets à retenir",
-            NEWSLETTER_ICON + " Etape 2: Export",
+            TOPIC_ICON + " " + translate("step_1_title"),
+            NEWSLETTER_ICON + " " + translate("step_2_title"),
         ]
     )
     with tab1:
@@ -48,21 +49,19 @@ def reporting():
     with tab2:
         configure_export(selected_weak_topics_df, selected_strong_topics_df)
 
-    # generate_newsletter()
-
 
 def choose_topics():
-    st.subheader("Etape 1: Sélection des sujets à retenir")
+    st.subheader(translate("step_1_subheader"))
     model_id = st.session_state.model_id
     dfs_interpretation = st.session_state.signal_interpretations
     if model_id not in dfs_interpretation:
-        st.error(f"{ERROR_ICON} Pas de données")
+        st.error(f"{ERROR_ICON} {translate('no_data')}")
         st.stop()
     cols = st.columns(2)
     with cols[0]:
-        st.write("#### :orange[Sujets émergents]")
+        st.write(f"#### :orange[{translate('emerging_topics')}]")
         if WEAK_SIGNALS not in dfs_interpretation[model_id]:
-            st.error(f"{ERROR_ICON} Pas de données")
+            st.error(f"{ERROR_ICON} {translate('no_data')}")
             filtered_weak_signals = None
         else:
             df_w = dfs_interpretation[model_id][WEAK_SIGNALS]
@@ -70,9 +69,9 @@ def choose_topics():
             filtered_weak_signals = df_w[df_w["Topic"].isin(weak_topics_list)]
 
     with cols[1]:
-        st.write("#### :green[Sujets forts]")
+        st.write(f"#### :green[{translate('strong_topics')}]")
         if STRONG_SIGNALS not in dfs_interpretation[model_id]:
-            st.error(f"{ERROR_ICON} Pas de données")
+            st.error(f"{ERROR_ICON} {translate('no_data')}")
             filtered_strong_signals = None
         else:
             df_w = dfs_interpretation[model_id][STRONG_SIGNALS]
@@ -100,19 +99,17 @@ def choose_from_df(df: pd.DataFrame):
 
 
 def configure_export(weak_signals: pd.DataFrame, strong_signals: pd.DataFrame):
-    st.subheader("Etape 2: Configuration de l'export")
-    st.write(
-        "TODO: séléction des parties à inclure dans l'export par topic: résumé global, liens, évolution par période, analyse détaillée, etc."
-    )
+    st.subheader(translate("step_2_subheader"))
+    st.write(translate("export_configuration_note"))
 
     st.button(
-        "Générer",
+        translate("generate_button_label"),
         type="primary",
         on_click=lambda: generate_report(weak_signals, strong_signals),
     )
 
 
-@st.dialog("Rapport (aperçu)", width="large")
+@st.dialog(translate("report_preview_title"), width="large")
 def generate_report(weak_signals: pd.DataFrame, strong_signals: pd.DataFrame):
     model_id = st.session_state.model_id
 
@@ -121,7 +118,9 @@ def generate_report(weak_signals: pd.DataFrame, strong_signals: pd.DataFrame):
     number_links = 2
 
     report_template = Path(__file__).parent / "report_template.html"
-    report_title = f"Actu <font color='royal_blue'>{model_id}</font>"
+    report_title = (
+        f"{translate('report_title_part_1')} <font color='royal_blue'>{model_id}</font>"
+    )
     data_list = []
     for df, color in zip([weak_signals, strong_signals], ["orange", "green"]):
         # Iterate over the filtered DataFrame rows
@@ -151,7 +150,9 @@ def generate_report(weak_signals: pd.DataFrame, strong_signals: pd.DataFrame):
     with cols[0]:
         download(temp_report_path, model_id)
     with cols[1]:
-        email(temp_report_path, mail_title=f"Rapport veille {model_id}")  #
+        email(
+            temp_report_path, mail_title=f"{translate('report_mail_title')} {model_id}"
+        )
 
 
 def create_temp_report(html_content) -> Path:
@@ -165,7 +166,7 @@ def create_temp_report(html_content) -> Path:
 def download(temp_path: Path, model_id: str):
     with open(temp_path, "r", encoding="utf-8") as file:
         st.download_button(
-            label=f"{DOWNLOAD_ICON} Télécharger (html)",
+            label=f"{DOWNLOAD_ICON} {translate('download_button_label')}",
             type="primary",
             data=file.read(),
             file_name=f"rapport_{model_id}.html",
@@ -185,15 +186,15 @@ def email(temp_path: Path, mail_title: str) -> None:
         user_email = st.text_input("@", label_visibility="collapsed")
 
     with col2:
-        if st.button(f"{EMAIL_ICON} Envoyer", type="primary"):
+        if st.button(f"{EMAIL_ICON} {translate('send_button_label')}", type="primary"):
             if not user_email:
                 return
             if not is_valid_email(user_email):
-                st.error(f"{ERROR_ICON} Adresse mail incorrecte")
+                st.error(f"{ERROR_ICON} {translate('invalid_email')}")
                 return
 
             try:
-                # Send newsletter by email
+                # Send the newsletter by email
                 # string to list conversion for recipients
                 recipients = [user_email]
                 try:
@@ -208,7 +209,7 @@ def email(temp_path: Path, mail_title: str) -> None:
                         f"Problem with token for email, please regenerate it: {re}"
                     )
 
-                st.success("Email sent successfully!")
+                st.success(translate("email_sent_successfully"))
 
             except Exception as e:
-                st.error(f"Error sending email: {e}")
+                st.error(f"{translate('email_error_message')}: {e}")

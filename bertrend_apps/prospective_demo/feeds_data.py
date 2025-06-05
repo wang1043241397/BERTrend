@@ -8,6 +8,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
+from bertrend.demos.demos_utils.i18n import translate
 from bertrend.utils.data_loading import (
     load_data,
     TIMESTAMP_COLUMN,
@@ -25,7 +26,7 @@ def display_data_status():
     col1, col2 = st.columns(2)
     with col1:
         st.selectbox(
-            "Sélection de la veille",
+            translate("monitoring_selection_label"),
             options=sorted(st.session_state.user_feeds.keys()),
             key="id_data",
         )
@@ -34,7 +35,7 @@ def display_data_status():
         if "data_time_window" not in st.session_state:
             st.session_state.data_time_window = 7
         st.slider(
-            "Fenêtre temporelle (jours)",
+            translate("time_window_label"),
             min_value=1,
             max_value=60,
             step=1,
@@ -61,19 +62,25 @@ def display_data_info_for_feed(feed_id: str):
         df_filtered = df[df[TIMESTAMP_COLUMN] >= cutoff_date]
 
     stats = {
-        "ID": feed_id,
-        "# Fichiers": len(all_files),
-        "Date début": df[TIMESTAMP_COLUMN].min() if not df.empty else None,
-        "Date fin": df[TIMESTAMP_COLUMN].max() if not df.empty else None,
-        "# Articles": len(df),
-        f"# Articles ({st.session_state.data_time_window} derniers jours)": len(
-            df_filtered
+        translate("stats_id_label"): feed_id,
+        translate("stats_files_count_label"): len(all_files),
+        translate("stats_start_date_label"): (
+            df[TIMESTAMP_COLUMN].min() if not df.empty else None
         ),
+        translate("stats_end_date_label"): (
+            df[TIMESTAMP_COLUMN].max() if not df.empty else None
+        ),
+        translate("stats_articles_count_label"): len(df),
+        translate("stats_recent_articles_count_label").format(
+            days=st.session_state.data_time_window
+        ): len(df_filtered),
     }
 
     st.dataframe(pd.DataFrame([stats]))
 
-    st.write(f"#### Données des derniers {st.session_state.data_time_window} jours")
+    st.write(
+        f"#### {translate('recent_data_title').format(days=st.session_state.data_time_window)}"
+    )
     st.dataframe(
         df_filtered,
         use_container_width=True,

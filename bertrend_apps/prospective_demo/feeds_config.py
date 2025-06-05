@@ -12,6 +12,7 @@ import toml
 from loguru import logger
 
 from bertrend.config.parameters import LANGUAGES
+from bertrend.demos.demos_utils.i18n import translate
 from bertrend.demos.demos_utils.icons import (
     INFO_ICON,
     ERROR_ICON,
@@ -44,38 +45,37 @@ DEFAULT_ATOM_CRONTAB_EXPRESSION = "42 0,6,12,18 * * *"  # 4 times a day
 DEFAULT_MAX_RESULTS = 20
 DEFAULT_NUMBER_OF_DAYS = 14
 FEED_SOURCES = ["google", "atom"]
-TRANSLATION = {"English": "Anglais", "French": "Français"}
 
 
-@st.dialog("Configuration d'un nouveau flux de données")
+@st.dialog(translate("feed_config_dialog_title"))
 def edit_feed_monitoring(config: dict | None = None):
     """Create or update a feed monitoring configuration."""
     chosen_id = st.text_input(
-        "ID :red[*]",
-        help="Identifiant du flux de données",
+        translate("feed_id_label") + " :red[*]",
+        help=translate("feed_id_help"),
         value=None if not config else config["id"],
     )
 
     provider = st.segmented_control(
-        "Source",
+        translate("feed_source_label"),
         selection_mode="single",
         options=FEED_SOURCES,
         default=FEED_SOURCES[0] if not config else config["provider"],
-        help="Sélection de la source de données",
+        help=translate("feed_source_help"),
     )
     if provider == "google":
         query = st.text_input(
-            "Requête :red[*]",
+            translate("feed_query_label") + " :red[*]",
             value="" if not config else config["query"],
-            help="Saisir ici la requête qui sera faite sur Google News",
+            help=translate("feed_query_help"),
         )
         language = st.segmented_control(
-            "Langue",
+            translate("feed_language_label"),
             selection_mode="single",
             options=LANGUAGES,
             default=LANGUAGES[0],
-            format_func=lambda lang: TRANSLATION[lang],
-            help="Choix de la langue",
+            format_func=lambda lang: translate(f"language_{lang.lower()}"),
+            help=translate("feed_language_help"),
         )
         if "update_frequency" not in st.session_state:
             st.session_state.update_frequency = (
@@ -84,18 +84,18 @@ def edit_feed_monitoring(config: dict | None = None):
                 else config["update_frequency"]
             )
         new_freq = st.text_input(
-            f"Fréquence d'exécution",
+            translate("feed_frequency_label"),
             value=st.session_state.update_frequency,
-            help=f"Fréquence de collecte des données",
+            help=translate("feed_frequency_help"),
         )
         st.session_state.update_frequency = new_freq
         st.write(display_crontab_description(st.session_state.update_frequency))
 
     elif provider == "atom":
         query = st.text_input(
-            "ATOM feed :red[*]",
+            translate("feed_atom_label") + " :red[*]",
             value="" if not config else config["query"],
-            help="URL du flux de données ATOM",
+            help=translate("feed_atom_help"),
         )
 
     try:
@@ -105,7 +105,7 @@ def edit_feed_monitoring(config: dict | None = None):
         valid_cron = False
 
     if st.button(
-        "OK",
+        translate("ok_button"),
         disabled=not chosen_id
         or not query
         or (query and provider == "atom" and not re.match(URL_PATTERN, query)),
@@ -160,7 +160,7 @@ def display_crontab_description(crontab_expr: str) -> str:
     try:
         return f":blue[{INFO_ICON} {get_understandable_cron_description(crontab_expr)}]"
     except Exception:
-        return f":red[{ERROR_ICON} Expression mal écrite !]"
+        return f":red[{ERROR_ICON} {translate('cron_error_message')}]"
 
 
 def configure_information_sources():
@@ -185,7 +185,9 @@ def configure_information_sources():
     if not df.empty:
         df = df.sort_values(by="id", inplace=False).reset_index(drop=True)
 
-    if st.button(f":green[{ADD_ICON}]", type="tertiary", help="Nouveau flux de veille"):
+    if st.button(
+        f":green[{ADD_ICON}]", type="tertiary", help=translate("new_feed_help")
+    ):
         edit_feed_monitoring()
 
     clickable_df_buttons = [
@@ -197,7 +199,7 @@ def configure_information_sources():
 
 
 def toggle_icon(df: pd.DataFrame, index: int) -> str:
-    """Switch the toggle icon depending on the statis of the scrapping feed in the crontab"""
+    """Switch the toggle icon depending on the status of the scrapping feed in the crontab"""
     feed_id = df["id"][index]
     return (
         f":green[{TOGGLE_ON_ICON}]"
@@ -215,13 +217,19 @@ def toggle_feed(cfg: dict):
         feed_id=feed_id, user=st.session_state.username
     ):
         if remove_scrapping_for_user(feed_id=feed_id, user=st.session_state.username):
-            st.toast(f"Le flux **{feed_id}** est déactivé !", icon=INFO_ICON)
+            st.toast(
+                translate("feed_deactivated_message").format(feed_id=feed_id),
+                icon=INFO_ICON,
+            )
             logger.info(f"Flux {feed_id} désactivé !")
     else:
         schedule_scrapping(
             st.session_state.feed_files[feed_id], user=st.session_state.username
         )
-        st.toast(f"Le flux **{feed_id}** est activé !", icon=WARNING_ICON)
+        st.toast(
+            translate("feed_activated_message").format(feed_id=feed_id),
+            icon=WARNING_ICON,
+        )
         logger.info(f"Flux {feed_id} activé !")
     time.sleep(0.2)
     st.rerun()
@@ -237,16 +245,16 @@ def delete_feed_config(feed_id: str):
         logger.error(f"An error occurred: {e}")
 
 
-@st.dialog("Confirmation")
+@st.dialog(translate("confirmation_dialog_title"))
 def handle_delete(row_dict: dict):
     """Function to handle remove click events"""
     feed_id = row_dict["id"]
     st.write(
-        f":orange[{WARNING_ICON}] Voulez-vous vraiment supprimer le flux de veille **{feed_id}** ?"
+        f":orange[{WARNING_ICON}] {translate('delete_feed_confirmation').format(feed_id=feed_id)}"
     )
     col1, col2, _ = st.columns([2, 2, 8])
     with col1:
-        if st.button("Oui", type="primary"):
+        if st.button(translate("yes_button"), type="primary"):
             remove_scrapping_for_user(feed_id=feed_id, user=st.session_state.username)
             delete_feed_config(feed_id)
             logger.info(f"Flux {feed_id} supprimé !")
@@ -257,11 +265,11 @@ def handle_delete(row_dict: dict):
             time.sleep(0.2)
             st.rerun()
     with col2:
-        if st.button("Non"):
+        if st.button(translate("no_button")):
             st.rerun()
 
 
-@st.dialog("Confirmation")
+@st.dialog(translate("confirmation_dialog_title"))
 def handle_toggle_feed(row_dict: dict):
     """Function to handle remove click events"""
     feed_id = row_dict["id"]
@@ -269,17 +277,19 @@ def handle_toggle_feed(row_dict: dict):
         feed_id=feed_id, user=st.session_state.username
     ):
         st.write(
-            f":orange[{WARNING_ICON}] Voulez-vous vraiment désactiver le flux de veille **{feed_id}** ?"
+            f":orange[{WARNING_ICON}] {translate('deactivate_feed_confirmation').format(feed_id=feed_id)}"
         )
         col1, col2, _ = st.columns([2, 2, 8])
         with col1:
-            if st.button("Oui", type="primary"):
+            if st.button(translate("yes_button"), type="primary"):
                 toggle_feed(row_dict)
                 st.rerun()
         with col2:
-            if st.button("Non"):
+            if st.button(translate("no_button")):
                 st.rerun()
     else:
-        st.write(f":blue[{INFO_ICON}] Activation du flux de veille **{feed_id}**")
+        st.write(
+            f":blue[{INFO_ICON}] {translate('activate_feed_message').format(feed_id=feed_id)}"
+        )
         toggle_feed(row_dict)
         st.rerun()

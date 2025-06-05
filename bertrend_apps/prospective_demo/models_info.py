@@ -15,6 +15,7 @@ import toml
 from loguru import logger
 
 from bertrend import BERTREND_LOG_PATH, BEST_CUDA_DEVICE, load_toml_config
+from bertrend.demos.demos_utils.i18n import translate
 from bertrend.demos.demos_utils.icons import (
     EDIT_ICON,
     DELETE_ICON,
@@ -60,14 +61,18 @@ def models_monitoring():
         list_models = get_models_info(model_id)
         displayed_list.append(
             {
-                "id": model_id,
-                "# modèles": len(list_models) if list_models else 0,
-                "date 1er modèle": list_models[0] if list_models else None,
-                "date dernier modèle": list_models[-1] if list_models else None,
-                "fréquence mise à jour (# jours)": st.session_state.model_analysis_cfg[
+                translate("col_id"): model_id,
+                translate("col_num_models"): len(list_models) if list_models else 0,
+                translate("col_first_model_date"): (
+                    list_models[0] if list_models else None
+                ),
+                translate("col_last_model_date"): (
+                    list_models[-1] if list_models else None
+                ),
+                translate("col_update_frequency"): st.session_state.model_analysis_cfg[
                     model_id
                 ]["model_config"]["granularity"],
-                "fenêtre d'analyse (# jours)": st.session_state.model_analysis_cfg[
+                translate("col_analysis_window"): st.session_state.model_analysis_cfg[
                     model_id
                 ]["model_config"]["window_size"],
             }
@@ -80,7 +85,9 @@ def models_monitoring():
 
     df = pd.DataFrame(displayed_list)
     if not df.empty:
-        df = df.sort_values(by="id", inplace=False).reset_index(drop=True)
+        df = df.sort_values(by=translate("col_id"), inplace=False).reset_index(
+            drop=True
+        )
 
     clickable_df_buttons = [
         (EDIT_ICON, edit_model_parameters, "secondary"),
@@ -91,24 +98,23 @@ def models_monitoring():
     clickable_df(df, clickable_df_buttons)
 
 
-@st.dialog("Paramètres")
+@st.dialog(translate("dialog_parameters"))
 def edit_model_parameters(row_dict: dict):
-    model_id = row_dict["id"]
-    st.write(f"**Paramètres des modèles pour la veille {model_id}**")
+    model_id = row_dict[translate("col_id")]
+    st.write(f"**{translate('model_params_title').format(model_id)}**")
 
     new_granularity = st.slider(
-        "Fréquence de mise à jour des modèles (en jours)",
+        translate("update_frequency_label"),
         min_value=1,
         max_value=30,
         value=st.session_state.model_analysis_cfg[model_id]["model_config"][
             "granularity"
         ],
         step=1,
-        help=f"{INFO_ICON} Sélection de la fréquence à laquelle la détection de sujets est effectuée. "
-        f"Le nombre de jours sélectionné doit être choisi pour s'assurer d'un volume de données suffisant.",
+        help=f"{INFO_ICON} {translate('update_frequency_help')}",
     )
     new_window_size = st.slider(
-        "Sélection de la fenêtre temporelle (en jours)",
+        translate("time_window_label"),
         min_value=new_granularity,
         max_value=30,
         value=max(
@@ -118,25 +124,24 @@ def edit_model_parameters(row_dict: dict):
             new_granularity,
         ),
         step=1,
-        help=f"{INFO_ICON} Sélection de la plage temporelle considérée pour calculer les différents "
-        f"types de signaux (faibles, forts)",
+        help=f"{INFO_ICON} {translate('time_window_help')}",
     )
 
-    st.write(f"**Paramètres d'analyse de la veille {model_id}: éléments à inclure**")
+    st.write(f"**{translate('analysis_params_title').format(model_id)}**")
     topic_evolution = st.checkbox(
-        "Evolution du sujet",
+        translate("topic_evolution"),
         value=st.session_state.model_analysis_cfg[model_id]["analysis_config"][
             "topic_evolution"
         ],
     )
     evolution_scenarios = st.checkbox(
-        "Scénarios d'évolution",
+        translate("evolution_scenarios"),
         value=st.session_state.model_analysis_cfg[model_id]["analysis_config"][
             "evolution_scenarios"
         ],
     )
     multifactorial_analysis = st.checkbox(
-        "Analyse multifactorielle",
+        translate("multifactorial_analysis"),
         value=st.session_state.model_analysis_cfg[model_id]["analysis_config"][
             "multifactorial_analysis"
         ],
@@ -157,7 +162,7 @@ def edit_model_parameters(row_dict: dict):
         "multifactorial_analysis": multifactorial_analysis,
     }
 
-    if st.button("OK"):
+    if st.button(translate("btn_ok")):
         save_model_config(
             model_id, {"model_config": model_config, "analysis_config": analysis_config}
         )
@@ -183,47 +188,43 @@ def load_model_config(model_id: str) -> dict:
         return DEFAULT_ANALYSIS_CFG
 
 
-@st.dialog("Confirmation")
+@st.dialog(translate("dialog_confirmation"))
 def handle_delete_models(row_dict: dict):
     """Function to handle remove models from cache"""
-    model_id = row_dict["id"]
+    model_id = row_dict[translate("col_id")]
     st.warning(
-        f":orange[{WARNING_ICON}] Voulez-vous vraiment supprimer tous les modèles stockés pour la veille **{model_id}** ?"
+        f":orange[{WARNING_ICON}] {translate('delete_models_warning').format(model_id)}"
     )
     col1, col2, _ = st.columns([2, 2, 8])
     with col1:
-        if st.button("Oui", type="primary"):
+        if st.button(translate("btn_yes"), type="primary"):
             remove_scheduled_training_for_user(
                 model_id=model_id, user=st.session_state.username
             )
             delete_cached_models(model_id)
-            logger.info(f"Modèles en cache supprimés pour la veille {model_id} !")
+            logger.info(translate("models_deleted_success").format(model_id))
             time.sleep(0.2)
             st.rerun()
     with col2:
-        if st.button("Non"):
+        if st.button(translate("btn_no")):
             st.rerun()
 
 
-@st.dialog("Regénération des modèles")
+@st.dialog(translate("dialog_model_regeneration"))
 def handle_regenerate_models(row_dict: dict):
     """Function to regenerate models from scratch"""
-    model_id = row_dict["id"]
+    model_id = row_dict[translate("col_id")]
     st.warning(
-        f"{WARNING_ICON} Voulez-vous re-générer l'ensemble des modèles pour la veille {model_id} ?"
+        f"{WARNING_ICON} {translate('regenerate_models_warning').format(model_id)}"
     )
-    st.warning(
-        f"{WARNING_ICON} L'ensemble des modèles existant pour cette veille sera supprimé."
-    )
-    st.error(
-        f"{ERROR_ICON} Attention, cette regénération ne peut pas être annulée une fois lancée !"
-    )
+    st.warning(f"{WARNING_ICON} {translate('regenerate_models_delete_warning')}")
+    st.error(f"{ERROR_ICON} {translate('regenerate_models_irreversible')}")
     col1, col2, _ = st.columns([2, 2, 8])
     with col1:
-        if yes_btn := st.button("Oui", type="primary"):
+        if yes_btn := st.button(translate("btn_yes"), type="primary"):
             # Delete previously stored model
             delete_cached_models(model_id)
-            logger.info(f"Modèles en cache supprimés pour la veille {model_id} !")
+            logger.info(translate("models_deleted_success").format(model_id))
 
             # Regenerate new models
             # Launch model generation in a separate thread to avoid blocking the app
@@ -243,20 +244,17 @@ def handle_regenerate_models(row_dict: dict):
             # st.rerun()
 
     with col2:
-        if st.button("Non"):
+        if st.button(translate("btn_no")):
             st.rerun()
 
     if yes_btn:
-        st.info(
-            f"{INFO_ICON} Regénération en cours des modèles pour la veille {model_id}. "
-            "L'opération peut prendre un peu de temps."
-        )
-        st.info(f"{INFO_ICON} Vous pouvez fermer cette fenêtre.")
+        st.info(f"{INFO_ICON} {translate('regeneration_in_progress').format(model_id)}")
+        st.info(f"{INFO_ICON} {translate('regeneration_close_info')}")
 
 
 def toggle_learning(cfg: dict):
     """Activate / deactivate the learning from the crontab"""
-    model_id = cfg["id"]
+    model_id = cfg[translate("col_id")]
     if check_if_learning_active_for_user(
         model_id=model_id, user=st.session_state.username
     ):
@@ -264,41 +262,39 @@ def toggle_learning(cfg: dict):
             model_id=model_id, user=st.session_state.username
         ):
             st.toast(
-                f"Le learning pour la veille **{model_id}** est déactivé !",
+                translate("learning_deactivated").format(model_id),
                 icon=INFO_ICON,
             )
-            logger.info(f"Learning pour {model_id} désactivé !")
+            logger.info(f"Learning for {model_id} deactivated !")
     else:
         schedule_training_for_user(model_id, st.session_state.username)
-        st.toast(
-            f"Le learning pour la veille **{model_id}** est activé !", icon=WARNING_ICON
-        )
-        logger.info(f"Learning pour {model_id} activé !")
+        st.toast(translate("learning_activated").format(model_id), icon=WARNING_ICON)
+        logger.info(f"Learning for {model_id} activated !")
     time.sleep(0.2)
     st.rerun()
 
 
-@st.dialog("Confirmation")
+@st.dialog(translate("dialog_confirmation"))
 def handle_toggle_learning(cfg: dict):
     """Function to handle remove click events"""
-    model_id = cfg["id"]
+    model_id = cfg[translate("col_id")]
     if check_if_learning_active_for_user(
         model_id=model_id, user=st.session_state.username
     ):
         st.write(
-            f":orange[{WARNING_ICON}] Voulez-vous vraiment l'apprentissage pour le flux de veille **{model_id}** ?"
+            f":orange[{WARNING_ICON}] {translate('deactivate_learning_question').format(model_id)}"
         )
         col1, col2, _ = st.columns([2, 2, 8])
         with col1:
-            if st.button("Oui", type="primary"):
+            if st.button(translate("btn_yes"), type="primary"):
                 toggle_learning(cfg)
                 st.rerun()
         with col2:
-            if st.button("Non"):
+            if st.button(translate("btn_no")):
                 st.rerun()
     else:
         st.write(
-            f":blue[{INFO_ICON}] Activation de l'apprentissage pour le flux de veille **{model_id}**"
+            f":blue[{INFO_ICON}] {translate('activate_learning_info').format(model_id)}"
         )
         toggle_learning(cfg)
         st.rerun()
@@ -306,7 +302,7 @@ def handle_toggle_learning(cfg: dict):
 
 def toggle_icon(df: pd.DataFrame, index: int) -> str:
     """Switch the toggle icon depending on the status of the scrapping feed in the crontab"""
-    model_id = df["id"][index]
+    model_id = df[translate("col_id")][index]
     return (
         f":green[{TOGGLE_ON_ICON}]"
         if check_if_learning_active_for_user(
