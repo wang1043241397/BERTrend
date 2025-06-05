@@ -30,6 +30,10 @@ Utilisez vos connaissances et compétences analytiques pour fournir une analyse 
 
 SIGNAL_INSTRUCTIONS = {
     "en": """
+Analyze this signal only if it represents a genuinely significant trend or development. If the signal lacks substance or novelty, respond with an empty JSON dictionary: {}
+
+For substantial signals, provide:
+
 1. Potential Impact Analysis:
    - Examine the potential effects of this signal on various sectors, industries, and societal aspects.
    - Consider both short-term and long-term implications.
@@ -51,8 +55,13 @@ SIGNAL_INSTRUCTIONS = {
 Your analysis should be thorough and nuanced, going beyond surface-level observations. Draw upon your expertise to provide insights that capture the complexity and potential significance of this signal. Don't hesitate to make well-reasoned predictions about its potential trajectory and impact.
 
 Focus on providing a clear, insightful, and actionable analysis that can inform strategic decision-making and future planning.
+If analysis cannot be substantiated with clear reasoning, omit that section.
 """,
     "fr": """
+Analysez ce signal uniquement s'il représente une tendance ou un développement véritablement significatif. Si le signal manque de substance ou de nouveauté, répondez avec un dictionnaire JSON vide : {}
+
+Pour les signaux substantiels, fournissez :
+
 1. Analyse de l'Impact Potentiel :
    - Examinez les effets potentiels de ce signal sur divers secteurs, industries et aspects sociétaux.
    - Considérez les implications à court et à long terme.
@@ -74,6 +83,7 @@ Focus on providing a clear, insightful, and actionable analysis that can inform 
 Votre analyse doit être approfondie et nuancée, allant au-delà des observations superficielles. Appuyez-vous sur votre expertise pour fournir des insights qui capturent la complexité et l'importance potentielle de ce signal. N'hésitez pas à faire des prédictions bien raisonnées sur sa trajectoire et son impact potentiels.
 
 Concentrez-vous sur la fourniture d'une analyse claire, perspicace et exploitable qui peut éclairer la prise de décision stratégique et la planification future.
+Si l'analyse ne peut être étayée par un raisonnement clair, omettez cette section.
 """,
 }
 
