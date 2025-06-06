@@ -45,6 +45,7 @@ dependencies = [
     "plotly (>=5.24.1)",
     "plotly-resampler (>=0.10.0)",
     "pylabeladjust (==0.1.13)",
+    "PyJWT (>=2.10.1)",
     "Pyqtree (==1.0.0)",
     "pytest>=8.3.3",
     "scipy (==1.12)",

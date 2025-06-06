@@ -186,7 +186,7 @@ We recommend using a remote embedding service (this is now the default config) a
 
 The change of configuration can be done in: [services_default_config.toml](bertrend/config/services_default_config.toml).
 
-An example of a very simple implementation to deploy a separate embedding service can be found here: https://github.com/rte-france/wattelse/tree/main/wattelse/api/embedding. (this implementation is compatible with our code)
+An example of a very simple implementation to deploy a separate embedding service can be found here: `bertrend/services/embedding_server`
 
 
 ![parameters](docs/images/parameters.png)
