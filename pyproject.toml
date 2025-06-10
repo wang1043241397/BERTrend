@@ -1,6 +1,6 @@
 [project]
 name = "bertrend"
-version = "0.3.4"
+version = "0.3.5"
 description = "BERTrend analyses topic evolution over time using state-of-the-art transformer models: topic modelling and LLM"
 license = "LICENSE.md"
 readme = "README.md"
@@ -45,8 +45,9 @@ dependencies = [
     "plotly (>=5.24.1)",
     "plotly-resampler (>=0.10.0)",
     "pylabeladjust (==0.1.13)",
+    "PyJWT (>=2.10.1)",
     "Pyqtree (==1.0.0)",
-    "pytest>=8.3.3",
+    "pytest>=8.4.0",
     "scipy (==1.12)",
     "scikit-learn (>=1.5.2)",
     "sentence-transformers (==3.0.1)",
@@ -54,7 +55,7 @@ dependencies = [
     "requests (>=2.32.3)",
     "seaborn (>=0.13.2)",
     "sentencepiece (>=0.2.0)",
-    "streamlit (>=1.45.0)",
+    "streamlit (>=1.45.1)",
     "streamlit-code-editor (>=0.1.22)",
     "tldextract (>=2.0.1)",
     "thefuzz (>=0.22.1)",

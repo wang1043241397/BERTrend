@@ -13,7 +13,7 @@ from pandas import Timestamp
 from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend import LLM_CONFIG
 from bertrend.trend_analysis.data_structure import TopicSummaryList, SignalAnalysis
-from bertrend.trend_analysis.prompts import get_prompt, fill_html_template
+from bertrend.trend_analysis.prompts import get_prompt
 
 MAXIMUM_ANALYZED_PERIODS = 3
 

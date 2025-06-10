@@ -29,7 +29,7 @@ from bertrend_apps.prospective_demo.feeds_data import display_data_status
 from bertrend.demos.demos_utils.i18n import (
     translate,
     create_internationalization_language_selector,
-    set_default_internationalization_language,
+    set_internationalization_language,
 )
 from bertrend_apps.prospective_demo.models_info import models_monitoring
 from bertrend_apps.prospective_demo.report_generation import reporting
@@ -45,6 +45,7 @@ AUTHENTIFICATION = True
 
 def main():
     """Main page"""
+    set_internationalization_language("fr")
     page_title = translate("app_title")
     st.set_page_config(
         page_title=page_title,
@@ -68,7 +69,6 @@ def main():
 
     # Sidebar
     with st.sidebar:
-        set_default_internationalization_language("fr")
         st.header(SETTINGS_ICON + " " + translate("settings_and_controls"))
         create_internationalization_language_selector()
 
