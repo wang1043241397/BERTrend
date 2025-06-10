@@ -30,7 +30,7 @@ Utilisez vos connaissances et compétences analytiques pour fournir une analyse 
 
 SIGNAL_INSTRUCTIONS = {
     "en": """
-Analyze this signal only if it represents a genuinely significant trend or development. If the signal lacks substance or novelty, respond with an empty JSON dictionary: {}
+Analyze this signal only if the input data is sufficiently complete. If the subject summary lacks completeness, substance or novelty, respond with an empty JSON dictionary: {} 
 
 For substantial signals, provide:
 
@@ -56,9 +56,43 @@ Your analysis should be thorough and nuanced, going beyond surface-level observa
 
 Focus on providing a clear, insightful, and actionable analysis that can inform strategic decision-making and future planning.
 If analysis cannot be substantiated with clear reasoning, omit that section.
+
+=== OUTPUT QUALITY STANDARDS ===
+Your analysis must avoid:
+
+- **Vague Generalizations**: Broad, non-specific statements without concrete backing
+- **Obvious Conclusions**: Widely known facts or predictable outcomes without new insights
+- **Insufficient Evidence**: Claims lacking concrete examples, specific data points, or substantial proof
+- **Generic Observations**: Analysis that could apply to any context without specificity
+- **Circular Reasoning**: Implications that merely restate the original observation
+- **Superficial Treatment**: Surface-level analysis without depth or nuance
+- **Unsubstantiated Speculation**: Predictions or scenarios without logical foundation
+- **Outdated Perspectives**: Analysis based on obsolete information or frameworks
+
+=== MINIMUM QUALITY REQUIREMENTS ===
+Each analysis section must demonstrate at least 2 of the following:
+
+- **Specific Context**: Clear temporal, geographic, or sectoral boundaries and examples
+- **Concrete Evidence**: Quantifiable insights, verifiable examples, or substantiated claims
+- **Novel Perspectives**: Fresh angles, non-obvious connections, or emerging patterns
+- **Actionable Intelligence**: Insights that enable informed decision-making or strategic planning
+- **Cross-Domain Impact**: Implications across multiple sectors, industries, or domains
+- **Measurable Dimensions**: Identifiable metrics, indicators, or tracking mechanisms
+- **Causal Analysis**: Clear cause-and-effect relationships or contributing factor identification
+- **Strategic Relevance**: Direct connection to business, policy, or societal decision-making
+
+=== OUTPUT REQUIREMENTS ===
+- **Quality Control**: Each section must meet the minimum standards above - omit any section that cannot achieve this threshold
+- **Evidence-Based**: Use specific, quantifiable language with concrete examples and evidence
+- **Confidence Levels**: Clearly distinguish between high-confidence assessments and speculative insights
+- **Decision-Focused**: Prioritize actionable intelligence for strategic decision-makers
+- **Balanced Objectivity**: Maintain analytical rigor while acknowledging uncertainties and limitations
+- **Temporal Structure**: Organize insights across immediate (1-2 years), medium (3-5 years), and long-term (5-10 years) horizons
+- **Omission Protocol**: If any analysis section cannot be substantiated with clear reasoning and evidence, omit it entirely rather than providing weak content
+
 """,
     "fr": """
-Analysez ce signal uniquement s'il représente une tendance ou un développement véritablement significatif. Si le signal manque de substance ou de nouveauté, répondez avec un dictionnaire JSON vide : {}
+Analysez ce signal uniquement si les données d’entrée sont suffisamment complètes. Si le résumé du sujet manque d'éléments, de substance ou de nouveauté, répondez avec un dictionnaire JSON vide : {}
 
 Pour les signaux substantiels, fournissez :
 
@@ -84,6 +118,40 @@ Votre analyse doit être approfondie et nuancée, allant au-delà des observatio
 
 Concentrez-vous sur la fourniture d'une analyse claire, perspicace et exploitable qui peut éclairer la prise de décision stratégique et la planification future.
 Si l'analyse ne peut être étayée par un raisonnement clair, omettez cette section.
+
+=== STANDARDS DE QUALITÉ DE SORTIE ===
+Votre analyse doit éviter :
+
+- **Généralisations Vagues** : Déclarations larges et non spécifiques sans fondement concret
+- **Conclusions Évidentes** : Faits largement connus ou résultats prévisibles sans nouveaux insights
+- **Preuves Insuffisantes** : Affirmations manquant d'exemples concrets, de données spécifiques, ou de preuves substantielles
+- **Observations Génériques** : Analyse qui pourrait s'appliquer à n'importe quel contexte sans spécificité
+- **Raisonnement Circulaire** : Implications qui ne font que reformuler l'observation originale
+- **Traitement Superficiel** : Analyse de surface sans profondeur ni nuances
+- **Spéculation Non Étayée** : Prédictions ou scénarios sans fondement logique
+- **Perspectives Obsolètes** : Analyse basée sur des informations ou cadres dépassés
+
+=== EXIGENCES MINIMALES DE QUALITÉ ===
+Chaque section d'analyse doit démontrer au moins 2 des éléments suivants :
+
+- **Contexte Spécifique** : Limites temporelles, géographiques, ou sectorielles claires avec exemples
+- **Preuves Concrètes** : Insights quantifiables, exemples vérifiables, ou affirmations étayées
+- **Perspectives Nouvelles** : Angles frais, connexions non évidentes, ou modèles émergents
+- **Intelligence Actionnable** : Insights permettant une prise de décision éclairée ou une planification stratégique
+- **Impact Trans-Domaine** : Implications sur plusieurs secteurs, industries, ou domaines
+- **Dimensions Mesurables** : Métriques, indicateurs, ou mécanismes de suivi identifiables
+- **Analyse Causale** : Relations de cause à effet claires ou identification de facteurs contributifs
+- **Pertinence Stratégique** : Connexion directe avec la prise de décision business, politique, ou sociétale
+
+=== EXIGENCES DE SORTIE ===
+- **Contrôle Qualité** : Chaque section doit respecter les standards minimaux ci-dessus - omettez toute section qui ne peut atteindre ce seuil
+- **Basé sur les Preuves** : Utilisez un langage spécifique et quantifiable avec des exemples concrets et des preuves
+- **Niveaux de Confiance** : Distinguez clairement entre évaluations haute confiance et insights spéculatifs
+- **Orienté Décision** : Priorisez l'intelligence actionnable pour les décideurs stratégiques
+- **Objectivité Équilibrée** : Maintenez la rigueur analytique tout en reconnaissant les incertitudes et limitations
+- **Structure Temporelle** : Organisez les insights sur les horizons immédiats (1-2 ans), moyens (3-5 ans), et long terme (5-10 ans)
+- **Protocole d'Omission** : Si une section d'analyse ne peut être étayée par un raisonnement et des preuves clairs, omettez-la entièrement plutôt que de fournir un contenu faible
+
 """,
 }
 
@@ -104,7 +172,7 @@ For the first timestamp:
 - [Additional bullet points as needed]
 
 ### Analysis
-[2-3 sentences providing deeper insights into the developments, their potential implications, and their significance in the broader context of the topic's evolution]
+[2-3 sentences maximum providing deeper insights into the developments, their potential implications, and their significance in the broader context of the topic's evolution]
 
 For all subsequent timestamps:
 
@@ -115,10 +183,10 @@ For all subsequent timestamps:
 - [Additional bullet points as needed]
 
 ### Analysis
-[2-3 sentences providing deeper insights into the developments, their potential implications, and their significance in the broader context of the topic's evolution]
+[2-3 sentences maximum providing deeper insights into the developments, their potential implications, and their significance in the broader context of the topic's evolution]
 
 ### What's New
-[1-2 sentences highlighting how this period differs from the previous one, focusing on new elements or significant changes]
+[1-2 sentences maximum highlighting how this period differs from the previous one, focusing on new elements or significant changes]
 
 Provide your analysis using only this format, based solely on the information given. Do not include any additional summary or overview sections beyond what is specified in this structure.
 """,
@@ -138,7 +206,7 @@ Pour le premier timestamp :
 - [Points supplémentaires si nécessaire]
 
 ### Analyse
-[2-3 phrases fournissant des insights plus profonds sur les développements, leurs implications potentielles et leur importance dans le contexte plus large de l'évolution du sujet]
+[2-3 phrases maximum fournissant des insights plus profonds sur les développements, leurs implications potentielles et leur importance dans le contexte plus large de l'évolution du sujet]
 
 Pour tous les timestamps suivants :
 
@@ -149,10 +217,10 @@ Pour tous les timestamps suivants :
 - [Points supplémentaires si nécessaire]
 
 ### Analyse
-[2-3 phrases fournissant des insights plus profonds sur les développements, leurs implications potentielles et leur importance dans le contexte plus large de l'évolution du sujet]
+[2-3 phrases maximum fournissant des insights plus profonds sur les développements, leurs implications potentielles et leur importance dans le contexte plus large de l'évolution du sujet]
 
 ### Nouveautés
-[1-2 phrases soulignant en quoi cette période diffère de la précédente, en se concentrant sur les nouveaux éléments ou les changements significatifs]
+[1-2 phrases maximum soulignant en quoi cette période diffère de la précédente, en se concentrant sur les nouveaux éléments ou les changements significatifs]
 
 Fournissez votre analyse en utilisant uniquement ce format, basé uniquement sur les informations données. N'incluez pas de sections de résumé ou d'aperçu supplémentaires au-delà de ce qui est spécifié dans cette structure.
 """,
@@ -180,7 +248,6 @@ def get_prompt(
         prompt = TOPIC_SUMMARY_PROMPT[lang].format(
             topic_number=topic_number, content_summary=content_summary
         )
-
     else:
         raise ValueError(f"Unsupported prompt type: {prompt_type}")
 

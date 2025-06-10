@@ -17,7 +17,7 @@ class TopicSummary(BaseModel):
     key_developments: list[str]
     # Analysis
     description: str
-    # Novelty compared to previous period
+    # Novelty compared to the previous period
     novelty: str
 
 
