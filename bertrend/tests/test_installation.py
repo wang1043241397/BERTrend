@@ -3,6 +3,8 @@ Test script to verify that the installation process works correctly with the new
 This script attempts to import key components from each dependency group.
 """
 
+import pytest
+
 
 def test_core_dependencies():
     """Test that core dependencies for topic modeling and analysis are installed correctly."""
@@ -19,10 +21,8 @@ def test_core_dependencies():
         import umap
 
         print("✅ Core dependencies imported successfully")
-        return True
     except ImportError as e:
-        print(f"❌ Failed to import core dependencies: {e}")
-        return False
+        pytest.fail(f"❌ Failed to import core dependencies: {e}")
 
 
 def test_nlp_dependencies():
@@ -38,10 +38,8 @@ def test_nlp_dependencies():
         import tokenizers
 
         print("✅ NLP dependencies imported successfully")
-        return True
     except ImportError as e:
-        print(f"❌ Failed to import NLP dependencies: {e}")
-        return False
+        pytest.fail(f"❌ Failed to import NLP dependencies: {e}")
 
 
 def test_llm_dependencies():
@@ -52,10 +50,8 @@ def test_llm_dependencies():
         import tiktoken
 
         print("✅ LLM dependencies imported successfully")
-        return True
     except ImportError as e:
-        print(f"❌ Failed to import LLM dependencies: {e}")
-        return False
+        pytest.fail(f"❌ Failed to import LLM dependencies: {e}")
 
 
 def test_visualization_dependencies():
@@ -70,10 +66,8 @@ def test_visualization_dependencies():
         import streamlit
 
         print("✅ Visualization dependencies imported successfully")
-        return True
     except ImportError as e:
-        print(f"❌ Failed to import visualization dependencies: {e}")
-        return False
+        pytest.fail(f"❌ Failed to import visualization dependencies: {e}")
 
 
 def test_utility_dependencies():
@@ -92,23 +86,8 @@ def test_utility_dependencies():
         import tqdm
 
         print("✅ Utility dependencies imported successfully")
-        return True
     except ImportError as e:
-        print(f"❌ Failed to import utility dependencies: {e}")
-        return False
-
-
-def test_optional_test_dependencies():
-    """Test that optional test dependencies are installed correctly."""
-    try:
-        import pytest
-        import coverage
-
-        print("✅ Test dependencies imported successfully")
-        return True
-    except ImportError as e:
-        print(f"❌ Failed to import test dependencies: {e}")
-        return False
+        pytest.fail(f"❌ Failed to import utility dependencies: {e}")
 
 
 def test_optional_apps_dependencies():
@@ -120,62 +99,5 @@ def test_optional_apps_dependencies():
         import googleapiclient
 
         print("✅ Apps dependencies imported successfully")
-        return True
     except ImportError as e:
-        print(f"❌ Failed to import apps dependencies: {e}")
-        return False
-
-
-if __name__ == "__main__":
-    print("Testing BERTrend installation...")
-
-    # Test core dependencies
-    core_ok = test_core_dependencies()
-
-    # Test NLP dependencies
-    nlp_ok = test_nlp_dependencies()
-
-    # Test LLM dependencies
-    llm_ok = test_llm_dependencies()
-
-    # Test visualization dependencies
-    viz_ok = test_visualization_dependencies()
-
-    # Test utility dependencies
-    util_ok = test_utility_dependencies()
-
-    # Test optional dependencies
-    test_ok = test_optional_test_dependencies()
-    apps_ok = test_optional_apps_dependencies()
-
-    # Print summary
-    print("\nInstallation Test Summary:")
-    print(f"Core dependencies: {'✅' if core_ok else '❌'}")
-    print(f"NLP dependencies: {'✅' if nlp_ok else '❌'}")
-    print(f"LLM dependencies: {'✅' if llm_ok else '❌'}")
-    print(f"Visualization dependencies: {'✅' if viz_ok else '❌'}")
-    print(f"Utility dependencies: {'✅' if util_ok else '❌'}")
-    print(f"Test dependencies: {'✅' if test_ok else '❌'}")
-    print(f"Apps dependencies: {'✅' if apps_ok else '❌'}")
-
-    if all([core_ok, nlp_ok, llm_ok, viz_ok, util_ok]):
-        print("\n✅ Core installation is complete and working correctly.")
-    else:
-        print("\n❌ Some core dependencies are missing. Please check the output above.")
-
-    if test_ok and apps_ok:
-        print("✅ All optional dependencies are installed correctly.")
-    elif test_ok:
-        print("✅ Test dependencies are installed correctly.")
-        print(
-            "❌ Apps dependencies are missing. Install with 'pip install \".[apps]\"' or 'poetry install --with apps'"
-        )
-    elif apps_ok:
-        print("✅ Apps dependencies are installed correctly.")
-        print(
-            "❌ Test dependencies are missing. Install with 'pip install \".[tests]\"' or 'poetry install --with test'"
-        )
-    else:
-        print(
-            "❌ Optional dependencies are missing. Install with 'pip install \".[tests,apps]\"' or 'poetry install --with test,apps'"
-        )
+        pytest.fail(f"❌ Failed to import apps dependencies: {e}")
