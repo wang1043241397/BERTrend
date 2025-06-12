@@ -84,14 +84,18 @@ class DataProvider(ABC):
         return results as json lines"""
         articles = []
         for entry in queries_batch:
-            logger.info(f"Processing query: {entry}")
-            articles += self.get_articles(
-                query=entry[0],
-                after=entry[1],
-                before=entry[2],
-                max_results=max_results,
-                language=language,
-            )
+            try:
+                logger.info(f"Processing query: {entry}")
+                articles += self.get_articles(
+                    query=entry[0],
+                    after=entry[1],
+                    before=entry[2],
+                    max_results=max_results,
+                    language=language,
+                )
+            except Exception as e:
+                logger.error("Error occurred with query: " + entry[0] + "\n " + str(e))
+                continue
         # remove duplicates
         articles = [dict(t) for t in {tuple(d.items()) for d in articles}]
         logger.info(f"Collected {len(articles)} articles")
