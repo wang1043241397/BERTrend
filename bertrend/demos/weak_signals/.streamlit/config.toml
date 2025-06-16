@@ -3,4 +3,4 @@ primaryColor = "royalblue"
 baseFontSize = 13
 
 [server]
-port = 8081
+port = 8084
