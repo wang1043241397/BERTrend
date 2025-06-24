@@ -5,4 +5,9 @@
 # This file is part of BERTrend.
 #
 
-OPENAI_API_KEY=$OPENAI_API_KEY_VEILLE CUDA_VISIBLE_DEVICES=0 streamlit run app.py
+
+# Set logs directory and create if not exists
+export BERTREND_LOGS_DIR=$BERTREND_BASE_DIR/logs/bertrend
+mkdir -p $BERTREND_LOGS_DIR
+
+OPENAI_API_KEY=$OPENAI_API_KEY_VEILLE CUDA_VISIBLE_DEVICES=0 streamlit run app.py | tee -a $BERTREND_LOGS_DIR/curebot_demo.log

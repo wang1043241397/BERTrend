@@ -19,6 +19,6 @@ Le résumé doit être concis (maximum 100 mots) et représenter au mieux la sp�
 Il doit pas commencer par "Les articles parlent de..." ou équivalent et doit être écrit dans un style journalistique.
 Répondez sous la forme d'un JSON suivant le format ci-dessous :
 {
-    "résumé": "<votre résumé du thème>"
+    "summary": "<votre résumé du thème>"
 }
 """

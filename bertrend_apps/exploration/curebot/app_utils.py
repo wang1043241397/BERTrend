@@ -42,10 +42,17 @@ EMBEDDING_SERVICE = EmbeddingService(local=False)
 
 
 class TopicDescription(BaseModel):
-    """Description of topic during a time period"""
+    """Description of a topic during a time period"""
 
     # Title of the topic
     title: str
+
+
+class TopicSummary(BaseModel):
+    """Summary of a topic"""
+
+    # Title of the topic
+    summary: str
 
 
 @st.cache_data(show_spinner=False)
@@ -237,12 +244,12 @@ def create_newsletter(
             endpoint=LLM_CONFIG["endpoint"],
             model=LLM_CONFIG["model"],
         )
-        response = llm_client.generate(
+        response = llm_client.parse(
             user_prompt=user_prompt,
             system_prompt=TOPIC_SUMMARY_SYSTEM_PROMPT,
-            response_format={"type": "json_object"},
+            response_format=TopicSummary,
         )
-        topic_dict["summary"] = json.loads(response)["résumé"]
+        topic_dict["summary"] = response.summary
         topic_dict["articles"] = []
         for _, row in topic_df.iterrows():
             article_dict = {}
