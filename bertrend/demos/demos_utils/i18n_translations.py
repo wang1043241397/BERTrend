@@ -137,4 +137,16 @@ TRANSLATIONS = {
         "fr": "Paramètres et contrôles",
         "en": "Settings and Controls",
     },
+    "column_selection": {
+        "fr": "Sélection des colonnes",
+        "en": "Column Selection",
+    },
+    "text_column_selection": {
+        "fr": "Sélection de la colonne contenant le texte",
+        "en": "Select Column Containing Text",
+    },
+    "timestamp_column_selection": {
+        "fr": "Sélection de la colonne contenant l'horodatage",
+        "en": "Select Column Containing Timestamp",
+    },
 }
