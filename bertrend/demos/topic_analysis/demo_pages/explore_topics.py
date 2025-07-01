@@ -292,7 +292,7 @@ def _display_topic_description(filtered_df: pd.DataFrame):
         with st.spinner(translate("generating_description")):
             language_code = (
                 "fr"
-                if SessionStateManager.get("internationalization_language") == "French"
+                if SessionStateManager.get("internationalization_language") == "fr"
                 else "en"
             )
             gpt_description = generate_topic_description(

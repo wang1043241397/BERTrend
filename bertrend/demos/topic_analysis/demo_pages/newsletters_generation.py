@@ -51,7 +51,7 @@ def generate_newsletter_wrapper(
 
     language_code = (
         "fr"
-        if SessionStateManager.get("internationalization_language") == "French"
+        if SessionStateManager.get("internationalization_language") == "fr"
         else "en"
     )
 
