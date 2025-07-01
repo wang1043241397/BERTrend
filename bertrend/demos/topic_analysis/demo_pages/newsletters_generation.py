@@ -14,6 +14,7 @@ from bertrend.demos.demos_utils.state_utils import (
     save_widget_state,
     restore_widget_state,
     register_multiple_widget,
+    SessionStateManager,
 )
 from bertrend.services.summary.abstractive_summarizer import AbstractiveSummarizer
 from bertrend.services.summary.chatgpt_summarizer import GPTSummarizer
@@ -48,6 +49,12 @@ def generate_newsletter_wrapper(
         else st.session_state["newsletter_nb_docs"]
     )
 
+    language_code = (
+        "fr"
+        if SessionStateManager.get("internationalization_language") == "French"
+        else "en"
+    )
+
     return generate_newsletter(
         topic_model=st.session_state["topic_model"],
         df=df,
@@ -60,6 +67,7 @@ def generate_newsletter_wrapper(
             st.session_state["summarizer_classname"]
         ],
         summary_mode=st.session_state["summary_mode"],
+        prompt_language=language_code,
     )
 
 

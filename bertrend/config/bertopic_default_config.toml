@@ -30,7 +30,7 @@ prediction_data = true
 
 # CountVectorizer: https://scikit-learn.org/1.5/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html
 [vectorizer_model]
-ngram_range = [1, 1]
+ngram_range = [1, 2]
 stop_words = true # If true, will check `language` parameter and load associated stopwords file
 min_df = 2
 
