@@ -127,6 +127,7 @@ def train_model():
         topic_model_output = topic_model.fit(
             docs=dataset,
             embeddings=embeddings,
+            embedding_model=SessionStateManager.get("embedding_model_name"),
         )
         bertopic = topic_model_output.topic_model
 

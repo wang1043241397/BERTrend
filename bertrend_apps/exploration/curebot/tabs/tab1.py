@@ -130,9 +130,9 @@ def train_model() -> None:
 
     # Train topic model
     bertopic, topics = fit_bertopic(
-        texts_list,
-        embeddings,
-        st.session_state["min_articles_per_topic"],
+        docs=texts_list,
+        embeddings=embeddings,
+        min_articles_per_topic=st.session_state["min_articles_per_topic"],
         zeroshot_topic_list=zeroshot_topic_list,
     )
 

@@ -50,7 +50,7 @@ def generate_newsletter(
     openai_model_name: str = None,
     nb_sentences: int = 3,
 ) -> tuple[str, str, str]:
-    """Generates a newsletters based on a trained BERTopic model.
+    """Generates a newsletter based on a trained BERTopic model.
 
     Args:
         topic_model (BERTopic): trained BERTopic model

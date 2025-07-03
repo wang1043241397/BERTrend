@@ -216,6 +216,7 @@ if __name__ == "__main__":
         output = topic_model.fit(
             docs=dataset[TEXT_COLUMN],
             embeddings=embeddings,
+            embedding_model=embedding_model,
         )
         return output.topics, output.topic_model
 

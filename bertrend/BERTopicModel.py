@@ -237,6 +237,7 @@ class BERTopicModel:
             Precomputed document embeddings.
         embedding_model : SentenceTransformer or str or None, optional
             Sentence transformer (or associated model name) model for embeddings.
+            NB. Important: if not set, the keywords describing the topics may not be correct (e.g. accents strip); therefore, it is recommended to set this parameter.
         zeroshot_topic_list : list[str] or None, optional
             List of topics used for zeroshot classification.
         zeroshot_min_similarity : float or None, optional
