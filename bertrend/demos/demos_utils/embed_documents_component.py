@@ -31,6 +31,9 @@ def display_embed_documents_component():
                     local=False,
                     url=SessionStateManager.get("embedding_service_url"),
                 )
+                SessionStateManager.set(
+                    "embedding_model_name", embedding_service.embedding_model_name
+                )
 
             texts = SessionStateManager.get_dataframe("time_filtered_df")[
                 TEXT_COLUMN
