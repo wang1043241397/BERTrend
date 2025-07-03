@@ -282,27 +282,23 @@ def create_topic_documents(
     return folder_name, documents
 
 
+@st.cache_data
 def _display_topic_description(filtered_df: pd.DataFrame):
     """Display a human-readable description of the selected topic using a LLM."""
-    if st.button(
-        translate("generate_topic_description"),
-        type="primary",
-        use_container_width=True,
-    ):
-        with st.spinner(translate("generating_description")):
-            language_code = (
-                "fr"
-                if SessionStateManager.get("internationalization_language") == "fr"
-                else "en"
-            )
-            gpt_description = generate_topic_description(
-                st.session_state["topic_model"],
-                st.session_state["selected_topic_number"],
-                filtered_df,
-                language_code=language_code,
-            )
-        with st.container(border=True):
-            st.markdown(f"### {gpt_description.title}\n{gpt_description.description}")
+    with st.spinner(translate("generating_description")):
+        language_code = (
+            "fr"
+            if SessionStateManager.get("internationalization_language") == "fr"
+            else "en"
+        )
+        gpt_description = generate_topic_description(
+            st.session_state["topic_model"],
+            st.session_state["selected_topic_number"],
+            filtered_df,
+            language_code=language_code,
+        )
+    with st.container(border=True):
+        st.markdown(f"### {gpt_description.title}\n{gpt_description.description}")
 
 
 def main():
