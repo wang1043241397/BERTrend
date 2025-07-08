@@ -42,6 +42,13 @@
                 {% if topic.summary %}
                     <p class="summary">{{ topic.summary | e}}</p> <!-- | e filter escapes HTML special characters (<, >, &, "), so your text will appear exactly as typed, with no risk. -->
                 {% endif %}
+
+                <div class="hashtags">
+                    {% for hashtag in topic.hashtags %}
+                        <span>#{{ hashtag }}</span>
+                    {% endfor %}
+                </div>
+
                 <div class="articles">
                     {% for article in topic.articles %}
                     <div class="article">
@@ -77,11 +84,6 @@
                         </p>
                         {% endif %}
 
-                        <div class="hashtags">
-                            {% for hashtag in topic.hashtags %}
-                            <span>#{{ hashtag }}</span>
-                            {% endfor %}
-                        </div>
                     </div>
                     {% endfor %}
                 </div>
