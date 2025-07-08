@@ -6,6 +6,7 @@ import inspect
 
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 from pathlib import Path
 
 from bertrend.demos.demos_utils.i18n import translate
@@ -16,13 +17,17 @@ from bertrend.demos.demos_utils.state_utils import (
     register_multiple_widget,
     SessionStateManager,
 )
+from bertrend.llm_utils.newsletter_model import Newsletter
 from bertrend.services.summary.abstractive_summarizer import AbstractiveSummarizer
 from bertrend.services.summary.chatgpt_summarizer import GPTSummarizer
 from bertrend.services.summary.extractive_summarizer import (
     ExtractiveSummarizer,
     EnhancedExtractiveSummarizer,
 )
-from bertrend.llm_utils.newsletter_features import generate_newsletter, md2html
+from bertrend.llm_utils.newsletter_features import (
+    generate_newsletter,
+    render_newsletter_html,
+)
 
 
 # Define summarizer options
@@ -34,9 +39,7 @@ SUMMARIZER_OPTIONS_MAPPER = {
 }
 
 
-def generate_newsletter_wrapper(
-    df: pd.DataFrame, df_split: pd.DataFrame
-) -> tuple[str, str, str]:
+def generate_newsletter_wrapper(df: pd.DataFrame, df_split: pd.DataFrame) -> Newsletter:
     """Wrapper function to generate newsletter based on user settings."""
     top_n_topics = (
         None
@@ -172,10 +175,14 @@ def main():
 
     # Display generated newsletters
     if "newsletters" in st.session_state:
-        st.components.v1.html(
-            md2html(
-                st.session_state["newsletters"][0],
-                Path(inspect.getfile(generate_newsletter)).parent / "newsletter.css",
+        components.html(
+            render_newsletter_html(
+                st.session_state["newsletters"],
+                html_template=Path(inspect.getfile(generate_newsletter)).parent
+                / "newsletter_template.html",
+                custom_css=Path(inspect.getfile(generate_newsletter)).parent
+                / "newsletter.css",
+                language=SessionStateManager.get("internationalization_language"),
             ),
             height=800,
             scrolling=True,

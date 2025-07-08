@@ -5,15 +5,21 @@
 import inspect
 from pathlib import Path
 import os
-import locale
+
+import jinja2
 
 # from md2pdf.core import md2pdf
-import markdown
 import pandas as pd
 import tldextract
 from loguru import logger
 
 from bertrend import LLM_CONFIG
+from bertrend.llm_utils.newsletter_model import (
+    Newsletter,
+    Topic,
+    STRONG_TOPIC_TYPE,
+    Article,
+)
 from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend.services.summary.chatgpt_summarizer import GPTSummarizer
 from bertrend.topic_analysis.representative_docs import get_most_representative_docs
@@ -49,7 +55,7 @@ def generate_newsletter(
     improve_topic_description: bool = False,
     openai_model_name: str = None,
     nb_sentences: int = 3,
-) -> tuple[str, str, str]:
+) -> Newsletter:
     """Generates a newsletter based on a trained BERTopic model.
 
     Args:
@@ -72,7 +78,7 @@ def generate_newsletter(
         nb_sentences (int, optional): Number of sentences used for topic description
 
     Returns:
-        str: Newsletter in Markdown format
+        Newsletter type object
     """
     logger.debug("Generating newsletters...")
     if not openai_model_name:
@@ -83,21 +89,6 @@ def generate_newsletter(
         model=openai_model_name,
     )
 
-    # Adapt language for date
-    current_local = locale.getlocale()
-    locale_set_successfully = True
-    try:
-        if prompt_language == "en":
-            locale.setlocale(locale.LC_TIME, "en_US.UTF-8")
-        elif prompt_language == "fr":
-            locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
-    except locale.Error:
-        logger.warning(
-            f"Locale {prompt_language} not available, falling back to default locale"
-        )
-        locale_set_successfully = False
-        # Keep the current locale
-
     # Instantiates summarizer
     summarizer = summarizer_class()
 
@@ -107,24 +98,19 @@ def generate_newsletter(
     if top_n_topics is None or top_n_topics > len(topics_info):
         top_n_topics = len(topics_info)
 
-    # Date range
-    if locale_set_successfully:
-        date_min = df.timestamp.min().strftime("%A %d %b %Y")
-        date_max = df.timestamp.max().strftime("%A %d %b %Y")
-    else:
-        # Use a locale-independent format if locale setting failed
-        date_min = df.timestamp.min().strftime("%Y-%m-%d")
-        date_max = df.timestamp.max().strftime("%Y-%m-%d")
-
-    # Store each line in a list
-    md_lines = [f"# {newsletter_title}"]
-    if prompt_language == "fr":
-        md_lines.append(f"<div class='date_range'>du {date_min} au {date_max}</div>")
-    else:
-        md_lines.append(f"<div class='date_range'>from {date_min} to {date_max}</div>")
+    # Create the Newsletter object
+    newsletter = Newsletter(
+        title=newsletter_title,
+        period_start_date=df.timestamp.min().date(),
+        period_end_date=df.timestamp.max().date(),
+        topics=[],
+    )
 
     # Iterate over topics
     for i in tqdm(range(top_n_topics), desc="Processing topics..."):
+
+        topic_keywords = topics_info["Representation"].iloc[i]
+
         sub_df = get_most_representative_docs(
             topic_model=topic_model,
             df=df,
@@ -134,6 +120,8 @@ def generate_newsletter(
             topic_number=i,
             top_n_docs=top_n_docs,
         )
+
+        topic_summary = None
 
         # Compute summary according to summary_mode
         if summary_mode == "document":
@@ -149,20 +137,12 @@ def generate_newsletter(
 
             topic_summary = openai_api.generate(
                 (USER_SUMMARY_MULTIPLE_DOCS[prompt_language]).format(
-                    keywords=", ".join(topics_info["Representation"].iloc[i]),
+                    keywords=", ".join(topic_keywords),
                     article_list=article_list,
                     nb_sentences=nb_sentences,
                 ),
                 model=openai_model_name,
             )
-        elif summary_mode == "none":
-            # No summarization is performed
-            pass
-        else:
-            logger.error(
-                f"{summary_mode} is not a valid parameter for argument summary_mode in function generate_newsletter"
-            )
-            exit()
 
         # Improve topic description
         if improve_topic_description:
@@ -184,89 +164,150 @@ def generate_newsletter(
                 "."
             )
 
-            md_lines.extend(
-                (
-                    f"## Sujet {i + 1} : {improved_topic_description_v2}",
-                    f"### {' '.join(['#' + keyword for keyword in topics_info['Representation'].iloc[i]])}",
-                )
-            )
+            topic_title = improved_topic_description_v2
         else:
-            md_lines.append(
-                f"## Sujet {i + 1} : {', '.join(topics_info['Representation'].iloc[i])}"
-            )
+            topic_title = ", ".join(topic_keywords)
 
-        # Write summaries + documents
-        if summary_mode == "topic":
-            md_lines.append(topic_summary)
         i = 0
+        article_list = []
         for _, doc in sub_df.iterrows():
-            # Write newsletters
-            md_lines.append(f"### [*{doc.title}*]({doc.url})")
             try:
                 domain = tldextract.extract(doc.url).domain
             except:
                 logger.warning(f"Cannot extract URL for {doc}")
-                domain = ""
-            if locale_set_successfully:
-                timestamp_str = doc.timestamp.strftime("%A %d %b %Y")
-            else:
-                # Use a locale-independent format if locale setting failed
-                timestamp_str = doc.timestamp.strftime("%Y-%m-%d")
-            md_lines.append(f"<div class='timestamp'>{timestamp_str} | {domain}</div>")
-            if summary_mode == "document":
-                md_lines.append(summaries[i])
-            elif summary_mode == "none":
-                md_lines.append(
-                    doc.text
-                )  # Add the full text when no summarization is performed
+                domain = None
+            # Add the full text when no summarization is performed
+            article_summary = (
+                summaries[i]
+                if summary_mode == "document"
+                else doc.text if summary_mode == "none" else None
+            )
+            article_list.append(
+                Article(
+                    title=doc.title,
+                    url=doc.url,
+                    summary=article_summary,
+                    date=doc.timestamp.date(),
+                    source=domain,
+                )
+            )
             i += 1
 
-    # Write the full file
-    md_content = "\n\n".join(md_lines)
+        # Create topic object
+        topic = Topic(
+            title=topic_title,
+            hashtags=topic_keywords,
+            summary=topic_summary,
+            articles=article_list,
+            topic_type=STRONG_TOPIC_TYPE,
+        )
 
-    # Reset locale
-    try:
-        locale.setlocale(locale.LC_TIME, ".".join(current_local))
-    except locale.Error:
-        logger.warning("Could not reset to original locale")
-    return md_content, date_min, date_max
+        # Update newsletter object
+        newsletter.topics.append(topic)
+
+    return newsletter
 
 
-def export_md_string(newsletter_md: str, path: Path, output_format="md"):
+def render_newsletter(
+    newsletter: Newsletter, path: Path, output_format="md", language="fr"
+):
     """Save a Markdown string to a file."""
     path.parent.mkdir(parents=True, exist_ok=True)
     if output_format == "md":
         with open(path, "w") as f:
-            f.write(newsletter_md)
-    # elif output_format == "pdf":
-    #    md2pdf(path, md_content=newsletter_md)
+            f.write(render_newsletter_md(newsletter))
     elif output_format == "html":
         css_style = Path(inspect.getfile(generate_newsletter)).parent / "newsletter.css"
-        result = md2html(newsletter_md, css_style)
+        html_template = (
+            Path(inspect.getfile(generate_newsletter)).parent
+            / "newsletter_template.html"
+        )
+        result = render_newsletter_html(
+            newsletter,
+            html_template=html_template,
+            custom_css=css_style,
+            language=language,
+        )
         with open(path, "w") as f:
             f.write(result)
 
 
-def md2html(md: str, css_style: Path = None) -> str:
-    """Convert a markdown string to HTML."""
-    html_result = markdown.markdown(md)
-    if not css_style:
-        return html_result
-    output = """<!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <style type="text/css">
+def render_newsletter_html(
+    newsletter: Newsletter,
+    html_template: Path = None,
+    custom_css: Path = None,
+    language: str = "fr",
+) -> str:
+    # Load the template from an external file
+    with open(html_template, "r") as file:
+        template_string = file.read()
+    with open(custom_css, "r") as file:
+        custom_css_content = file.read()
+
+    # Create a Jinja2 environment and compile the template
+    template = jinja2.Template(template_string)
+
+    # Render the template with data
+    rendered_html = template.render(
+        newsletter=newsletter, language=language, custom_css=custom_css_content
+    )
+
+    return rendered_html
+
+
+def render_newsletter_md(newsletter: Newsletter) -> str:
     """
-    cssin = open(css_style)
-    output += cssin.read()
-    output += """
-        </style>
-    </head>
-    <body>
+    Renders a Newsletter object into a Markdown formatted string.
+
+    Args:
+        newsletter (Newsletter): The newsletter object to render.
+
+    Returns:
+        str: The Markdown formatted string.
     """
-    output += html_result
-    output += """</body>
-    </html>
-    """
-    return output
+    # Start with the title and period
+    md_lines = [f"# {newsletter.title}"]
+    md_lines.append(
+        f"Period: {newsletter.period_start_date.strftime('%B %d, %Y')} to {newsletter.period_end_date.strftime('%B %d, %Y')}"
+    )
+
+    # Iterate over topics
+    for topic in newsletter.topics:
+        # Topic Header
+        md_lines.append(f"\n## {topic.title}")
+
+        # Topic Hashtags
+        if topic.hashtags:
+            md_lines.append(
+                f"Hashtags: {' '.join([f'#{tag}' for tag in topic.hashtags])}"
+            )
+
+        # Topic Summary
+        if topic.summary:
+            md_lines.append(f"\n{topic.summary}")
+
+        # Articles
+        if topic.articles:
+            for article in topic.articles:
+                md_lines.append(f"\n### {article.title}")
+
+                # Link to article if URL exists
+                if article.url:
+                    md_lines.append(f"[Link to Article]({article.url})")
+
+                # Article Date
+                md_lines.append(f"Date: {article.date.strftime('%B %d, %Y')}")
+
+                # Article Source
+                if article.source:
+                    md_lines.append(f"Source: {article.source}")
+
+                # Article Summary
+                if article.summary:
+                    md_lines.append(f"\n{article.summary}")
+
+        # Add extra spacing between topics
+        md_lines.append("\n---")
+
+    # Return the Markdown content as a string
+    return "\n".join(md_lines)
