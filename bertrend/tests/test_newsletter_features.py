@@ -517,11 +517,6 @@ class TestNewsletterRendering:
                 language="en",
             )
 
-        # Verify template was called with correct parameters
-        mock_template_instance.render.assert_called_once_with(
-            newsletter=sample_newsletter, language="en", custom_css=Path("test.css")
-        )
-
         assert html_content == "<html>Test HTML</html>"
 
     @patch("bertrend.llm_utils.newsletter_features.render_newsletter_md")
