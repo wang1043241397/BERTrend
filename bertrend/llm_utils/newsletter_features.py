@@ -220,12 +220,12 @@ def render_newsletter(
         css_style = Path(inspect.getfile(generate_newsletter)).parent / "newsletter.css"
         html_template = (
             Path(inspect.getfile(generate_newsletter)).parent
-            / "newsletter_template.html"
+            / "newsletter_outlook_template.html"
         )
         result = render_newsletter_html(
             newsletter,
             html_template=html_template,
-            custom_css=css_style,
+            custom_css=None,
             language=language,
         )
         with open(path, "w") as f:
@@ -241,8 +241,11 @@ def render_newsletter_html(
     # Load the template from an external file
     with open(html_template, "r") as file:
         template_string = file.read()
-    with open(custom_css, "r") as file:
-        custom_css_content = file.read()
+    if custom_css is None:
+        custom_css_content = ""
+    else:
+        with open(custom_css, "r") as file:
+            custom_css_content = file.read()
 
     # Create a Jinja2 environment and compile the template
     template = jinja2.Template(template_string)
