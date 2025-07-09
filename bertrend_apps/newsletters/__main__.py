@@ -32,7 +32,7 @@ from bertrend.utils.data_loading import (
 )
 from bertrend.llm_utils.newsletter_features import (
     generate_newsletter,
-    export_md_string,
+    render_newsletter,
 )
 from bertrend_apps.common.mail_utils import get_credentials, send_email
 from bertrend_apps.common.crontab_utils import schedule_newsletter
@@ -156,7 +156,7 @@ if __name__ == "__main__":
         # generate newsletters
         logger.info(f"Generating newsletter...")
         title = newsletter_params.get("title")
-        newsletter_md, date_from, date_to = generate_newsletter(
+        newsletter = generate_newsletter(
             topic_model=topic_model,
             df=original_dataset,
             topics=topics,
@@ -175,7 +175,7 @@ if __name__ == "__main__":
 
         if newsletter_params.get("debug", True):
             conf_dict = {section: dict(config[section]) for section in config.keys()}
-            newsletter_md += f"\n\n## Debug: config\n\n{conf_dict} \n\n"
+            newsletter.debug_info = conf_dict
 
         # Save newsletter
         output_dir = OUTPUT_PATH / newsletter_params.get("output_directory")
@@ -185,11 +185,18 @@ if __name__ == "__main__":
             / f"{datetime.today().strftime('%Y-%m-%d')}_{newsletter_params.get('id')}"
             f"_{data_feed_cfg['data-feed'].get('id')}.{output_format}"
         )
-        export_md_string(newsletter_md, output_path, output_format=output_format)
+        render_newsletter(
+            newsletter,
+            output_path,
+            output_format=output_format,
+            language=newsletter_params.get("prompt_language", "fr"),
+        )
         logger.info(f"Newsletter exported in {output_format} format: {output_path}")
 
         # Send newsletter by email
-        mail_title = title + f" ({date_from}/{date_to})"
+        mail_title = (
+            title + f" ({newsletter.period_start_date}/{newsletter.period_end_date})"
+        )
         # string to list conversion for recipients
         recipients = ast.literal_eval(newsletter_params.get("recipients", "[]"))
         try:

@@ -5,127 +5,141 @@
  * This file is part of BERTrend.
  */
 
-/* inspired by https://codepen.io/vedadesigns/pen/GPxYZg */
-
+/* General Body Styles */
 body {
-   width:70%;
-   margin:0 auto;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f9;
+    color: #333;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
 }
 
 h1 {
-  position: relative;
-  padding: 0;
-  margin: 0;
-  font-family: "Raleway", sans-serif;
-  font-weight: 300;
-  font-size: 40px;
-  color: #080808;
-  -webkit-transition: all 0.4s ease 0s;
-  -o-transition: all 0.4s ease 0s;
-  transition: all 0.4s ease 0s;
-  text-align: center;
-  text-transform: uppercase;
-  padding-bottom: 5px;
+    font-size: 32px;
+    color: #333;
 }
 
-h1:before {
-  width: 28px;
-  height: 5px;
-  display: block;
-  content: "";
-  position: absolute;
-  bottom: 3px;
-  left: 50%;
-  margin-left: -14px;
-  background-color: #b80000;
-}
-h1:after {
-  width: 100px;
-  height: 1px;
-  display: block;
-  content: "";
-  position: relative;
-  margin-top: 25px;
-  left: 50%;
-  margin-left: -50px;
-  background-color: #b80000;
+.period {
+    font-size: 18px;
+    color: #555;
 }
 
+/* Topic Styles */
+.topic {
+    margin-top: 30px;
+    padding-left: 20px;  /* Added padding to make room for the colored bar */
+    border-left: 10px solid transparent;  /* Default to transparent */
+}
+
+/* Topic Types - Adjusted to apply colors to the entire topic */
+.topic.strong {
+    border-left-color: #4caf50; /* Green for strong */
+}
+
+.topic.weak {
+    border-left-color: #ff9800; /* Orange for weak */
+}
+
+.topic.noise {
+    border-left-color: #9e9e9e; /* Grey for noise */
+}
 
 h2 {
-  padding: 0;
-  margin: 0;
-  font-family: "Raleway", sans-serif;
-  color:#c50000;
-  -webkit-transition: all 0.4s ease 0s;
-  -o-transition: all 0.4s ease 0s;
-  transition: all 0.4s ease 0s;
-  font-size: 28px;
-  font-weight: 500;
-  letter-spacing: 0;
-  line-height: 1.5em;
-  padding-bottom: 15px;
-  position: relative;
-
+    font-size: 24px;
+    color: #c50000;
 }
 
-h2:before {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  height: 5px;
-  width: 55px;
-  background-color: #111;
-}
-h2:after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: 2px;
-  height: 1px;
-  width: 95%;
-  max-width: 90%;
-  background-color: #333;
+.summary {
+    margin: 10px 0;
+    font-size: 16px;
+    color: #666;
 }
 
-h3 {
-  padding: 0;
-  margin: 0;
-  font-family: "Raleway", sans-serif;
-  color:DarkSlateBlue;
-  -webkit-transition: all 0.4s ease 0s;
-  -o-transition: all 0.4s ease 0s;
-  transition: all 0.4s ease 0s;
-  font-size: 18px;
-  font-weight: 500;
-  letter-spacing: 0;
-  line-height: 1.5em;
-  position: relative;
-
+/* Article Styles */
+.articles {
+    margin-top: 15px;
 }
 
-p { color: #222; font-family: "Raleway", sans-serif; font-size: 15px; font-weight: 400; line-height: 24px; margin: 0 0 14px; }
-
-a { background: #fff; color: MidnightBlue; font-family: "Raleway", sans-serif; font-size: 15px; text-decoration: none; }
-
-a:visited {
-  color: purple;
+.article {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-left: none; /* Removed the vertical bar for articles */
 }
 
-a:hover { background: #c50000; color: #eee; text-decoration: none; }
-
-.timestamp{
-  color: grey;
-  font-family: "Raleway", sans-serif;
-  display: flex;
-  align-items: stretch;
-  padding-bottom: 15px;
+.article h3 {
+    font-size: 18px;
+    color: #2a2a2a;
 }
 
-.date_range{
-  color: grey;
-  font-family: "Raleway", sans-serif;
-  font-size: 20px;
-  font-weight: bold;
+/* Styling for the Article Title Link */
+.article a {
+    text-decoration: none; /* Remove default underline */
+    color: #0066cc; /* Blue color for the link */
+    font-weight: bold; /* Make the link title bold */
+    transition: all 0.3s ease; /* Smooth transition for hover effect */
+}
+
+/* Hover Effect */
+.article a:hover {
+    color: #005bb5; /* Darker blue on hover */
+    text-decoration: underline; /* Underline on hover for better visual feedback */
+    border-bottom: 2px solid #005bb5; /* Optional: Add a border for emphasis */
+}
+
+/* Date and Source Inline */
+.timestamp {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: grey;
+    margin-bottom: 10px;
+}
+
+.timestamp .separator {
+    margin: 0 5px;
+}
+
+.date {
+    font-weight: bold;
+}
+
+.source {
+    font-style: italic;
+}
+
+/* Hashtags */
+.hashtags {
+    margin-top: 7px;
+}
+.hashtags span {
+    display: inline-block;
+    margin-right: 8px;
+    padding: 2px 8px;
+    background: #e8eefa;
+    color: #205296;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    margin-bottom: 2px;
+    transition: background 0.16s;
+}
+.hashtags span:hover {
+    background: #bfd6f6;
+}
+
+/* Footer Styles */
+.footer {
+    margin-top: 40px;
+    text-align: center;
+    font-size: 12px;
+    color: #aaa;
 }

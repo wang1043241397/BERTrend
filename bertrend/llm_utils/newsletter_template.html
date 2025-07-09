@@ -1,0 +1,106 @@
+<!--
+  ~ Copyright (c) 2024, RTE (https://www.rte-france.com)
+  ~ See AUTHORS.txt
+  ~ SPDX-License-Identifier: MPL-2.0
+  ~ This file is part of BERTrend.
+  -->
+<!DOCTYPE html>
+<html lang="{{ language }}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% if language == 'en' %}
+        <title>{{ newsletter.title }} Newsletter</title>
+    {% else %}
+        <title>Newsletter {{ newsletter.title }}</title>
+    {% endif %}
+
+    <!-- Dynamic CSS Injection -->
+    <style>
+        {{ custom_css | safe}}
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>{{ newsletter.title }}</h1>
+            <p class="period">
+                {% if language == 'en' %}
+                    Period: {{ newsletter.period_start_date }} to {{ newsletter.period_end_date }}
+                {% else %}
+                    Période : {{ newsletter.period_start_date }} au {{ newsletter.period_end_date }}
+                {% endif %}
+            </p>
+        </header>
+
+        <main>
+            {% for topic in newsletter.topics %}
+            <section class="topic {{ topic.topic_type }}">
+                <h2>{{ topic.title }}</h2>
+                {% if topic.summary %}
+                    <p class="summary">{{ topic.summary | e}}</p> <!-- | e filter escapes HTML special characters (<, >, &, "), so your text will appear exactly as typed, with no risk. -->
+                {% endif %}
+
+                <div class="hashtags">
+                    {% for hashtag in topic.hashtags %}
+                        <span>#{{ hashtag }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="articles">
+                    {% for article in topic.articles %}
+                    <div class="article">
+                        {% if article.url %}
+                            <a href="{{ article.url }}" target="_blank">
+                                <h3>{{ article.title | e}}</h3>
+                            </a>
+                        {% else %}
+                            <h3>{{ article.title | e}}</h3>
+                        {% endif %}
+                        <!-- Date and Source Inline -->
+                        <div class="timestamp">
+                            <div class="date">{{ article.date }}</div>
+                            {% if article.source %}
+                                <span class="separator">|</span>
+                                <div class="source">
+                                    {% if language == 'en' %}
+                                        Source: {{ article.source }}
+                                    {% else %}
+                                        Source : {{ article.source }}
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {% if article.summary %}
+                        <p class="summary">
+                            {% if language == 'en' %}
+                                {{ article.summary | e}}
+                            {% else %}
+                                {{ article.summary | e}}
+                            {% endif %}
+                        </p>
+                        {% endif %}
+
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endfor %}
+        </main>
+
+        <footer class="footer">
+            <p>
+                {% if language == 'en' %}
+                    Newsletter generated partially by AI, some information may be inaccurate. © 2025 RTE | All rights reserved.
+                {% else %}
+                    Newsletter générée partiellement par IA, des informations peuvent être inexactes. © 2025 RTE | Tous droits réservés.
+                {% endif %}
+            </p>
+        </footer>
+    </div>
+</body>
+
+</html>

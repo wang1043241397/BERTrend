@@ -1,6 +1,6 @@
 [project]
 name = "bertrend"
-version = "0.3.7"
+version = "0.3.8"
 description = "BERTrend analyses topic evolution over time using state-of-the-art transformer models: topic modelling and LLM"
 license = "LICENSE.md"
 readme = "README.md"
@@ -55,7 +55,7 @@ dependencies = [
     "requests (>=2.32.3)",
     "seaborn (>=0.13.2)",
     "sentencepiece (>=0.2.0)",
-    "streamlit (>=1.45.1)",
+    "streamlit (>=1.46)",
     "streamlit-code-editor (>=0.1.22)",
     "tldextract (>=2.0.1)",
     "thefuzz (>=0.22.1)",

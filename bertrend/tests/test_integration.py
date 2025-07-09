@@ -344,7 +344,7 @@ class TestNewsletterIntegration:
         # Import here to avoid dependency issues if OpenAI is not available
         from bertrend.llm_utils.newsletter_features import (
             generate_newsletter,
-            export_md_string,
+            render_newsletter,
         )
 
         # Create a sample dataset
@@ -426,7 +426,7 @@ class TestNewsletterIntegration:
 
             # Export the newsletter to markdown
             md_path = tmp_path / "newsletter.md"
-            export_md_string(newsletter, str(md_path), format="md")
+            render_newsletter(newsletter, str(md_path), format="md")
 
             # Verify the results
             assert newsletter is not None

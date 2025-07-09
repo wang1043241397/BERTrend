@@ -37,6 +37,9 @@ from bertrend.utils.data_loading import (
     split_data,
     TIMESTAMP_COLUMN,
     DataLoadingError,
+    _file_to_pd,
+    _clean_data,
+    _check_data,
 )
 
 FORMAT_ICONS = {
@@ -50,7 +53,31 @@ FORMAT_ICONS = {
 }
 
 
-@st.cache_data(ttl=60 * 60 * 24)
+@st.dialog(translate("column_selection"))
+def _select_alternative_columns(df: pd.DataFrame, message: str = ""):
+    st.warning(message, icon=WARNING_ICON),
+    if TEXT_COLUMN not in df.columns:
+        text_column = st.selectbox(
+            label=translate("text_column_selection"), options=df.columns
+        )
+    else:
+        text_column = None
+    if TIMESTAMP_COLUMN not in df.columns:
+        timestamp_column = st.selectbox(
+            label=translate("timestamp_column_selection"), options=df.columns
+        )
+    else:
+        timestamp_column = None
+    if st.button("Submit"):
+        if text_column:
+            df[TEXT_COLUMN] = df[text_column]
+        if timestamp_column:
+            df[TIMESTAMP_COLUMN] = df[timestamp_column]
+        st.session_state["modified_df"] = df
+        st.rerun()
+
+
+#    @st.cache_data(ttl=60 * 60 * 24)
 def _process_uploaded_files(
     files: list[UploadedFile],
 ) -> list[pd.DataFrame]:
@@ -61,20 +88,23 @@ def _process_uploaded_files(
             with open(tmpdir + "/" + f.name, "wb") as tmp_file:
                 tmp_file.write(f.getvalue())
             if tmp_file is not None:
+                if "modified_df" in st.session_state:
+                    df = st.session_state["modified_df"]
+                    st.session_state.pop("modified_df")
+                else:
+                    df = _file_to_pd(Path(tmp_file.name))
                 try:
-                    df = load_data(
-                        Path(tmp_file.name),
-                        SessionStateManager.get("language", "French"),
-                    )
+                    _check_data(df, Path(tmp_file.name))
                 except DataLoadingError as dle:
-                    st.warning(
-                        translate("error_loading_file").format(
-                            file_name=f.name, error=dle
-                        ),
-                        icon=WARNING_ICON,
+                    message = translate("error_loading_file").format(
+                        file_name=f.name, error=dle
                     )
+                    if "modified_df" in st.session_state:
+                        st.session_state.pop("modified_df")
+                    _select_alternative_columns(df, message)
                     df = None
                 if df is not None:
+                    df = _clean_data(df, SessionStateManager.get("language", "French"))
                     dataframes.append(df)
         return dataframes
 
@@ -99,7 +129,12 @@ def _load_files(
                 ),
                 icon=WARNING_ICON,
             )
-            df = None
+            _select_alternative_columns(df)
+            df = (
+                st.session_state["modified_df"]
+                if "modified_df" in st.session_state
+                else None
+            )
         if df is not None:
             dfs.append(df)
     return dfs

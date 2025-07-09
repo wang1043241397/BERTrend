@@ -41,24 +41,10 @@ def find_compatible_files(path: Path, extensions: list[str]) -> list[Path]:
     return [f.relative_to(path) for f in path.rglob("*") if f.suffix[1:] in extensions]
 
 
-def load_data(
+def _check_data(
+    df: pd.DataFrame,
     selected_file: Path,
-    language: str = "French",
-) -> pd.DataFrame | None:
-    """
-    Load and preprocess data (adds additional columns if needed) from a selected file.
-
-    Args:
-        selected_file (Path): A path to the selected file
-        language (str): The language of the text data ('French' or 'English').
-
-    Returns:
-        pd.DataFrame: The loaded and preprocessed DataFrame.
-    """
-    df = _file_to_pd(selected_file)
-    if df is None:
-        return None
-
+):
     if TIMESTAMP_COLUMN not in df.columns:
         raise DataLoadingError(
             f"Missing '{TIMESTAMP_COLUMN}' column in {selected_file.name}"
@@ -68,6 +54,10 @@ def load_data(
             f"Missing '{TEXT_COLUMN}' column in {selected_file.name}"
         )
 
+
+def _clean_data(df: pd.DataFrame, language: str = "French") -> pd.DataFrame | None:
+    if df is None:
+        return None
     # Convert timestamp column to datetime
     df[TIMESTAMP_COLUMN] = pd.to_datetime(df[TIMESTAMP_COLUMN], errors="coerce")
 
@@ -101,8 +91,26 @@ def load_data(
     else:
         # Title colupmn used in topic explorations
         df[TITLE_COLUMN] = ""
-
     return df
+
+
+def load_data(
+    selected_file: Path,
+    language: str = "French",
+) -> pd.DataFrame | None:
+    """
+    Load and preprocess data (adds additional columns if needed) from a selected file.
+
+    Args:
+        selected_file (Path): A path to the selected file
+        language (str): The language of the text data ('French' or 'English').
+
+    Returns:
+        pd.DataFrame: The loaded and preprocessed DataFrame.
+    """
+    df = _file_to_pd(selected_file)
+    _check_data(df, selected_file)
+    return _clean_data(df, language)
 
 
 def split_data(
