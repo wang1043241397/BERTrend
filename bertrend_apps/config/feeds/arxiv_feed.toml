@@ -1,6 +1,6 @@
 [data-feed]
 id = "feed_arxiv"
-query = "cat:cs.CL"
+query = "cat:cs.AI"
 provider = "arxiv"
 # maximum number of results *per day*
 max_results = 1000
