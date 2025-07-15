@@ -22,7 +22,7 @@ DELAY_SECONDS = 3
 NUM_RETRIES = 10
 
 ### Request parameters ###
-query = "cat:cs.CL"
+query = "cat:cs.AI"
 max_results = float("inf")
 
 ### Parameters Semantic Scholar ###
@@ -54,6 +54,7 @@ class ArxivProvider(DataProvider):
         before: str,
         max_results: int,
         language: str = None,
+        add_citations_count: bool = False,
     ) -> list[dict]:
         """Requests the news data provider, collects a set of URLs to be parsed, return results as json lines.
 
@@ -97,8 +98,12 @@ class ArxivProvider(DataProvider):
             <= datetime.strptime(res["timestamp"], DATE_FORMAT_YYYYMMDD_TIME)
             <= end
         ]
-        # add citations count
-        return self.add_citations_count(results)
+
+        if add_citations_count:
+            # add citations count
+            return self.add_citations_count(results)
+        else:
+            return results
 
     def _parse_entry(self, entry: arxiv.Result) -> dict | None:
         """Parses a Arxiv entry"""
@@ -115,6 +120,8 @@ class ArxivProvider(DataProvider):
                 "summary": entry.summary,
                 "text": entry.summary,
                 "timestamp": published,
+                "url": entry.entry_id,
+                "link": entry.entry_id,
             }
         except Exception as e:
             logger.error(str(e) + f"\nError occurred with parsing of: {entry}")
