@@ -10,7 +10,7 @@
 # It is generally more efficient to use a dedicated service for embeddings.
 use_local = true
 model_name = "OrdalieTech/Solon-embeddings-large-0.1"
-url = "https://10.132.5.44:6464"
+url = "$EMBEDDING_SERVICE_URL"
 embedding_dtypes = ["float32", "float16", "bfloat16"]
 embedding_batch_size = 2048
 embedding_max_seq_length = 512
