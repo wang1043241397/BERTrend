@@ -45,7 +45,10 @@ DEFAULT_RATE_WINDOW = int(os.getenv("DEFAULT_RATE_WINDOW", "60"))  # Window in s
 
 # Client registry - in production, store somewhere else - database, file...
 CLIENT_REGISTRY_FILE = os.getenv(
-    "CLIENT_REGISTRY_FILE", f"{os.path.expanduser('~')}/bertrend_client_registry.json"
+    "CLIENT_REGISTRY_FILE",
+    os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "bertrend_client_registry.json"
+    ),
 )
 
 RESTRICTED_ACCESS = "restricted_access"
