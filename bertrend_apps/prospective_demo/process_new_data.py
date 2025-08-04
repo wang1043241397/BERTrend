@@ -305,9 +305,13 @@ if __name__ == "__main__":
     def train_new_model(
         user_name: str = typer.Argument(help="Identifier of the user"),
         model_id: str = typer.Argument(help="ID of the model/data to train"),
+        split_by_paragraph: bool = typer.Option(
+            default=True, help="Split data by paragraphs"
+        ),
     ):
         """Incrementally enrich the BERTrend model with new data"""
         logger.info(f'Processing new data for user "{user_name}" about "{model_id}"...')
+        logger.info(f"Splitting data by paragraphs: {split_by_paragraph}")
 
         # Get relevant model info from config
         granularity, window_size, language = get_relevant_model_config(
@@ -326,7 +330,9 @@ if __name__ == "__main__":
         filtered_df = new_data[new_data["timestamp"] >= cut_off_date]
 
         # Split data by paragraphs
-        filtered_df = split_data(filtered_df)
+        filtered_df = split_data(
+            df=filtered_df, split_by_paragraph="yes" if split_by_paragraph else "no"
+        )
 
         train_new_model_for_period(
             model_id=model_id,

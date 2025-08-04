@@ -377,4 +377,12 @@ TRANSLATIONS = {
         "fr": "TODO: sélection des parties à inclure dans l'export par topic: résumé global, liens, évolution par période, analyse détaillée, etc.",
         "en": "TODO: Select parts to include in the export per topic: global summary, links, evolution by period, detailed analysis, etc.",
     },
+    "split_by_paragraph": {
+        "en": "Split text by paragraphs for analysis",
+        "fr": "Découper le texte par paragraphes pour l'analyse",
+    },
+    "split_by_paragraph_help": {
+        "en": "Split text by paragraphs for analysis (useful for long text such as news articles which may contain different subtopics)",
+        "fr": "Découpe le texte par paragraphes pour l'analyse (utile pour des textes longs comme des articles de presse qui peuvent contenir plusieurs sous-sujets)",
+    },
 }

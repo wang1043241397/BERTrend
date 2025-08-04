@@ -40,11 +40,12 @@ from bertrend_apps.prospective_demo.models_info import (
 from bertrend_apps.prospective_demo.streamlit_utils import clickable_df
 
 # Default feed configs
-DEFAULT_GNEWS_CRONTAB_EXPRESSION = "1 0 * * 1"
+DEFAULT_CRONTAB_EXPRESSION = "1 0 * * 1"
 DEFAULT_ATOM_CRONTAB_EXPRESSION = "42 0,6,12,18 * * *"  # 4 times a day
-DEFAULT_MAX_RESULTS = 20
-DEFAULT_NUMBER_OF_DAYS = 14
-FEED_SOURCES = ["google", "atom"]
+DEFAULT_MAX_RESULTS = 25
+DEFAULT_MAX_RESULTS_ARXIV = 1000
+DEFAULT_NUMBER_OF_DAYS = 7
+FEED_SOURCES = ["google", "atom", "arxiv"]
 
 
 @st.dialog(translate("feed_config_dialog_title"))
@@ -63,7 +64,7 @@ def edit_feed_monitoring(config: dict | None = None):
         default=FEED_SOURCES[0] if not config else config["provider"],
         help=translate("feed_source_help"),
     )
-    if provider == "google":
+    if provider == "google" or provider == "arxiv":
         query = st.text_input(
             translate("feed_query_label") + " :red[*]",
             value="" if not config else config["query"],
@@ -73,15 +74,13 @@ def edit_feed_monitoring(config: dict | None = None):
             translate("feed_language_label"),
             selection_mode="single",
             options=LANGUAGES,
-            default=LANGUAGES[0],
+            default=LANGUAGES[0] if provider == "google" else LANGUAGES[1],
             format_func=lambda lang: translate(f"language_{lang.lower()}"),
             help=translate("feed_language_help"),
         )
         if "update_frequency" not in st.session_state:
             st.session_state.update_frequency = (
-                DEFAULT_GNEWS_CRONTAB_EXPRESSION
-                if not config
-                else config["update_frequency"]
+                DEFAULT_CRONTAB_EXPRESSION if not config else config["update_frequency"]
             )
         new_freq = st.text_input(
             translate("feed_frequency_label"),
@@ -119,15 +118,19 @@ def edit_feed_monitoring(config: dict | None = None):
         config["query"] = query
         config["provider"] = provider
         if not config.get("max_results"):
-            config["max_results"] = DEFAULT_MAX_RESULTS
+            config["max_results"] = (
+                DEFAULT_MAX_RESULTS
+                if provider != "arxiv"
+                else DEFAULT_MAX_RESULTS_ARXIV
+            )
         if not config.get("number_of_days"):
             config["number_of_days"] = DEFAULT_NUMBER_OF_DAYS
-        if provider == "google":
+        if provider == "google" or provider == "arxiv":
             config["language"] = "fr" if language == "French" else "en"
             config["update_frequency"] = (
                 st.session_state.update_frequency
                 if valid_cron
-                else DEFAULT_GNEWS_CRONTAB_EXPRESSION
+                else DEFAULT_CRONTAB_EXPRESSION
             )
         elif provider == "atom":
             config["language"] = "fr"
