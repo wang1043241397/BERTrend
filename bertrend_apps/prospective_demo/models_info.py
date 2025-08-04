@@ -332,7 +332,7 @@ def remove_scheduled_training_for_user(model_id: str, user: str):
     """Removes from the crontab the training job matching the provided model_id"""
     if user:
         return remove_from_crontab(
-            rf"process_new_data train-new-model.*{user}.*{model_id}"
+            rf"process_new_data train-new-model {user} {model_id}"
         )
     return False
 
