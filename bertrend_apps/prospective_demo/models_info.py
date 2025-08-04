@@ -127,9 +127,15 @@ def edit_model_parameters(row_dict: dict):
         help=f"{INFO_ICON} {translate('time_window_help')}",
     )
 
+    if not st.session_state.user_feeds[model_id]:
+        split_by_paragraph_value = True
+    else:
+        split_by_paragraph_value = (
+            st.session_state.user_feeds[model_id]["data-feed"]["provider"] != "arxiv"
+        )
     split_by_paragraph = st.checkbox(
         translate("split_by_paragraph"),
-        value=True,
+        value=split_by_paragraph_value,
         help=f"{INFO_ICON} {translate('split_by_paragraph_help')}",
     )
 
