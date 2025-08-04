@@ -34,6 +34,7 @@ DEFAULT_ANALYSIS_CFG = {
         "granularity": DEFAULT_GRANULARITY,
         "window_size": DEFAULT_WINDOW_SIZE,
         "language": "French",
+        "split_by_paragraph": True,
     },
     "analysis_config": {
         "topic_evolution": True,

@@ -58,6 +58,14 @@ def models_monitoring():
             )
         except Exception:
             st.session_state.model_analysis_cfg[model_id] = DEFAULT_ANALYSIS_CFG
+            # special case for split by paragraphs
+            st.session_state.model_analysis_cfg[model_id]["model_config"][
+                "split_by_paragraph"
+            ] = (
+                st.session_state.user_feeds[model_id]["data-feed"]["provider"]
+                != "arxiv"
+            )
+
         list_models = get_models_info(model_id)
         displayed_list.append(
             {
@@ -127,15 +135,11 @@ def edit_model_parameters(row_dict: dict):
         help=f"{INFO_ICON} {translate('time_window_help')}",
     )
 
-    if not st.session_state.user_feeds[model_id]:
-        split_by_paragraph_value = True
-    else:
-        split_by_paragraph_value = (
-            st.session_state.user_feeds[model_id]["data-feed"]["provider"] != "arxiv"
-        )
     split_by_paragraph = st.checkbox(
         translate("split_by_paragraph"),
-        value=split_by_paragraph_value,
+        value=st.session_state.model_analysis_cfg[model_id]["model_config"][
+            "split_by_paragraph"
+        ],
         help=f"{INFO_ICON} {translate('split_by_paragraph_help')}",
     )
 
@@ -190,16 +194,6 @@ def save_model_config(model_id: str, config: dict):
     with open(model_cfg_path, "w") as toml_file:
         toml.dump(config, toml_file)
     logger.debug(f"Saved model analysis config {config} to {model_cfg_path}")
-
-
-def load_model_config(model_id: str) -> dict:
-    model_cfg_path = get_model_cfg_path(
-        user_name=st.session_state.username, model_id=model_id
-    )
-    try:
-        return load_toml_config(model_cfg_path)
-    except Exception:
-        return DEFAULT_ANALYSIS_CFG
 
 
 @st.dialog(translate("dialog_confirmation"))
