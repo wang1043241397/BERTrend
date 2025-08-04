@@ -127,6 +127,18 @@ def edit_model_parameters(row_dict: dict):
         help=f"{INFO_ICON} {translate('time_window_help')}",
     )
 
+    if not st.session_state.user_feeds[model_id]:
+        split_by_paragraph_value = True
+    else:
+        split_by_paragraph_value = (
+            st.session_state.user_feeds[model_id]["data-feed"]["provider"] != "arxiv"
+        )
+    split_by_paragraph = st.checkbox(
+        translate("split_by_paragraph"),
+        value=split_by_paragraph_value,
+        help=f"{INFO_ICON} {translate('split_by_paragraph_help')}",
+    )
+
     st.write(f"**{translate('analysis_params_title').format(model_id)}**")
     topic_evolution = st.checkbox(
         translate("topic_evolution"),
@@ -155,6 +167,7 @@ def edit_model_parameters(row_dict: dict):
             if st.session_state.user_feeds[model_id]["data-feed"]["language"] == "fr"
             else "English"
         ),
+        "split_by_paragraph": split_by_paragraph,
     }
     analysis_config = {
         "topic_evolution": topic_evolution,
@@ -166,6 +179,7 @@ def edit_model_parameters(row_dict: dict):
         save_model_config(
             model_id, {"model_config": model_config, "analysis_config": analysis_config}
         )
+        update_scheduled_training_for_user(model_id, st.session_state.username)
         st.rerun()
 
 
@@ -324,8 +338,17 @@ def remove_scheduled_training_for_user(model_id: str, user: str):
     """Removes from the crontab the training job matching the provided model_id"""
     if user:
         return remove_from_crontab(
-            rf"process_new_data train-new-model.*{user}.*{model_id}"
+            rf"process_new_data train-new-model {user} {model_id}"
         )
+    return False
+
+
+def update_scheduled_training_for_user(model_id: str, user: str):
+    """Updates the crontab with the new training job"""
+    if check_if_learning_active_for_user(model_id, user):
+        remove_scheduled_training_for_user(model_id, user)
+        schedule_training_for_user(model_id, user)
+        return True
     return False
 
 
@@ -334,10 +357,16 @@ def schedule_training_for_user(model_id: str, user: str):
     schedule = generate_crontab_expression(
         st.session_state.model_analysis_cfg[model_id]["model_config"]["granularity"]
     )
+    split_by_paragraph = st.session_state.model_analysis_cfg[model_id]["model_config"][
+        "split_by_paragraph"
+    ]
+    split_by_paragraph_option = (
+        "--split-by-paragraph" if split_by_paragraph else "--no-split-by-paragraph"
+    )
     logpath = BERTREND_LOG_PATH / "users" / user
     logpath.mkdir(parents=True, exist_ok=True)
     command = (
-        f"{sys.prefix}/bin/python -m bertrend_apps.prospective_demo.process_new_data train-new-model {user} {model_id} "
+        f"{sys.prefix}/bin/python -m bertrend_apps.prospective_demo.process_new_data train-new-model {user} {model_id} {split_by_paragraph_option} "
         f"> {logpath}/learning_{model_id}.log 2>&1"
     )
     env_vars = f"CUDA_VISIBLE_DEVICES={BEST_CUDA_DEVICE}"
