@@ -4,6 +4,11 @@
   ~ SPDX-License-Identifier: MPL-2.0
   ~ This file is part of BERTrend.
   -->
+
+{% macro detailed_topic_analysis(topic, loop_index, language) %}
+{# default: nothing #}
+{% endmacro %}
+
 <!DOCTYPE html>
 <html lang="{{ language }}">
 
@@ -58,19 +63,29 @@
                     <tr>
                         <td>
                             <h1 style="font-size: 32px; color: #333; margin: 0 0 10px 0; font-family: Arial, sans-serif;">{{ newsletter.title }}</h1>
-                            <p style="font-size: 18px; color: #555; margin: 0 0 30px 0; font-family: Arial, sans-serif;">
-                                {% if language == 'en' %}
-                                    Period: {{ newsletter.period_start_date }} to {{ newsletter.period_end_date }}
-                                {% else %}
-                                    Période : {{ newsletter.period_start_date }} au {{ newsletter.period_end_date }}
-                                {% endif %}
-                            </p>
+                                <p style="font-size: 18px; color: #555; margin: 0 0 30px 0; font-family: Arial, sans-serif;">
+                                    {% if newsletter.reference_period %}
+                                        {% if language == 'en' %}
+                                            Period: {{ newsletter.reference_period }}
+                                        {% else %}
+                                            Période : {{ newsletter.reference_period }}
+                                        {% endif %}
+                                    {% elif newsletter.period_start_date and newsletter.period_end_date %}
+                                        {% if language == 'en' %}
+                                            Period: {{ newsletter.period_start_date }} to {{ newsletter.period_end_date }}
+                                        {% else %}
+                                            Période : {{ newsletter.period_start_date }} au {{ newsletter.period_end_date }}
+                                        {% endif %}
+                                    {% endif %}
+                                </p>
                         </td>
                     </tr>
                 </table>
 
                 <!-- Topics -->
                 {% for topic in newsletter.topics %}
+                {% set current_topic = topic %}
+                {% set current_loop_index = loop.index %}
                 <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-top: 30px; border-collapse: collapse;">
                     <tr>
                         <td>
@@ -123,7 +138,9 @@
 
                                                     <!-- Date and Source -->
                                                     <div style="font-size: 10px; color: #666; margin-bottom: 8px; font-family: Arial, sans-serif;">
+                                                        {% if article.date %}
                                                         <span style="font-weight: bold;">{{ article.date }}</span>
+                                                        {% endif %}
                                                         {% if article.source %}
                                                         <span style="margin: 0 5px;">|</span>
                                                         <span style="font-style: italic;">
@@ -150,6 +167,11 @@
                                             </tr>
                                         </table>
                                         {% endfor %}
+
+                                        <!-- Call macro with explicit parameters -->
+                                        {% block detailed_topic_analysis scoped %}
+                                            {{ detailed_topic_analysis(current_topic, current_loop_index, language) }}
+                                        {% endblock %}
                                     </td>
                                 </tr>
                             </table>
@@ -174,6 +196,8 @@
             </td>
         </tr>
     </table>
-</body>
+
+    </body>
 
 </html>
+

@@ -1,0 +1,73 @@
+<!--
+  ~ Copyright (c) 2024, RTE (https://www.rte-france.com)
+  ~ See AUTHORS.txt
+  ~ SPDX-License-Identifier: MPL-2.0
+  ~ This file is part of BERTrend.
+  -->
+
+{% extends 'newsletter_outlook_template.html' %}
+
+<!-- Override the macro to provide detailed analysis functionality -->
+{% macro detailed_topic_analysis(topic, loop_index, language) %}
+
+    {% if topic.topic_evolution %}
+
+    {% endif %}
+
+    {% if topic.topic_analysis %}
+        <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-top: 20px;">
+            <tr>
+                <td>
+                    <!-- Toggle Button for Detailed Analysis -->
+                    <div class="analysis-toggle" id="toggle-{{ loop_index }}" onclick="toggleAnalysis('{{ loop_index }}')" style="background-color: #f0f0f0; border: 1px solid #ddd; padding: 10px; margin: 15px 0 5px 0; cursor: pointer; border-radius: 4px; font-family: Arial, sans-serif;">
+                        <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td style="font-size: 14px; font-weight: bold; color: #333;">
+                                    <span class="toggle-icon" style="margin-right: 8px; font-size: 12px;">▶</span>
+                                    {% if language == 'en' %}
+                                        Detailed Analysis
+                                    {% else %}
+                                        Analyse Détaillée
+                                    {% endif %}
+                                </td>
+                                <td style="text-align: right; font-size: 11px; color: #666;">
+                                    {% if language == 'en' %}
+                                        Click to expand
+                                    {% else %}
+                                        Cliquer pour développer
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Analysis Content -->
+                    <div class="analysis-content collapsed" id="analysis-{{ loop_index }}" style="background-color: #fafafa; border: 1px solid #e0e0e0; border-top: none; padding: 15px; margin: 0 0 15px 0; display: none;">
+                        <div style="font-size: 13px; color: #444; line-height: 1.5; font-family: Arial, sans-serif;">
+                            {{ topic.topic_analysis | e | nl2br }}
+                        </div>
+
+                        <!-- Optional: Key insights subsection -->
+                        {% if topic.key_insights %}
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e8e8e8;">
+                            <h4 style="font-size: 12px; color: #c50000; margin: 0 0 10px 0; font-family: Arial, sans-serif; font-weight: bold;">
+                                {% if language == 'en' %}
+                                    Key Insights:
+                                {% else %}
+                                    Points Clés :
+                                {% endif %}
+                            </h4>
+                            <ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #555; font-family: Arial, sans-serif;">
+                                {% for insight in topic.key_insights %}
+                                <li style="margin-bottom: 5px;">{{ insight | e }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+        </table>
+    {% endif %}
+
+{% endmacro %}

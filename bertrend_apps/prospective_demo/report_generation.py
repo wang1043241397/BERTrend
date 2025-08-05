@@ -2,6 +2,7 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
+import inspect
 import tempfile
 import re
 
@@ -10,7 +11,9 @@ import streamlit as st
 from pathlib import Path
 
 from google.auth.exceptions import RefreshError
+from jinja2 import FileSystemLoader, Environment
 from loguru import logger
+from tqdm import tqdm
 
 from bertrend.demos.demos_utils.i18n import translate
 from bertrend.demos.demos_utils.icons import (
@@ -20,6 +23,13 @@ from bertrend.demos.demos_utils.icons import (
     DOWNLOAD_ICON,
     EMAIL_ICON,
 )
+from bertrend.llm_utils.newsletter_features import generate_newsletter
+from bertrend.llm_utils.newsletter_model import (
+    STRONG_TOPIC_TYPE,
+    WEAK_TOPIC_TYPE,
+    Article,
+)
+from bertrend.trend_analysis.data_structure import TopicSummaryList, SignalAnalysis
 from bertrend_apps.common.mail_utils import get_credentials, send_email
 from bertrend_apps.prospective_demo import (
     WEAK_SIGNALS,
@@ -29,10 +39,12 @@ from bertrend_apps.prospective_demo import (
     URLS_COLUMN,
 )
 from bertrend_apps.prospective_demo.dashboard_common import choose_id_and_ts
-from bertrend_apps.prospective_demo.report_utils import generate_html_report
+from bertrend_apps.prospective_demo.data_model import DetailedNewsletter, TopicOverTime
 
 WEAK_SIGNAL_NB = 3
 STRONG_SIGNAL_NB = 5
+
+MAXIMUM_NUMBER_OF_ARTICLES = 3
 
 
 def reporting():
@@ -109,35 +121,61 @@ def configure_export(weak_signals: pd.DataFrame, strong_signals: pd.DataFrame):
     )
 
 
-@st.dialog(translate("report_preview_title"), width="large")
-def generate_report(weak_signals: pd.DataFrame, strong_signals: pd.DataFrame):
+def create_detailed_newsletter(
+    weak_signals: pd.DataFrame, strong_signals: pd.DataFrame
+) -> DetailedNewsletter:
     model_id = st.session_state.model_id
 
-    # TODO: output à configurer selon les infos choisies
-    # rendering parameters
-    number_links = 2
-
-    report_template = Path(__file__).parent / "report_template.html"
-    report_title = (
-        f"{translate('report_title_part_1')} <font color='royal_blue'>{model_id}</font>"
+    # Create the DetailedNewsletter object
+    detailed_newsletter = DetailedNewsletter(
+        title=model_id,
+        reference_period=st.session_state.reference_ts.date(),
+        topics=[],
     )
-    data_list = []
-    for df, color in zip([weak_signals, strong_signals], ["orange", "green"]):
+
+    # Iterate over topics
+    for df, topic_type in tqdm(
+        zip([weak_signals, strong_signals], [STRONG_TOPIC_TYPE, WEAK_TOPIC_TYPE])
+    ):
         # Iterate over the filtered DataFrame rows
+        if df is None or df.empty:
+            continue
         for _, row in df.iterrows():
             # For each row, iterate over each column
-            data_list.append(
-                {
-                    "topic_title": row[LLM_TOPIC_TITLE_COLUMN],
-                    "topic_description": row[LLM_TOPIC_DESCRIPTION_COLUMN],
-                    "color": color,
-                    "links": list(set(row[URLS_COLUMN]))[:number_links],
-                    "analysis": row["analysis"],
-                }
+            articles = [
+                Article(title=link, date=None, source=None, url=link)
+                for link in list(set(row[URLS_COLUMN]))[:MAXIMUM_NUMBER_OF_ARTICLES]
+            ]
+
+            topic: TopicOverTime = TopicOverTime(
+                title=row[LLM_TOPIC_TITLE_COLUMN],
+                hashtags=None,
+                summary=row[LLM_TOPIC_DESCRIPTION_COLUMN],
+                articles=articles,
+                topic_type=topic_type,
+                topic_evolution=TopicSummaryList.model_validate_json(row["summary"]),
+                topic_analysis=SignalAnalysis.model_validate_json(
+                    row["analysis"],
+                ),
             )
 
+            detailed_newsletter.topics.append(topic)
+
+    return detailed_newsletter
+
+
+@st.dialog(translate("report_preview_title"), width="large")
+def generate_report(weak_signals: pd.DataFrame, strong_signals: pd.DataFrame):
+
+    detailed_newsletter: DetailedNewsletter = create_detailed_newsletter(
+        weak_signals, strong_signals
+    )
+
     # Generate the HTML
-    output_html = generate_html_report(report_template, report_title, data_list)
+    output_html = render_html_report(
+        newsletter=detailed_newsletter,
+        language=st.session_state.internationalization_language,
+    )
 
     # Render HTML
     with st.container(height=475):
@@ -147,12 +185,37 @@ def generate_report(weak_signals: pd.DataFrame, strong_signals: pd.DataFrame):
     temp_report_path = create_temp_report(output_html)  # Create the file in temp dir
 
     cols = st.columns([2, 3])
+    model_id = st.session_state.model_id
     with cols[0]:
         download(temp_report_path, model_id)
     with cols[1]:
         email(
             temp_report_path, mail_title=f"{translate('report_mail_title')} {model_id}"
         )
+
+
+def render_html_report(
+    newsletter: DetailedNewsletter,
+    language: str = "fr",
+) -> str:
+
+    template_dirs = [
+        Path(__file__).parent,  # Current directory
+        Path(
+            inspect.getfile(generate_newsletter)
+        ).parent,  # Main template ("newsletter_outlook_template.html")
+    ]
+
+    # Set up the Jinja2 environment to look in both directories
+    env = Environment(loader=FileSystemLoader(template_dirs))
+
+    # Render the template with data
+    template = env.get_template("detailed_report_template.html")
+    rendered_html = template.render(
+        newsletter=newsletter, language=language, custom_css=""
+    )
+
+    return rendered_html
 
 
 def create_temp_report(html_content) -> Path:
