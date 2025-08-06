@@ -5,9 +5,9 @@
 
 import base64
 import os
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+from email.message import EmailMessage
 from email.utils import COMMASPACE
+import mimetypes
 from pathlib import Path
 
 # Gmail API utils
@@ -57,35 +57,75 @@ def get_credentials(
 
 
 def send_email(
-    credentials: Credentials,
+    credentials,
     subject: str,
     recipients: list[str],
-    content: str,
-    content_type="html",
-):
+    content: str | Path,
+    content_type: str = "html",
+    file_name: str = None,
+) -> None:
+    """
+    Send an e-mail with Gmail API.
+
+    If *content* is a valid path it is attached as a file (with an optional filename),
+    otherwise it is used as the message body.
+    """
     try:
-        # Call the Gmail API
         service = build("gmail", "v1", credentials=credentials)
-        message = MIMEMultipart()
-        message["To"] = COMMASPACE.join(recipients)
-        message["From"] = FROM
-        message["Subject"] = subject
 
-        # Record the MIME types of both parts - text/plain and text/html.
-        part1 = MIMEText(
-            content, "plain" if content_type in ["md", "text", "txt"] else content_type
-        )
-        message.attach(part1)
+        msg = EmailMessage()
+        msg["Subject"] = subject
+        msg["From"] = FROM
+        msg["To"] = COMMASPACE.join(recipients)
 
-        encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+        # ------------------------------------------------------------------ #
+        # 1. Attach a file if *content* points to an existing file            #
+        # ------------------------------------------------------------------ #
+        if isinstance(content, (str, Path)) and Path(content).is_file():
+            file_path = Path(content)
 
-        create_message = {"raw": encoded_message}
+            # Body text so the message is not “empty”
+            msg.set_content(
+                f"Please find {file_path.name} attached.",
+                subtype="plain",
+            )
 
-        # Send email using the Gmail API
-        email = (
-            service.users().messages().send(userId="me", body=create_message).execute()
-        )
+            mime_type, _ = mimetypes.guess_type(file_path)
+            mime_type = mime_type or "application/octet-stream"
+            maintype, subtype = mime_type.split("/", 1)
 
-        logger.debug(f"Email sent: {email}")
-    except HttpError as error:
-        logger.error(f"An error occurred: {error}")
+            with file_path.open("rb") as fp:
+                msg.add_attachment(
+                    fp.read(),
+                    maintype=maintype,
+                    subtype=subtype,
+                    filename=file_path.name if not file_name else file_name,
+                )
+
+        # ------------------------------------------------------------------ #
+        # 2. Otherwise use *content* as the body                             #
+        # ------------------------------------------------------------------ #
+        else:
+            subtype = (
+                "plain"
+                if content_type.lower() in {"md", "text", "txt"}
+                else content_type
+            )
+            msg.set_content(content, subtype=subtype)
+
+        # ------------------------------------------------------------------ #
+        # 3. Send through Gmail API                                          #
+        # ------------------------------------------------------------------ #
+        raw_message = base64.urlsafe_b64encode(msg.as_bytes()).decode()
+        service.users().messages().send(
+            userId="me", body={"raw": raw_message}
+        ).execute()
+
+        logger.debug("E-mail successfully sent.")
+
+    except HttpError as err:
+        logger.error("Gmail API error: %s", err)
+    except FileNotFoundError:
+        logger.error("File not found: %s", content)
+    except Exception as err:
+        logger.exception("Unexpected error: %s", err)

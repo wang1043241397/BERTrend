@@ -371,12 +371,9 @@ TRANSLATIONS = {
     # Report
     "report_title_part_1": {"fr": "Actu", "en": "Actu"},
     "report_mail_title": {"fr": "Rapport veille", "en": "Monitoring report"},
+    "email_recipients": {"fr": "Destinataires", "en": "Recipients"},
     "report_preview_title": {"fr": "Rapport (aperçu)", "en": "Report (Preview)"},
     # Miscellaneous
-    "export_configuration_note": {
-        "fr": "TODO: sélection des parties à inclure dans l'export par topic: résumé global, liens, évolution par période, analyse détaillée, etc.",
-        "en": "TODO: Select parts to include in the export per topic: global summary, links, evolution by period, detailed analysis, etc.",
-    },
     "split_by_paragraph": {
         "en": "Split text by paragraphs for analysis",
         "fr": "Découper le texte par paragraphes pour l'analyse",

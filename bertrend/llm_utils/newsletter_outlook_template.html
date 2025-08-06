@@ -4,11 +4,6 @@
   ~ SPDX-License-Identifier: MPL-2.0
   ~ This file is part of BERTrend.
   -->
-
-{% macro detailed_topic_analysis(topic, loop_index, language) %}
-{# default: nothing #}
-{% endmacro %}
-
 <!DOCTYPE html>
 <html lang="{{ language }}">
 
@@ -84,8 +79,6 @@
 
                 <!-- Topics -->
                 {% for topic in newsletter.topics %}
-                {% set current_topic = topic %}
-                {% set current_loop_index = loop.index %}
                 <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-top: 30px; border-collapse: collapse;">
                     <tr>
                         <td>
@@ -168,9 +161,8 @@
                                         </table>
                                         {% endfor %}
 
-                                        <!-- Call macro with explicit parameters -->
                                         {% block detailed_topic_analysis scoped %}
-                                            {{ detailed_topic_analysis(current_topic, current_loop_index, language) }}
+                                            <!-- Placeholder for detailed analysis -->
                                         {% endblock %}
                                     </td>
                                 </tr>

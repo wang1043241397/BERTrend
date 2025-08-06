@@ -13,7 +13,7 @@ from pathlib import Path
 from google.auth.exceptions import RefreshError
 from jinja2 import FileSystemLoader, Environment
 from loguru import logger
-from tqdm import tqdm
+from streamlit_tags import st_tags
 
 from bertrend.demos.demos_utils.i18n import translate
 from bertrend.demos.demos_utils.icons import (
@@ -112,17 +112,39 @@ def choose_from_df(df: pd.DataFrame):
 
 def configure_export(weak_signals: pd.DataFrame, strong_signals: pd.DataFrame):
     st.subheader(translate("step_2_subheader"))
-    st.write(translate("export_configuration_note"))
-
+    model_id = st.session_state.model_id
+    topic_evolution = st.checkbox(
+        translate("topic_evolution"),
+        value=st.session_state.model_analysis_cfg[model_id]["analysis_config"][
+            "topic_evolution"
+        ],
+    )
+    evolution_scenarios = st.checkbox(
+        translate("evolution_scenarios"),
+        value=st.session_state.model_analysis_cfg[model_id]["analysis_config"][
+            "evolution_scenarios"
+        ],
+    )
+    multifactorial_analysis = st.checkbox(
+        translate("multifactorial_analysis"),
+        value=st.session_state.model_analysis_cfg[model_id]["analysis_config"][
+            "multifactorial_analysis"
+        ],
+    )
+    options = {
+        "topic_evolution": topic_evolution,
+        "evolution_scenarios": evolution_scenarios,
+        "multifactorial_analysis": multifactorial_analysis,
+    }
     st.button(
         translate("generate_button_label"),
         type="primary",
-        on_click=lambda: generate_report(weak_signals, strong_signals),
+        on_click=lambda: generate_report(weak_signals, strong_signals, options),
     )
 
 
 def create_detailed_newsletter(
-    weak_signals: pd.DataFrame, strong_signals: pd.DataFrame
+    weak_signals: pd.DataFrame, strong_signals: pd.DataFrame, options: dict = None
 ) -> DetailedNewsletter:
     model_id = st.session_state.model_id
 
@@ -134,8 +156,8 @@ def create_detailed_newsletter(
     )
 
     # Iterate over topics
-    for df, topic_type in tqdm(
-        zip([weak_signals, strong_signals], [STRONG_TOPIC_TYPE, WEAK_TOPIC_TYPE])
+    for df, topic_type in zip(
+        [weak_signals, strong_signals], [WEAK_TOPIC_TYPE, STRONG_TOPIC_TYPE]
     ):
         # Iterate over the filtered DataFrame rows
         if df is None or df.empty:
@@ -159,16 +181,25 @@ def create_detailed_newsletter(
                 ),
             )
 
+            if options is not None and not options["topic_evolution"]:
+                topic.topic_evolution = None
+            if options is not None and not options["evolution_scenarios"]:
+                topic.topic_analysis.evolution_scenarios = None
+            if options is not None and not options["multifactorial_analysis"]:
+                topic.topic_analysis.multifactorial_analysis = None
+
             detailed_newsletter.topics.append(topic)
 
     return detailed_newsletter
 
 
 @st.dialog(translate("report_preview_title"), width="large")
-def generate_report(weak_signals: pd.DataFrame, strong_signals: pd.DataFrame):
+def generate_report(
+    weak_signals: pd.DataFrame, strong_signals: pd.DataFrame, options: dict = None
+):
 
     detailed_newsletter: DetailedNewsletter = create_detailed_newsletter(
-        weak_signals, strong_signals
+        weak_signals, strong_signals, options
     )
 
     # Generate the HTML
@@ -184,14 +215,17 @@ def generate_report(weak_signals: pd.DataFrame, strong_signals: pd.DataFrame):
     # Save report to temp file
     temp_report_path = create_temp_report(output_html)  # Create the file in temp dir
 
-    cols = st.columns([2, 3])
     model_id = st.session_state.model_id
-    with cols[0]:
-        download(temp_report_path, model_id)
-    with cols[1]:
-        email(
-            temp_report_path, mail_title=f"{translate('report_mail_title')} {model_id}"
-        )
+    download(temp_report_path, model_id)
+    recipients = st_tags(
+        label="",  # translate("email_recipients"),
+        value=[],
+    )
+    email(
+        temp_report_path,
+        mail_title=f"{translate('report_mail_title')} {model_id}",
+        recipients=recipients,
+    )
 
 
 def render_html_report(
@@ -243,36 +277,35 @@ def is_valid_email(email: str) -> bool:
     return re.match(regex, email) is not None
 
 
-def email(temp_path: Path, mail_title: str) -> None:
-    col1, col2 = st.columns([0.6, 0.4])
-    with col1:
-        user_email = st.text_input("@", label_visibility="collapsed")
+def email(temp_path: Path, mail_title: str, recipients: list[str]) -> None:
+    if st.button(f"{EMAIL_ICON} {translate('send_button_label')}", type="primary"):
+        if not recipients:
+            return
+        if not all(is_valid_email(email) for email in recipients):
+            st.error(f"{ERROR_ICON} {translate('invalid_email')}")
+            return
 
-    with col2:
-        if st.button(f"{EMAIL_ICON} {translate('send_button_label')}", type="primary"):
-            if not user_email:
-                return
-            if not is_valid_email(user_email):
-                st.error(f"{ERROR_ICON} {translate('invalid_email')}")
-                return
-
+        try:
+            # Send the newsletter by email
             try:
-                # Send the newsletter by email
-                # string to list conversion for recipients
-                recipients = [user_email]
-                try:
-                    if recipients:
-                        credentials = get_credentials()
-                        with open(temp_path, "r") as file:
-                            # Read the entire contents of the file into a string
-                            content = file.read()
-                        send_email(credentials, mail_title, recipients, content, "html")
-                except RefreshError as re:
-                    logger.error(
-                        f"Problem with token for email, please regenerate it: {re}"
-                    )
+                if recipients:
+                    credentials = get_credentials()
+                    with open(temp_path, "r") as file:
+                        # Read the entire contents of the file into a string
+                        # content = file.read()
+                        send_email(
+                            credentials=credentials,
+                            subject=mail_title,
+                            recipients=recipients,
+                            content=temp_path,
+                            file_name=f"{st.session_state.reference_ts.date()}_{st.session_state.model_id}.html",
+                        )
+            except RefreshError as re:
+                logger.error(
+                    f"Problem with token for email, please regenerate it: {re}"
+                )
 
-                st.success(translate("email_sent_successfully"))
+            st.success(translate("email_sent_successfully"))
 
-            except Exception as e:
-                st.error(f"{translate('email_error_message')}: {e}")
+        except Exception as e:
+            st.error(f"{translate('email_error_message')}: {e}")
