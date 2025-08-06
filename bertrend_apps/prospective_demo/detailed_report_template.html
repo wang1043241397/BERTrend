@@ -5,6 +5,7 @@
   ~ This file is part of BERTrend.
   -->
 {% extends 'newsletter_outlook_template.html' %}
+
 {% macro display_topic_evolution(topic, language) %}
     <!-- Macro to render the topic evolution -->
     {% if topic.topic_evolution %}
@@ -324,9 +325,6 @@
 
                         <!-- Analysis Content -->
                         <div style="background-color: #fafafa; border: 1px solid #e0e0e0; border-top: none; padding: 15px; margin: 0 0 15px 0;">
-                            <div style="font-size: 13px; color: #444; line-height: 1.5; font-family: Arial, sans-serif;">
-                                {{ topic.topic_analysis }}
-                            </div>
                             <!-- Display detailed analysis -->
                             {{ display_topic_evolution(topic, language) }}
                             {{ display_evolution_scenario(topic, language) }}
