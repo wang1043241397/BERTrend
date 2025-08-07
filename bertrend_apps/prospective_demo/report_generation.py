@@ -216,7 +216,11 @@ def generate_report(
     temp_report_path = create_temp_report(output_html)  # Create the file in temp dir
 
     model_id = st.session_state.model_id
-    download(temp_report_path, model_id)
+    col1, col2, _ = st.columns([3, 3, 7])
+    with col1:
+        download(temp_report_path, model_id)
+    with col2:
+        download_json(detailed_newsletter, model_id)
     recipients = st_tags(
         label="",  # translate("email_recipients"),
         value=[],
@@ -260,14 +264,26 @@ def create_temp_report(html_content) -> Path:
         return Path(temp_file.name)
 
 
+def download_json(detailed_newsletter: DetailedNewsletter, model_id: str):
+    st.download_button(
+        label=translate("download_json_button_label"),
+        type="primary",
+        data=detailed_newsletter.model_dump_json(),
+        file_name=f"{st.session_state.reference_ts.date()}_{model_id}.json",
+        mime="application/json",
+        icon=DOWNLOAD_ICON,
+    )
+
+
 def download(temp_path: Path, model_id: str):
     with open(temp_path, "r", encoding="utf-8") as file:
         st.download_button(
-            label=f"{DOWNLOAD_ICON} {translate('download_button_label')}",
+            label=translate("download_button_label"),
             type="primary",
             data=file.read(),
-            file_name=f"rapport_{model_id}.html",
+            file_name=f"{st.session_state.reference_ts.date()}_{model_id}.html",
             mime="text/html",
+            icon=DOWNLOAD_ICON,
         )
 
 

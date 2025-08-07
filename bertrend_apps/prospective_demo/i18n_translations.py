@@ -356,6 +356,7 @@ TRANSLATIONS = {
     # Messages
     "generate_button_label": {"fr": "Générer", "en": "Generate"},
     "download_button_label": {"fr": "Télécharger (html)", "en": "Download (html)"},
+    "download_json_button_label": {"fr": "Télécharger (json)", "en": "Download (json)"},
     "send_button_label": {"fr": "Envoyer", "en": "Send"},
     # Error Messages
     "invalid_email": {"fr": "Adresse email incorrecte", "en": "Invalid email address"},

@@ -18,18 +18,23 @@
             {% endif %}
         </h4>
         {% for topic_evolution_period in topic.topic_evolution.topic_summary_by_time_period | sort(attribute='date', reverse=True) %}
-            <div style="margin-bottom: 15px; padding: 10px; background-color: #f9f9f9; border-left: 3px solid #c50000; font-family: Arial, sans-serif;">
-                <!-- Period Title -->
-                {% if topic_evolution_period.title %}
-                <h5 style="font-size: 11px; color: #c50000; margin: 0 0 5px 0; font-weight: bold; text-transform: uppercase;">
-                    {{ topic_evolution_period.title | e }}
-                </h5>
-                {% endif %}
+            <div style="margin-bottom: 15px; padding: 10px; background-color: aliceblue; border-left: 3px solid steelblue; font-family: Arial, sans-serif;">
 
-                <!-- Period Date -->
-                {% if topic_evolution_period.date %}
-                <div style="font-size: 10px; color: #666; margin-bottom: 8px; font-style: italic;">
-                    {{ topic_evolution_period.date | e }}
+                {% if topic_evolution_period.date or topic_evolution_period.title %}
+                <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px;">
+
+                    {% if topic_evolution_period.date %}
+                    <div style="font-size: 10px; color:  steelblue; font-style: italic; font-weight: bold;">
+                        {{ topic_evolution_period.date | e }}
+                    </div>
+                    {% endif %}
+
+                    {% if topic_evolution_period.title %}
+                    <h5 style="font-size: 11px; color: steelblue; margin: 0; font-weight: bold;">
+                        {{ topic_evolution_period.title | e }}
+                    </h5>
+                    {% endif %}
+
                 </div>
                 {% endif %}
 
@@ -42,11 +47,11 @@
 
                 <!-- Novelty indicator -->
                 {% if topic_evolution_period.novelty %}
-                <div style="font-size: 11px; color: #c50000; margin-bottom: 3px; font-weight: bold;">
+                <div style="font-size: 11px; color: #444; margin-bottom: 3px; font-weight: bold;">
                     {% if language == 'en' %}
-                        Novelty:
+                        Novelty
                     {% else %}
-                        Nouveauté :
+                        Nouveauté
                     {% endif %}
                 </div>
                 <div style="font-size: 12px; color: #444; margin-bottom: 8px; line-height: 1.4;">
@@ -56,11 +61,11 @@
 
                 <!-- Key Developments -->
                 {% if topic_evolution_period.key_developments %}
-                <div style="font-size: 11px; color: #c50000; margin: 8px 0 5px 0; font-weight: bold;">
+                <div style="font-size: 11px; color: #444; margin: 8px 0 5px 0; font-weight: bold;">
                     {% if language == 'en' %}
-                        Key Developments:
+                        Key Developments
                     {% else %}
-                        Développements clés :
+                        Développements clés
                     {% endif %}
                 </div>
                 <ul style="margin: 0 0 0 0; padding-left: 20px; font-size: 12px; color: #555;">
@@ -91,20 +96,20 @@
         <div style="margin-bottom: 15px; padding: 10px; background-color: #f0f8f0; border-left: 3px solid #4caf50; font-family: Arial, sans-serif;">
             <h5 style="font-size: 11px; color: #4caf50; margin: 0 0 5px 0; font-weight: bold;">
                 {% if language == 'en' %}
-                    OPTIMISTIC SCENARIO:
+                    Optimistic scenario
                 {% else %}
-                    SCÉNARIO OPTIMISTE :
+                    Scénario optimiste
                 {% endif %}
             </h5>
             <div style="font-size: 12px; color: #444; margin-bottom: 8px; line-height: 1.4;">
                 {{ topic.topic_analysis.evolution_scenario.optimistic_scenario_description | e }}
             </div>
             {% if topic.topic_analysis.evolution_scenario.optimistic_scenario_points %}
-            <div style="font-size: 11px; color: #4caf50; margin: 8px 0 5px 0; font-weight: bold;">
+            <div style="font-size: 11px; color: #444; margin: 8px 0 5px 0; font-weight: bold;">
                 {% if language == 'en' %}
-                    Key Points:
+                    Key Points
                 {% else %}
-                    Points clés :
+                    Points clés
                 {% endif %}
             </div>
             <ul style="margin: 0 0 0 0; padding-left: 20px; font-size: 12px; color: #555;">
@@ -119,20 +124,20 @@
         <div style="margin-bottom: 15px; padding: 10px; background-color: #fff8f0; border-left: 3px solid #ff9800; font-family: Arial, sans-serif;">
             <h5 style="font-size: 11px; color: #ff9800; margin: 0 0 5px 0; font-weight: bold;">
                 {% if language == 'en' %}
-                    PESSIMISTIC SCENARIO:
+                    Pessimistic scenario
                 {% else %}
-                    SCÉNARIO PESSIMISTE :
+                    Scénario pessimiste
                 {% endif %}
             </h5>
             <div style="font-size: 12px; color: #444; margin-bottom: 8px; line-height: 1.4;">
                 {{ topic.topic_analysis.evolution_scenario.pessimistic_scenario_description | e }}
             </div>
             {% if topic.topic_analysis.evolution_scenario.pessimistic_scenario_points %}
-            <div style="font-size: 11px; color: #ff9800; margin: 8px 0 5px 0; font-weight: bold;">
+            <div style="font-size: 11px; color: #444; margin: 8px 0 5px 0; font-weight: bold;">
                 {% if language == 'en' %}
-                    Key Points:
+                    Key Points
                 {% else %}
-                    Points clés :
+                    Points clés
                 {% endif %}
             </div>
             <ul style="margin: 0 0 0 0; padding-left: 20px; font-size: 12px; color: #555;">
@@ -163,12 +168,12 @@
 
             <!-- Short-term implications -->
             {% if topic.topic_analysis.potential_implications.short_term_implications %}
-            <div style="margin-bottom: 15px; padding: 10px; background-color: #fff9f0; border-left: 3px solid #ff6b35; font-family: Arial, sans-serif;">
-                <h5 style="font-size: 11px; color: #ff6b35; margin: 0 0 5px 0; font-weight: bold;">
+            <div style="margin-bottom: 15px; padding: 10px; background-color: #f5f0e6; border-left: 3px solid #b35c2a; font-family: Arial, sans-serif;">
+                <h5 style="font-size: 11px; color: #b35c2a; margin: 0 0 5px 0; font-weight: bold;">
                     {% if language == 'en' %}
-                        SHORT-TERM IMPLICATIONS:
+                        Short-term implications
                     {% else %}
-                        IMPLICATIONS À COURT TERME :
+                        Implications à court terme
                     {% endif %}
                 </h5>
                 <ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #555;">
@@ -184,9 +189,9 @@
             <div style="margin-bottom: 15px; padding: 10px; background-color: #f0f0ff; border-left: 3px solid #6b5b95; font-family: Arial, sans-serif;">
                 <h5 style="font-size: 11px; color: #6b5b95; margin: 0 0 5px 0; font-weight: bold;">
                     {% if language == 'en' %}
-                        LONG-TERM IMPLICATIONS:
+                        Long-term implications
                     {% else %}
-                        IMPLICATIONS À LONG TERME :
+                        Implications à long terme
                     {% endif %}
                 </h5>
                 <ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #555;">
@@ -215,9 +220,9 @@
             <div style="margin-bottom: 15px; padding: 10px; background-color: #f0fff8; border-left: 3px solid #20b2aa; font-family: Arial, sans-serif;">
                 <div style="font-size: 11px; color: #20b2aa; margin: 0 0 5px 0; font-weight: bold;">
                     {% if language == 'en' %}
-                        Interconnections:
+                        Interconnections
                     {% else %}
-                        Interconnexions :
+                        Interconnexions
                     {% endif %}
                 </div>
                 <ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #555;">
@@ -233,9 +238,9 @@
             <div style="margin-bottom: 15px; padding: 10px; background-color: #faf0ff; border-left: 3px solid #9966cc; font-family: Arial, sans-serif;">
                 <div style="font-size: 11px; color: #9966cc; margin: 0 0 5px 0; font-weight: bold;">
                     {% if language == 'en' %}
-                        Ripple Effects:
+                        Ripple Effects
                     {% else %}
-                        Effets de propagation :
+                        Effets de propagation
                     {% endif %}
                 </div>
                 <ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #555;">
@@ -264,9 +269,9 @@
             <div style="margin-bottom: 15px; padding: 10px; background-color: #f0fff0; border-left: 3px solid #32cd32; font-family: Arial, sans-serif;">
                 <div style="font-size: 11px; color: #32cd32; margin: 0 0 5px 0; font-weight: bold;">
                     {% if language == 'en' %}
-                        Drivers:
+                        Drivers
                     {% else %}
-                        Moteurs :
+                        Moteurs
                     {% endif %}
                 </div>
                 <ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #555;">
