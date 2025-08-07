@@ -345,8 +345,8 @@ TRANSLATIONS = {
         "en": "Step 1: Choose topics to keep",
     },
     "step_2_title": {
-        "fr": "Configuration de l'export",
-        "en": "Export Configuration",
+        "fr": "Etape 2: Configuration de l'export",
+        "en": "Step 2: Export Configuration",
     },
     # Messages
     "generate_button_label": {"fr": "Générer", "en": "Generate"},
