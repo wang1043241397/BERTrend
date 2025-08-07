@@ -342,20 +342,16 @@ TRANSLATIONS = {
     # Titles and Steps
     "step_1_title": {
         "fr": "Etape 1: Sélection des sujets à retenir",
-        "en": "Step 1: Choose topics",
+        "en": "Step 1: Choose topics to keep",
     },
-    "step_2_title": {"fr": "Etape 2: Export", "en": "Step 2: Export"},
-    "step_1_subheader": {
-        "fr": "Sélectionnez les sujets à retenir",
-        "en": "Select the topics to retain",
-    },
-    "step_2_subheader": {
+    "step_2_title": {
         "fr": "Configuration de l'export",
         "en": "Export Configuration",
     },
     # Messages
     "generate_button_label": {"fr": "Générer", "en": "Generate"},
     "download_button_label": {"fr": "Télécharger (html)", "en": "Download (html)"},
+    "download_json_button_label": {"fr": "Télécharger (json)", "en": "Download (json)"},
     "send_button_label": {"fr": "Envoyer", "en": "Send"},
     # Error Messages
     "invalid_email": {"fr": "Adresse email incorrecte", "en": "Invalid email address"},
@@ -371,12 +367,9 @@ TRANSLATIONS = {
     # Report
     "report_title_part_1": {"fr": "Actu", "en": "Actu"},
     "report_mail_title": {"fr": "Rapport veille", "en": "Monitoring report"},
+    "email_recipients": {"fr": "Destinataires", "en": "Recipients"},
     "report_preview_title": {"fr": "Rapport (aperçu)", "en": "Report (Preview)"},
     # Miscellaneous
-    "export_configuration_note": {
-        "fr": "TODO: sélection des parties à inclure dans l'export par topic: résumé global, liens, évolution par période, analyse détaillée, etc.",
-        "en": "TODO: Select parts to include in the export per topic: global summary, links, evolution by period, detailed analysis, etc.",
-    },
     "split_by_paragraph": {
         "en": "Split text by paragraphs for analysis",
         "fr": "Découper le texte par paragraphes pour l'analyse",

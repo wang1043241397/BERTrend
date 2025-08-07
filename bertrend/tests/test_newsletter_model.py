@@ -127,11 +127,6 @@ class TestTopic:
             Topic(hashtags=["#test"], articles=articles)
         assert "title" in str(exc_info.value)
 
-        # Missing hashtags
-        with pytest.raises(ValidationError) as exc_info:
-            Topic(title="Test Topic", articles=articles)
-        assert "hashtags" in str(exc_info.value)
-
         # Missing articles
         with pytest.raises(ValidationError) as exc_info:
             Topic(title="Test Topic", hashtags=["#test"])
@@ -246,29 +241,12 @@ class TestNewsletter:
         # Missing title
         with pytest.raises(ValidationError) as exc_info:
             Newsletter(
+                reference_period=date(2024, 1, 31),
                 period_start_date=date(2024, 1, 1),
                 period_end_date=date(2024, 1, 31),
                 topics=topics,
             )
         assert "title" in str(exc_info.value)
-
-        # Missing period_start_date
-        with pytest.raises(ValidationError) as exc_info:
-            Newsletter(
-                title="Test Newsletter",
-                period_end_date=date(2024, 1, 31),
-                topics=topics,
-            )
-        assert "period_start_date" in str(exc_info.value)
-
-        # Missing period_end_date
-        with pytest.raises(ValidationError) as exc_info:
-            Newsletter(
-                title="Test Newsletter",
-                period_start_date=date(2024, 1, 1),
-                topics=topics,
-            )
-        assert "period_end_date" in str(exc_info.value)
 
         # Missing topics
         with pytest.raises(ValidationError) as exc_info:
@@ -399,6 +377,7 @@ class TestIntegration:
             title="Test Newsletter",
             period_start_date=date(2024, 1, 1),
             period_end_date=date(2024, 1, 31),
+            reference_period=date(2024, 1, 31),
             topics=[topic],
         )
 
@@ -409,6 +388,7 @@ class TestIntegration:
         assert data["title"] == "Test Newsletter"
         assert data["period_start_date"] == date(2024, 1, 1)
         assert data["period_end_date"] == date(2024, 1, 31)
+        assert data["reference_period"] == date(2024, 1, 31)
         assert len(data["topics"]) == 1
         assert data["topics"][0]["title"] == "Test Topic"
         assert len(data["topics"][0]["articles"]) == 1
@@ -420,4 +400,5 @@ class TestIntegration:
         assert newsletter_from_dict.title == newsletter.title
         assert newsletter_from_dict.period_start_date == newsletter.period_start_date
         assert newsletter_from_dict.period_end_date == newsletter.period_end_date
+        assert newsletter_from_dict.reference_period == newsletter.reference_period
         assert len(newsletter_from_dict.topics) == len(newsletter.topics)

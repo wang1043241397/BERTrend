@@ -73,7 +73,7 @@ The package includes utilities for managing information feeds:
 The package provides functionality for generating reports:
 - `report_generation.py` - For creating reports based on the analysis
 - `report_utils.py` - Utilities for report generation
-- `report_template.html` - HTML template for reports
+- `detailed_report_template.html` - HTML template for reports
 
 ## Usage
 

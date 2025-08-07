@@ -27,10 +27,18 @@
         <header>
             <h1>{{ newsletter.title }}</h1>
             <p class="period">
-                {% if language == 'en' %}
-                    Period: {{ newsletter.period_start_date }} to {{ newsletter.period_end_date }}
-                {% else %}
-                    Période : {{ newsletter.period_start_date }} au {{ newsletter.period_end_date }}
+                {% if newsletter.reference_period %}
+                    {% if language == 'en' %}
+                        Period: {{ newsletter.reference_period }}
+                    {% else %}
+                        Période : {{ newsletter.reference_period }}
+                    {% endif %}
+                {% elif newsletter.period_start_date and newsletter.period_end_date %}
+                    {% if language == 'en' %}
+                        Period: {{ newsletter.period_start_date }} to {{ newsletter.period_end_date }}
+                    {% else %}
+                        Période : {{ newsletter.period_start_date }} au {{ newsletter.period_end_date }}
+                    {% endif %}
                 {% endif %}
             </p>
         </header>
@@ -61,7 +69,9 @@
                         {% endif %}
                         <!-- Date and Source Inline -->
                         <div class="timestamp">
-                            <div class="date">{{ article.date }}</div>
+                            {% if article.date %}
+                                <div class="date">{{ article.date }}</div>
+                            {% endif %}
                             {% if article.source %}
                                 <span class="separator">|</span>
                                 <div class="source">
@@ -87,6 +97,11 @@
                     </div>
                     {% endfor %}
                 </div>
+
+                <!-- Placeholder for additional info -->
+                {% block detailed_topic_analysis with topic=topic %}
+                {% endblock %}
+
             </section>
             {% endfor %}
         </main>

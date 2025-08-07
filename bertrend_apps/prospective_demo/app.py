@@ -2,6 +2,7 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
+from importlib.metadata import version
 
 import torch
 
@@ -43,6 +44,29 @@ AUTHENTIFICATION = True
 # AUTHENTIFICATION = False
 
 
+def display_version_number():
+    # Display version at the bottom (using st.markdown and CSS for fixed footer)
+    footer = f"""
+    <style>
+    .footer {{
+        position: fixed;
+        right: 10px;
+        bottom: 10px;
+        color: #666;
+        font-size: 0.8em;
+        opacity: 0.6;
+        user-select: none;
+        pointer-events: none;
+        background: none;
+    }}
+    </style>
+    <div class="footer">
+        Version: {version('bertrend')}
+    </div>
+    """
+    st.markdown(footer, unsafe_allow_html=True)
+
+
 def main():
     """Main page"""
     set_internationalization_language("fr")
@@ -53,6 +77,8 @@ def main():
         initial_sidebar_state="expanded" if is_admin_mode() else "collapsed",
         page_icon=":part_alternation_mark:",
     )
+
+    display_version_number()
 
     st.title(":part_alternation_mark: " + page_title)
 
