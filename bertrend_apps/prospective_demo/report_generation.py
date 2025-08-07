@@ -184,9 +184,11 @@ def create_detailed_newsletter(
             if options is not None and not options["topic_evolution"]:
                 topic.topic_evolution = None
             if options is not None and not options["evolution_scenarios"]:
-                topic.topic_analysis.evolution_scenarios = None
+                topic.topic_analysis.evolution_scenario = None
             if options is not None and not options["multifactorial_analysis"]:
-                topic.topic_analysis.multifactorial_analysis = None
+                topic.topic_analysis.potential_implications = None
+                topic.topic_analysis.topic_interconnexions = None
+                topic.topic_analysis.drivers_inhibitors = None
 
             detailed_newsletter.topics.append(topic)
 
@@ -197,15 +199,16 @@ def create_detailed_newsletter(
 def generate_report(
     weak_signals: pd.DataFrame, strong_signals: pd.DataFrame, options: dict = None
 ):
+    model_id = st.session_state.model_id
 
     detailed_newsletter: DetailedNewsletter = create_detailed_newsletter(
         weak_signals, strong_signals, options
     )
-
+    language = "en" if st.session_state.model_analysis_cfg[model_id]["model_config"]["language"] == "English" else "fr"
     # Generate the HTML
     output_html = render_html_report(
         newsletter=detailed_newsletter,
-        language=st.session_state.internationalization_language,
+        language=language,
     )
 
     # Render HTML
@@ -215,7 +218,6 @@ def generate_report(
     # Save report to temp file
     temp_report_path = create_temp_report(output_html)  # Create the file in temp dir
 
-    model_id = st.session_state.model_id
     col1, col2, _ = st.columns([3, 3, 7])
     with col1:
         download(temp_report_path, model_id)
