@@ -2,6 +2,7 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
+from typing import Optional
 
 from pydantic import BaseModel
 from datetime import date
@@ -15,7 +16,7 @@ class Article(BaseModel):
     """Article model."""
 
     title: str
-    date: date = None
+    date: Optional[date]
     summary: str | None = None
     source: str | None = None
     url: str | None = None
