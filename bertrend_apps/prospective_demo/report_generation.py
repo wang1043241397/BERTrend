@@ -49,21 +49,12 @@ MAXIMUM_NUMBER_OF_ARTICLES = 3
 
 def reporting():
     choose_id_and_ts()
-
-    tab1, tab2 = st.tabs(
-        [
-            TOPIC_ICON + " " + translate("step_1_title"),
-            NEWSLETTER_ICON + " " + translate("step_2_title"),
-        ]
-    )
-    with tab1:
-        selected_weak_topics_df, selected_strong_topics_df = choose_topics()
-    with tab2:
-        configure_export(selected_weak_topics_df, selected_strong_topics_df)
+    selected_weak_topics_df, selected_strong_topics_df = choose_topics()
+    configure_export(selected_weak_topics_df, selected_strong_topics_df)
 
 
 def choose_topics():
-    st.subheader(translate("step_1_subheader"))
+    st.subheader(translate(TOPIC_ICON + " " + translate("step_1_title")))
     model_id = st.session_state.model_id
     dfs_interpretation = st.session_state.signal_interpretations
     if model_id not in dfs_interpretation:
@@ -111,7 +102,7 @@ def choose_from_df(df: pd.DataFrame):
 
 
 def configure_export(weak_signals: pd.DataFrame, strong_signals: pd.DataFrame):
-    st.subheader(translate("step_2_subheader"))
+    st.subheader(translate(NEWSLETTER_ICON + " " + translate("step_2_title")))
     model_id = st.session_state.model_id
     topic_evolution = st.checkbox(
         translate("topic_evolution"),

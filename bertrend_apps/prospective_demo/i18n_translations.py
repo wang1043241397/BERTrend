@@ -342,14 +342,9 @@ TRANSLATIONS = {
     # Titles and Steps
     "step_1_title": {
         "fr": "Etape 1: Sélection des sujets à retenir",
-        "en": "Step 1: Choose topics",
+        "en": "Step 1: Choose topics to keep",
     },
-    "step_2_title": {"fr": "Etape 2: Export", "en": "Step 2: Export"},
-    "step_1_subheader": {
-        "fr": "Sélectionnez les sujets à retenir",
-        "en": "Select the topics to retain",
-    },
-    "step_2_subheader": {
+    "step_2_title": {
         "fr": "Configuration de l'export",
         "en": "Export Configuration",
     },
