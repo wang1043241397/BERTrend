@@ -41,6 +41,14 @@ from bertrend_apps.prospective_demo.process_new_data import regenerate_models
 from bertrend_apps.prospective_demo.streamlit_utils import clickable_df
 
 
+def load_model_config(model_id: str):
+    """Loads the model config from the disk"""
+    st.session_state.model_analysis_cfg[model_id] = load_toml_config(
+        get_model_cfg_path(
+            user_name=st.session_state.username, model_id=model_id
+        )
+    )
+
 @st.fragment
 def models_monitoring():
     if not st.session_state.user_feeds:
@@ -51,11 +59,7 @@ def models_monitoring():
 
     for model_id in sorted(st.session_state.user_feeds.keys()):
         try:
-            st.session_state.model_analysis_cfg[model_id] = load_toml_config(
-                get_model_cfg_path(
-                    user_name=st.session_state.username, model_id=model_id
-                )
-            )
+            load_model_config(model_id)
         except Exception:
             st.session_state.model_analysis_cfg[model_id] = DEFAULT_ANALYSIS_CFG
             # special case for split by paragraphs
@@ -183,6 +187,8 @@ def edit_model_parameters(row_dict: dict):
         save_model_config(
             model_id, {"model_config": model_config, "analysis_config": analysis_config}
         )
+        # reload model config to update correctly memory cache
+        load_model_config(model_id)
         update_scheduled_training_for_user(model_id, st.session_state.username)
         st.rerun()
 

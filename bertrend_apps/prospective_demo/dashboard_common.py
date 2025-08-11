@@ -62,7 +62,7 @@ def choose_id_and_ts():
             st.warning(translate("no_available_model_warning"), icon=WARNING_ICON)
             st.stop()
         elif len(list_models) < 2:
-            st.warning("at_least_2models_warning", icon=WARNING_ICON)
+            st.warning(translate("at_least_2models_warning"), icon=WARNING_ICON)
             st.stop()
         if "reference_ts" not in st.session_state:
             st.session_state.reference_ts = list_models[-1]
