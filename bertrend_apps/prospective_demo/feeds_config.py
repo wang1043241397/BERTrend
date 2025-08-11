@@ -23,6 +23,7 @@ from bertrend.demos.demos_utils.icons import (
     TOGGLE_ON_ICON,
     TOGGLE_OFF_ICON,
 )
+from bertrend.demos.streamlit_components.clickable_df_component import clickable_df
 from bertrend_apps.common.crontab_utils import (
     get_understandable_cron_description,
     check_if_scrapping_active_for_user,
@@ -37,7 +38,6 @@ from bertrend_apps.prospective_demo import CONFIG_FEEDS_BASE_PATH
 from bertrend_apps.prospective_demo.models_info import (
     remove_scheduled_training_for_user,
 )
-from bertrend_apps.prospective_demo.streamlit_utils import clickable_df
 
 # Default feed configs
 DEFAULT_CRONTAB_EXPRESSION = "1 0 * * 1"

@@ -34,6 +34,7 @@ STRONG_SIGNAL_ICON = ":material/signal_cellular_3_bar:"
 DOWNLOAD_ICON = ":material/download:"
 EMAIL_ICON = ":material/mail:"
 RESTART_ICON = ":material/restart_alt:"
+PERSON_ADD_ICON = ":material/person_add:"
 
 JSON_ICON = "🧾"
 PARQUET_ICON = "📦️"

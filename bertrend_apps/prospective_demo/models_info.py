@@ -26,6 +26,7 @@ from bertrend.demos.demos_utils.icons import (
     ERROR_ICON,
     RESTART_ICON,
 )
+from bertrend.demos.streamlit_components.clickable_df_component import clickable_df
 from bertrend_apps.common.crontab_utils import (
     check_cron_job,
     remove_from_crontab,
@@ -38,7 +39,6 @@ from bertrend_apps.prospective_demo import (
 )
 from bertrend_apps.prospective_demo.perf_utils import get_least_used_gpu
 from bertrend_apps.prospective_demo.process_new_data import regenerate_models
-from bertrend_apps.prospective_demo.streamlit_utils import clickable_df
 
 
 def load_model_config(model_id: str):

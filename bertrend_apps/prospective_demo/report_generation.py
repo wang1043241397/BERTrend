@@ -13,7 +13,6 @@ from pathlib import Path
 from google.auth.exceptions import RefreshError
 from jinja2 import FileSystemLoader, Environment
 from loguru import logger
-from streamlit_tags import st_tags
 
 from bertrend.demos.demos_utils.i18n import translate
 from bertrend.demos.demos_utils.icons import (
@@ -22,6 +21,9 @@ from bertrend.demos.demos_utils.icons import (
     ERROR_ICON,
     DOWNLOAD_ICON,
     EMAIL_ICON,
+)
+from bertrend.demos.streamlit_components.input_with_pills_components import (
+    input_with_pills,
 )
 from bertrend.llm_utils.newsletter_features import generate_newsletter
 from bertrend.llm_utils.newsletter_model import (
@@ -219,9 +221,12 @@ def generate_report(
         download(temp_report_path, model_id)
     with col2:
         download_json(detailed_newsletter, model_id)
-    recipients = st_tags(
-        label="",  # translate("email_recipients"),
-        value=[],
+    recipients = input_with_pills(
+        label=translate("email_recipients"),
+        key="emails",
+        placeholder=translate("email_recipients"),
+        validate_fn=is_valid_email,
+        label_visibility="hidden",
     )
     email(
         temp_report_path,
