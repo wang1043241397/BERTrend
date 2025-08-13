@@ -205,7 +205,13 @@ if __name__ == "__main__":
                 with open(output_path, "r") as file:
                     # Read the entire contents of the file into a string
                     content = file.read()
-                send_email(credentials, mail_title, recipients, content, output_format)
+                send_email(
+                    credentials=credentials,
+                    subject=mail_title,
+                    recipients=recipients,
+                    content=content,
+                    content_type=output_format,
+                )
                 logger.info(f"Newsletter sent to: {recipients}")
         except RefreshError as re:
             logger.error(f"Problem with token for email, please regenerate it: {re}")

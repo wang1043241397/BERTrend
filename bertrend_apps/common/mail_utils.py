@@ -81,12 +81,12 @@ def send_email(
         # ------------------------------------------------------------------ #
         # 1. Attach a file if *content* points to an existing file            #
         # ------------------------------------------------------------------ #
-        if isinstance(content, (str, Path)) and Path(content).is_file():
+        if isinstance(content, Path) and content.is_file():
             file_path = Path(content)
 
             # Body text so the message is not “empty”
             msg.set_content(
-                f"Please find {file_path.name} attached.",
+                f"Please find the report {file_path.name if not file_name else file_name} attached.",
                 subtype="plain",
             )
 
@@ -124,8 +124,8 @@ def send_email(
         logger.debug("E-mail successfully sent.")
 
     except HttpError as err:
-        logger.error("Gmail API error: %s", err)
+        logger.error("Gmail API error: ", err)
     except FileNotFoundError:
-        logger.error("File not found: %s", content)
+        logger.error("File not found: ", content)
     except Exception as err:
-        logger.exception("Unexpected error: %s", err)
+        logger.exception("Unexpected error: ", err)
