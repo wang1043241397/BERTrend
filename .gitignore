@@ -127,4 +127,7 @@ postman
 # Streamlit password
 **/.streamlit/
 
+# Gmail credentials
+**/gmail_credentials.json
+
 
