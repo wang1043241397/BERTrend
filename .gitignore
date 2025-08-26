@@ -129,5 +129,6 @@ postman
 
 # Gmail credentials
 **/gmail_credentials.json
+**/gmail_token.json
 
 

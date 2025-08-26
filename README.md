@@ -152,6 +152,8 @@ Recommended public datasets:
 
 For custom dataset creation, please refer to the documentation page about [data providers](./docs/data_provider.md).
 
+For email configuration and newsletter sending (optional), please refer to the [mail configuration guide](./docs/mail_configuration.md).
+
 
 In order to use the provided demos, datasets :
 - can be stored on the server in: `$BERTREND_BASE_DIR/data/bertrend/`
