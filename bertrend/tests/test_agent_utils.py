@@ -438,4 +438,4 @@ class TestProgressReporter:
         progress_reporter(7, 10, result)
 
         call_args = mock_logger.info.call_args[0][0]
-        assert "7.0%" in call_args  # (7/10) * 10 = 7.0%
+        assert "70.0%" in call_args  # (7/10) * 100 = 70.0%

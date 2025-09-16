@@ -11,6 +11,7 @@ import streamlit as st
 import toml
 from loguru import logger
 
+from bertrend.article_scoring.article_scoring import QualityLevel
 from bertrend.config.parameters import LANGUAGES
 from bertrend.demos.demos_utils.i18n import translate
 from bertrend.demos.demos_utils.icons import (
@@ -100,12 +101,30 @@ def edit_feed_monitoring(config: dict | None = None):
                     if not config
                     else config.get("evaluate_articles_quality", False)
                 )
+            if "minimum_quality_level" not in st.session_state:
+                st.session_state.minimum_quality_level = (
+                    QualityLevel.AVERAGE
+                    if not config
+                    else config.get("minimum_quality_level", QualityLevel.AVERAGE)
+                )
             evaluate_articles_quality = st.checkbox(
                 translate("evaluate_articles_quality"),
                 value=st.session_state.evaluate_articles_quality,
                 help=translate("evaluate_articles_quality_help"),
             )
+            if evaluate_articles_quality:
+                minimum_quality_level = QualityLevel.from_string(
+                    st.selectbox(
+                        translate("minimum_quality_level"),
+                        options=[level.name for level in QualityLevel],
+                        index=st.session_state.minimum_quality_level.index,
+                        help=translate("minimum_quality_level_help"),
+                    )
+                )
+            else:
+                minimum_quality_level = QualityLevel.AVERAGE
             st.session_state.evaluate_articles_quality = evaluate_articles_quality
+            st.session_state.minimum_quality_level = minimum_quality_level
 
     elif provider == "atom":
         query = st.text_input(

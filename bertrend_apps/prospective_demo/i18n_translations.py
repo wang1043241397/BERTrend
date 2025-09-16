@@ -386,4 +386,12 @@ TRANSLATIONS = {
         "en": "Score each article using a LLM-based approach ($$) and keep only high-quality articles",
         "fr": "Evalue chaque article avec une approche basée sur des LLM ($$) et ne retient que les articles de meilleure qualité",
     },
+    "minimum_quality_level": {
+        "en": "Minimum quality level",
+        "fr": "Qualité minimale",
+    },
+    "minimum_quality_level_help": {
+        "en": "Select the minimum quality level of articles you wish to keep",
+        "fr": "Choisissez la qualité minimale des articles que vous souhaitez conserver",
+    },
 }

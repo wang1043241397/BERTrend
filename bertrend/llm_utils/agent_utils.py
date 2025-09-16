@@ -352,8 +352,10 @@ class AsyncAgentConcurrentProcessor:
 
                 # Call progress callback for the chunk
                 if progress_callback:
+                    count = processed_items - len(chunk)
                     for result in chunk_results:
-                        progress_callback(processed_items, total_items, result)
+                        count += 1
+                        progress_callback(count, total_items, result)
 
                 # Add a small delay between chunks to respect rate limits
                 if i + chunk_size < total_items:  # Don't sleep after the last chunk
@@ -376,7 +378,7 @@ class AsyncAgentConcurrentProcessor:
 
 def progress_reporter(current: int, total: int, result: ProcessingResult):
     """Enhanced progress callback function"""
-    percentage = (current / total) * 10
+    percentage = (current / total) * 100
     if result.timeout:
         status = "⏱"  # Timeout symbol
     elif result.output:

@@ -2,6 +2,7 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
+from functools import total_ordering
 
 from pydantic import (
     BaseModel,
@@ -14,7 +15,8 @@ from typing import Optional, List, Dict, Any
 from enum import Enum
 
 
-class QualityLevel(str, Enum):
+@total_ordering
+class QualityLevel(Enum):
     """Quality level categories based on score ranges"""
 
     POOR = "Poor"  # (0.0-0.25)
@@ -22,6 +24,37 @@ class QualityLevel(str, Enum):
     AVERAGE = "Average"  # (0.50-0.65)
     GOOD = "Good"  # (0.65-0.8)
     EXCELLENT = "Excellent"  # (0.8-1.0)
+
+    def __lt__(self, other):
+        if not isinstance(other, QualityLevel):
+            return NotImplemented
+        return self.index < other.index
+
+    def __eq__(self, other):
+        if not isinstance(other, QualityLevel):
+            return NotImplemented
+        return self.name == other.name
+
+    @classmethod
+    def from_string(cls, value):
+        """Create a QualityLevel from a string (case-insensitive)"""
+        if isinstance(value, cls):
+            return value
+
+        value_lower = str(value).lower().strip()
+        for level in cls:
+            if level.value.lower() == value_lower:
+                return level
+
+        valid_values = [level.value for level in cls]
+        raise ValueError(
+            f"'{value}' is not a valid QualityLevel. Valid values are: {valid_values}"
+        )
+
+    @property
+    def index(self):
+        """Get the index (position) of this QualityLevel in the enum definition order"""
+        return list(QualityLevel).index(self)
 
 
 class CriteriaScores(BaseModel):

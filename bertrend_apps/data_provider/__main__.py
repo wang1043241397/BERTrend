@@ -12,6 +12,7 @@ from loguru import logger
 from pathlib import Path
 
 from bertrend import FEED_BASE_PATH, load_toml_config
+from bertrend.article_scoring.article_scoring import QualityLevel
 from bertrend_apps.common.crontab_utils import schedule_scrapping
 from bertrend_apps.data_provider.arxiv_provider import ArxivProvider
 from bertrend_apps.data_provider.bing_news_provider import BingNewsProvider
@@ -97,6 +98,10 @@ if __name__ == "__main__":
         evaluate_articles_quality: bool = typer.Option(
             False, help="Evaluate quality of articles (LLM-based)"
         ),
+        minimum_quality_level: str = typer.Option(
+            default="AVERAGE",
+            help="Minimum quality level to consider an article as relevant. (among: poor, fair, average, good, excellent)",
+        ),
     ):
         """Scrape data from Arxiv, Google, Bing news or NewsCatcher (multiple requests from a configuration file: each line of the file shall be compliant with the following format:
         <keyword list>;<after_date, format YYYY-MM-DD>;<before_date, format YYYY-MM-DD>)
@@ -132,6 +137,7 @@ if __name__ == "__main__":
                 max_results=max_results,
                 language=language,
                 evaluate_articles_quality=evaluate_articles_quality,
+                minimum_quality_level=QualityLevel.from_string(minimum_quality_level),
             )
             logger.info(f"Storing {len(results)} articles")
             provider.store_articles(results, save_path)
@@ -211,6 +217,9 @@ if __name__ == "__main__":
         evaluate_articles_quality = data_feed_cfg["data-feed"].get(
             "evaluate_articles_quality", False
         )
+        minimum_quality_level = data_feed_cfg["data-feed"].get(
+            "minimum_quality_level", QualityLevel.AVERAGE
+        )
         save_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Generate a query file
@@ -236,6 +245,7 @@ if __name__ == "__main__":
                     save_path=save_path,
                     language=language,
                     evaluate_articles_quality=evaluate_articles_quality,
+                    minimum_quality_level=minimum_quality_level,
                 )
 
     @app.command("schedule-scrapping")

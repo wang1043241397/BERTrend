@@ -82,7 +82,7 @@ class DataProvider(ABC):
 
     @staticmethod
     def evaluate_quality(
-        articles: list[dict], minimum_quality=QualityLevel.AVERAGE
+        articles: list[dict], minimum_quality_level: QualityLevel
     ) -> list[dict]:
         texts = [article[TEXT_COLUMN] for article in articles]
 
@@ -97,11 +97,11 @@ class DataProvider(ABC):
                 "overall_quality": results[i].output.quality_level.name,
             }
             for i, article in enumerate(articles)
-            if results[i].output.quality_level >= minimum_quality
+            if results[i].output.quality_level >= minimum_quality_level
         ]
         assert len(results) == len(texts)
         logger.info(
-            f"Filtered out {len(articles) - len(filtered_articles)} articles with quality < {minimum_quality.name}"
+            f"Filtered out {len(articles) - len(filtered_articles)} articles with quality < {minimum_quality_level.name}"
         )
         return filtered_articles
 
@@ -111,6 +111,7 @@ class DataProvider(ABC):
         max_results: int,
         language: str = None,
         evaluate_articles_quality: bool = False,
+        minimum_quality_level: QualityLevel = QualityLevel.AVERAGE,
     ) -> list[dict]:
         """Requests the news data provider for a list of queries, collects a set of URLs to be parsed,
         return results as json lines"""
@@ -132,7 +133,9 @@ class DataProvider(ABC):
         articles = [dict(t) for t in {tuple(d.items()) for d in articles}]
 
         if evaluate_articles_quality:
-            articles = self.evaluate_quality(articles)
+            articles = self.evaluate_quality(
+                articles, minimum_quality_level=minimum_quality_level
+            )
 
         logger.info(f"Collected {len(articles)} articles")
         return articles
