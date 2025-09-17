@@ -2,6 +2,7 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
+import json
 from functools import total_ordering
 
 from pydantic import (
@@ -10,6 +11,7 @@ from pydantic import (
     model_validator,
     ConfigDict,
     computed_field,
+    model_serializer,
 )
 from typing import Optional, List, Dict, Any
 from enum import Enum
@@ -174,6 +176,7 @@ class ArticleScore(BaseModel):
         validate_assignment=True,
         extra="forbid",
         arbitrary_types_allowed=True,
+        use_enum_values=True,  # to serialize enum values
     )
 
     # Required fields
@@ -302,7 +305,22 @@ class ArticleScore(BaseModel):
             "scores": self.scores.model_dump(),
             "weights": self.weights.model_dump(),
             "final_score": self.final_score,
-            "quality_level": self.quality_level.value,
+            "quality_level": self.quality_level.value,  # Explicitly convert enum to string
             "assessment_summary": self.assessment_summary,
             "detailed_breakdown": self.get_detailed_breakdown(),
+        }
+
+    def to_json(self) -> str:
+        """Export to JSON string"""
+        return json.dumps(self.export_to_dict(), indent=2)
+
+    @model_serializer
+    def serialize_model(self) -> Dict[str, Any]:
+        """Custom serializer to handle QualityLevel enum"""
+        return {
+            'scores': self.scores.model_dump(),
+            'weights': self.weights.model_dump(),
+            'final_score': self.final_score,
+            'quality_level': self.quality_level.value,
+            'assessment_summary': self.assessment_summary,
         }

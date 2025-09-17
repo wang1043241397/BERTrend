@@ -18,11 +18,11 @@ class TestQualityLevel:
 
     def test_quality_level_values(self):
         """Test that QualityLevel enum has the expected values."""
-        assert QualityLevel.POOR == "Poor"
-        assert QualityLevel.FAIR == "Fair"
-        assert QualityLevel.AVERAGE == "Average"
-        assert QualityLevel.GOOD == "Good"
-        assert QualityLevel.EXCELLENT == "Excellent"
+        assert QualityLevel.POOR.value == "Poor"
+        assert QualityLevel.FAIR.value == "Fair"
+        assert QualityLevel.AVERAGE.value == "Average"
+        assert QualityLevel.GOOD.value == "Good"
+        assert QualityLevel.EXCELLENT.value == "Excellent"
 
     def test_quality_level_iteration(self):
         """Test that all quality levels can be iterated."""

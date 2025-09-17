@@ -273,7 +273,7 @@ class AsyncAgentConcurrentProcessor:
                 if progress_callback:
                     progress_callback(completed, total_items, result)
 
-                logger.debug(f"Completed {completed}/{total_items} tasks")
+                logger.trace(f"Completed {completed}/{total_items} tasks")
 
             except Exception as e:
                 logger.error(f"Error collecting result: {e}")
