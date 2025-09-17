@@ -54,6 +54,7 @@ class TestProcessingResult:
 class TestBaseAgentFactory:
     """Test cases for BaseAgentFactory class."""
 
+    @patch.dict(os.environ, {}, clear=True)
     def test_base_agent_factory_creation_default(self):
         """Test creating BaseAgentFactory with default parameters."""
         # Use explicit parameters to avoid environment dependency
@@ -72,6 +73,7 @@ class TestBaseAgentFactory:
         assert factory.api_key == "custom-key"
         assert factory.base_url == "https://api.openai.com"
 
+    @patch.dict(os.environ, {}, clear=True)
     def test_base_agent_factory_no_api_key(self):
         """Test that BaseAgentFactory raises error when no API key is provided."""
         with pytest.raises(EnvironmentError) as exc_info:

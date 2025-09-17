@@ -11,8 +11,6 @@ from openai import AsyncAzureOpenAI
 
 from bertrend.llm_utils.openai_client import AZURE_API_VERSION
 
-API_KEY = os.getenv("OPENAI_API_KEY")
-BASE_URL = os.getenv("OPENAI_BASE_URL")
 # Disable tracing
 run_config = RunConfig(tracing_disabled=True)
 
@@ -21,17 +19,19 @@ class BaseAgentFactory:
     def __init__(
         self,
         model_name: str = "gpt-4.1-mini",
-        api_key: str = API_KEY,
-        base_url: str = BASE_URL,
+        api_key: str = None,
+        base_url: str = None,
     ):
         self.model_name = model_name or os.getenv("OPENAI_DEFAULT_MODEL_NAME")
-        self.api_key = api_key
-        if not api_key:
+        self.api_key = api_key if api_key is not None else os.getenv("OPENAI_API_KEY")
+        if not self.api_key:
             logger.error(
                 "WARNING: OPENAI_API_KEY environment variable not found. Please set it before using OpenAI services."
             )
             raise EnvironmentError(f"OPENAI_API_KEY environment variable not found.")
-        self.base_url = base_url
+        self.base_url = (
+            base_url if base_url is not None else os.getenv("OPENAI_BASE_URL")
+        )
         if self.base_url == "":  # check empty env var
             self.base_url = None
         self._init_model()
