@@ -11,6 +11,7 @@ import streamlit as st
 import toml
 from loguru import logger
 
+from bertrend.article_scoring.article_scoring import QualityLevel
 from bertrend.config.parameters import LANGUAGES
 from bertrend.demos.demos_utils.i18n import translate
 from bertrend.demos.demos_utils.icons import (
@@ -51,6 +52,9 @@ FEED_SOURCES = ["google", "atom", "arxiv"]
 @st.dialog(translate("feed_config_dialog_title"))
 def edit_feed_monitoring(config: dict | None = None):
     """Create or update a feed monitoring configuration."""
+
+    evaluate_articles_quality = False
+
     chosen_id = st.text_input(
         translate("feed_id_label") + " :red[*]",
         help=translate("feed_id_help"),
@@ -89,6 +93,38 @@ def edit_feed_monitoring(config: dict | None = None):
         )
         st.session_state.update_frequency = new_freq
         st.write(display_crontab_description(st.session_state.update_frequency))
+
+        if provider == "google":
+            if "evaluate_articles_quality" not in st.session_state:
+                st.session_state.evaluate_articles_quality = (
+                    False
+                    if not config
+                    else config.get("evaluate_articles_quality", False)
+                )
+            if "minimum_quality_level" not in st.session_state:
+                st.session_state.minimum_quality_level = (
+                    QualityLevel.AVERAGE
+                    if not config
+                    else config.get("minimum_quality_level", QualityLevel.AVERAGE)
+                )
+            evaluate_articles_quality = st.checkbox(
+                translate("evaluate_articles_quality"),
+                value=st.session_state.evaluate_articles_quality,
+                help=translate("evaluate_articles_quality_help"),
+            )
+            if evaluate_articles_quality:
+                minimum_quality_level = QualityLevel.from_string(
+                    st.selectbox(
+                        translate("minimum_quality_level"),
+                        options=[level.name for level in QualityLevel],
+                        index=st.session_state.minimum_quality_level.index,
+                        help=translate("minimum_quality_level_help"),
+                    )
+                )
+            else:
+                minimum_quality_level = QualityLevel.AVERAGE
+            st.session_state.evaluate_articles_quality = evaluate_articles_quality
+            st.session_state.minimum_quality_level = minimum_quality_level
 
     elif provider == "atom":
         query = st.text_input(
@@ -135,6 +171,8 @@ def edit_feed_monitoring(config: dict | None = None):
         elif provider == "atom":
             config["language"] = "fr"
             config["update_frequency"] = DEFAULT_ATOM_CRONTAB_EXPRESSION
+
+        config["evaluate_articles_quality"] = evaluate_articles_quality
 
         if "update_frequency" in st.session_state:
             del st.session_state["update_frequency"]  # to avoid memory effect
