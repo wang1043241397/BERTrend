@@ -318,9 +318,9 @@ class ArticleScore(BaseModel):
     def serialize_model(self) -> Dict[str, Any]:
         """Custom serializer to handle QualityLevel enum"""
         return {
-            'scores': self.scores.model_dump(),
-            'weights': self.weights.model_dump(),
-            'final_score': self.final_score,
-            'quality_level': self.quality_level.value,
-            'assessment_summary': self.assessment_summary,
+            "scores": self.scores.model_dump(),
+            "weights": self.weights.model_dump(),
+            "final_score": self.final_score,
+            "quality_level": self.quality_level.value,
+            "assessment_summary": self.assessment_summary,
         }
