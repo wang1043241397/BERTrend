@@ -4,7 +4,6 @@
 #  This file is part of BERTrend.
 from datetime import timedelta
 from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pandas as pd
 import typer
@@ -90,7 +89,6 @@ def generate_llm_interpretation(
     df_name: str,
     output_path: Path,
     top_k: int = DEFAULT_TOP_K,
-    max_workers: int = 5,
 ):
     """
     Generate detailed analysis for the top k topics using parallel processing.
@@ -102,47 +100,23 @@ def generate_llm_interpretation(
         df_name: Name of the DataFrame for output
         output_path: Path to save the results
         top_k: Number of top topics to analyze
-        max_workers: Maximum number of concurrent workers for parallel processing
     """
 
-    # Get topics sorted by popularity
-    topics = df.sort_values(by=["Latest_Popularity"], ascending=False).head(top_k)["Topic"].tolist()
-    
-    def process_topic(topic):
-        """Process a single topic and return the result or None if failed"""
-        try:
-            summary, analysis = analyze_signal(bertrend, topic, reference_timestamp)
-            if not summary or not analysis:
-                logger.warning(f"Skipping topic {topic} as analysis of signal failed.")
-                return None
-            return {
+    interpretation = []
+    for topic in df.sort_values(by=["Latest_Popularity"], ascending=False).head(top_k)[
+        "Topic"
+    ]:
+        summary, analysis = analyze_signal(bertrend, topic, reference_timestamp)
+        if not summary or not analysis:
+            logger.warning(f"Skipping topic {topic} as analysis of signal failed.")
+            continue
+        interpretation.append(
+            {
                 "topic": topic,
                 "summary": summary.model_dump_json(),
                 "analysis": analysis.model_dump_json(),
             }
-        except Exception as e:
-            logger.error(f"Error processing topic {topic}: {str(e)}")
-            return None
-    
-    interpretation = []
-    
-    # Use ThreadPoolExecutor for parallel processing of I/O-bound analyze_signal calls
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        # Submit all topic analysis tasks
-        future_to_topic = {executor.submit(process_topic, topic): topic for topic in topics}
-        
-        # Collect results as they complete
-        for future in as_completed(future_to_topic):
-            topic = future_to_topic[future]
-            try:
-                result = future.result()
-                if result:
-                    interpretation.append(result)
-            except Exception as e:
-                logger.error(f"Exception occurred for topic {topic}: {str(e)}")
-    
-    # Sort results by topic number to maintain consistent output order
-    interpretation.sort(key=lambda x: x["topic"])
+        )
 
     # Save interpretation
     output_file_name = output_path / f"{df_name}_interpretation.jsonl"
