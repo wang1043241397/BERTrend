@@ -282,6 +282,9 @@ class BERTrend:
             (period, group) for period, group in grouped_data.items() if not group.empty
         ]
 
+        failed_periods = []
+        successful_periods = []
+
         for i, (period, group) in enumerate(non_empty_groups):
             try:
                 logger.info(f"Training topic model {i+1}/{len(non_empty_groups)}...")
@@ -308,15 +311,26 @@ class BERTrend:
                 self.last_topic_model_timestamp = period
 
                 logger.debug(f"Successfully processed period: {period}")
+                successful_periods.append(period)
 
             except Exception as e:
                 logger.error(f"Error processing period {period}: {e}")
                 logger.exception("Traceback:")
+                failed_periods.append(period)
                 continue  # TODO: better error handling
 
         self._is_fitted = True
 
-        logger.success("Finished training all topic models")
+        if failed_periods:
+            logger.error(
+                f"Training completed with failures for {len(failed_periods)} periods: {failed_periods}"
+            )
+            if successful_periods:
+                logger.warning(
+                    f"Successfully trained topic models for {len(successful_periods)} periods: {successful_periods}"
+                )
+        else:
+            logger.success("Finished training all topic models")
 
     def merge_models_with(
         self,
