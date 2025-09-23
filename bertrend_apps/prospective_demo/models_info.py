@@ -60,7 +60,17 @@ def models_monitoring():
         try:
             load_model_config(model_id)
         except Exception:
+            # create default config if not found
             st.session_state.model_analysis_cfg[model_id] = DEFAULT_ANALYSIS_CFG
+            # align language with the feed
+            st.session_state.model_analysis_cfg[model_id]["model_config"][
+                "language"
+            ] = (
+                "French"
+                if st.session_state.user_feeds[model_id]["data-feed"]["language"]
+                == "fr"
+                else "English"
+            )
             # special case for split by paragraphs
             st.session_state.model_analysis_cfg[model_id]["model_config"][
                 "split_by_paragraph"
@@ -68,6 +78,7 @@ def models_monitoring():
                 st.session_state.user_feeds[model_id]["data-feed"]["provider"]
                 != "arxiv"
             )
+            save_model_config(model_id, st.session_state.model_analysis_cfg[model_id])
 
         list_models = get_models_info(model_id)
         displayed_list.append(
