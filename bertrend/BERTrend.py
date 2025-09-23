@@ -322,9 +322,13 @@ class BERTrend:
         self._is_fitted = True
 
         if failed_periods:
-            logger.error(f"Training completed with failures for {len(failed_periods)} periods: {failed_periods}")
+            logger.error(
+                f"Training completed with failures for {len(failed_periods)} periods: {failed_periods}"
+            )
             if successful_periods:
-                logger.warning(f"Successfully trained topic models for {len(successful_periods)} periods: {successful_periods}")
+                logger.warning(
+                    f"Successfully trained topic models for {len(successful_periods)} periods: {successful_periods}"
+                )
         else:
             logger.success("Finished training all topic models")
 
