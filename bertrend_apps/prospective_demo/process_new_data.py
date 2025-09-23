@@ -79,7 +79,7 @@ def get_relevant_model_config(
     window_size = model_analysis_cfg["model_config"]["window_size"]
     language = model_analysis_cfg["model_config"]["language"]
     if language not in ["French", "English"]:
-        language = "French"
+        language = "English"
     return granularity, window_size, language
 
 

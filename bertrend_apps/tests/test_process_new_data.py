@@ -163,7 +163,7 @@ class TestGetRelevantModelConfig:
             "test_model", "test_user"
         )
 
-        assert language == "French"  # Should fallback to French
+        assert language == "English"  # Should fallback to English
 
 
 class TestGenerateLLMInterpretation:

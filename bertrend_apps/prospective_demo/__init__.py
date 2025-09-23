@@ -33,7 +33,7 @@ DEFAULT_ANALYSIS_CFG = {
     "model_config": {
         "granularity": DEFAULT_GRANULARITY,
         "window_size": DEFAULT_WINDOW_SIZE,
-        "language": "French",
+        "language": "English",
         "split_by_paragraph": True,
     },
     "analysis_config": {
