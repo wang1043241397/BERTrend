@@ -30,128 +30,130 @@ Utilisez vos connaissances et compétences analytiques pour fournir une analyse 
 
 SIGNAL_INSTRUCTIONS = {
     "en": """
-Analyze this signal only if the input data is sufficiently complete. If the subject summary lacks completeness, substance or novelty, respond with an empty JSON dictionary: {} 
+Analyze this signal only if the input data is sufficiently complete and substantive. If the subject summary lacks completeness, substance, specificity, or novelty, respond with an empty JSON dictionary: {}
 
-For substantial signals, provide:
+=== DECISION RULES (STRICT SUFFICIENCY) ===
+- Overall Sufficiency: Proceed with analysis only if the topic summary contains enough concrete, non-trivial information to support evidence-based reasoning across at least one analysis dimension (Impact, Evolution, Interconnections, Drivers/Inhibitors).
+- Section Sufficiency: For each analysis section (Impact, Evolution Scenarios, Interconnections and Synergies, Drivers and Inhibitors), include the section ONLY if the input contains enough detail to meet the Minimum Quality Requirements. If not, omit the section entirely (do not include placeholders).
+- Evidence-First: Prefer omission over speculation. Do not infer facts not supported by the provided summary.
+
+For substantial signals, provide the following sections (include only those that meet the standards; omit any that do not):
 
 1. Potential Impact Analysis:
-   - Examine the potential effects of this signal on various sectors, industries, and societal aspects.
-   - Consider both short-term and long-term implications.
-   - Analyze possible ripple effects and second-order consequences.
+   - Examine potential effects on sectors, industries, and societal aspects.
+   - Cover immediate (1–2 years), medium (3–5 years), and long-term (5–10 years) horizons.
+   - Include ripple effects and second-order consequences when supportable.
 
 2. Evolution Scenarios:
-   - Describe potential ways this signal could develop or manifest in the future.
-   - Consider various factors that could influence its trajectory.
-   - Explore both optimistic and pessimistic scenarios.
+   - Describe plausible future developments and manifestation paths.
+   - Identify factors shaping the trajectory.
+   - Provide both optimistic and pessimistic scenarios only if both are sufficiently supported; otherwise include the supported one(s) and omit the rest.
 
 3. Interconnections and Synergies:
-   - Identify how this signal might interact with other current trends or emerging phenomena.
-   - Discuss potential synergies or conflicts with existing systems or paradigms.
+   - Identify interactions with current trends or emerging phenomena.
+   - Discuss synergies or conflicts with existing systems or paradigms.
 
 4. Drivers and Inhibitors:
-   - Analyze factors that could accelerate or amplify this signal.
-   - Examine potential barriers or resistances that might hinder its development.
+   - Analyze accelerants and amplifiers of the signal.
+   - Examine barriers, constraints, or resistances.
 
-Your analysis should be thorough and nuanced, going beyond surface-level observations. Draw upon your expertise to provide insights that capture the complexity and potential significance of this signal. Don't hesitate to make well-reasoned predictions about its potential trajectory and impact.
-
-Focus on providing a clear, insightful, and actionable analysis that can inform strategic decision-making and future planning.
-If analysis cannot be substantiated with clear reasoning, omit that section.
+Your analysis should be thorough and nuanced, going beyond surface-level observations, and grounded in the provided content. Make well-reasoned predictions only when they are logically supported by the input. If analysis cannot be substantiated with clear reasoning, omit that section.
 
 === OUTPUT QUALITY STANDARDS ===
-Your analysis must avoid:
+Avoid:
+- Vague generalizations
+- Obvious conclusions without new insight
+- Insufficient evidence
+- Generic observations
+- Circular reasoning
+- Superficial treatment
+- Unsubstantiated speculation
+- Outdated perspectives
 
-- **Vague Generalizations**: Broad, non-specific statements without concrete backing
-- **Obvious Conclusions**: Widely known facts or predictable outcomes without new insights
-- **Insufficient Evidence**: Claims lacking concrete examples, specific data points, or substantial proof
-- **Generic Observations**: Analysis that could apply to any context without specificity
-- **Circular Reasoning**: Implications that merely restate the original observation
-- **Superficial Treatment**: Surface-level analysis without depth or nuance
-- **Unsubstantiated Speculation**: Predictions or scenarios without logical foundation
-- **Outdated Perspectives**: Analysis based on obsolete information or frameworks
-
-=== MINIMUM QUALITY REQUIREMENTS ===
-Each analysis section must demonstrate at least 2 of the following:
-
-- **Specific Context**: Clear temporal, geographic, or sectoral boundaries and examples
-- **Concrete Evidence**: Quantifiable insights, verifiable examples, or substantiated claims
-- **Novel Perspectives**: Fresh angles, non-obvious connections, or emerging patterns
-- **Actionable Intelligence**: Insights that enable informed decision-making or strategic planning
-- **Cross-Domain Impact**: Implications across multiple sectors, industries, or domains
-- **Measurable Dimensions**: Identifiable metrics, indicators, or tracking mechanisms
-- **Causal Analysis**: Clear cause-and-effect relationships or contributing factor identification
-- **Strategic Relevance**: Direct connection to business, policy, or societal decision-making
+=== MINIMUM QUALITY REQUIREMENTS (APPLY PER SECTION) ===
+Each included section must demonstrate at least 2 of:
+- Specific Context: Clear temporal, geographic, or sectoral boundaries with examples
+- Concrete Evidence: Quantifiable insights, verifiable examples, or substantiated claims from the input
+- Novel Perspectives: Non-obvious connections or emerging patterns grounded in the input
+- Actionable Intelligence: Guidance that enables decision-making or planning
+- Cross-Domain Impact: Implications across multiple sectors or domains
+- Measurable Dimensions: Metrics, indicators, or tracking mechanisms
+- Causal Analysis: Clear cause-and-effect or contributing factors
+- Strategic Relevance: Direct link to business, policy, or societal decisions
 
 === OUTPUT REQUIREMENTS ===
-- **Quality Control**: Each section must meet the minimum standards above - omit any section that cannot achieve this threshold
-- **Evidence-Based**: Use specific, quantifiable language with concrete examples and evidence
-- **Confidence Levels**: Clearly distinguish between high-confidence assessments and speculative insights
-- **Decision-Focused**: Prioritize actionable intelligence for strategic decision-makers
-- **Balanced Objectivity**: Maintain analytical rigor while acknowledging uncertainties and limitations
-- **Temporal Structure**: Organize insights across immediate (1-2 years), medium (3-5 years), and long-term (5-10 years) horizons
-- **Omission Protocol**: If any analysis section cannot be substantiated with clear reasoning and evidence, omit it entirely rather than providing weak content
+- Section-Level Omission: Omit any section that cannot meet the Minimum Quality Requirements with the provided information.
+- Evidence-Based: Use specific, quantifiable language with concrete examples derived from the input.
+- Confidence Levels: Clearly distinguish high-confidence assessments from speculative insights.
+- Decision-Focused: Prioritize actionable intelligence for strategic decision-makers.
+- Balanced Objectivity: Maintain rigor while acknowledging uncertainties and limitations.
+- Temporal Structure: Organize insights across immediate (1–2 years), medium (3–5 years), and long-term (5–10 years) where applicable.
+- Final Validation: Before finalizing, remove any statement that cannot be traced to or logically derived from the provided summary.
 
+If no section can meet these standards, return an empty JSON dictionary: {}
 """,
     "fr": """
-Analysez ce signal uniquement si les données d’entrée sont suffisamment complètes. Si le résumé du sujet manque d'éléments, de substance ou de nouveauté, répondez avec un dictionnaire JSON vide : {}
+Analysez ce signal uniquement si les données d’entrée sont suffisamment complètes et substantielles. Si le résumé du sujet manque de complétude, de substance, de spécificité ou de nouveauté, répondez avec un dictionnaire JSON vide : {}
 
-Pour les signaux substantiels, fournissez :
+=== RÈGLES DE DÉCISION (SUFFISANCE STRICTE) ===
+- Suffisance Globale : Poursuivez l’analyse uniquement si le résumé contient des informations concrètes et non triviales permettant un raisonnement fondé sur des preuves pour au moins une dimension d’analyse (Impact, Évolution, Interconnexions, Moteurs/Inhibiteurs).
+- Suffisance par Section : Pour chaque section (Impact, Scénarios d’Évolution, Interconnexions et Synergies, Moteurs et Inhibiteurs), incluez la section UNIQUEMENT si les informations permettent d’atteindre les Exigences Minimales de Qualité. Sinon, omettez entièrement la section (pas d’espace réservé).
+- Primauté des Preuves : Préférez l’omission à la spéculation. N’inférez pas de faits non étayés par le résumé fourni.
 
-1. Analyse de l'Impact Potentiel :
-   - Examinez les effets potentiels de ce signal sur divers secteurs, industries et aspects sociétaux.
-   - Considérez les implications à court et à long terme.
-   - Analysez les effets d'entraînement possibles et les conséquences de second ordre.
+Pour les signaux substantiels, fournissez les sections suivantes (n’incluez que celles qui respectent les standards ; omettez celles qui ne les atteignent pas) :
 
-2. Scénarios d'Évolution :
-   - Décrivez les façons potentielles dont ce signal pourrait se développer ou se manifester à l'avenir.
-   - Considérez divers facteurs qui pourraient influencer sa trajectoire.
-   - Explorez des scénarios optimistes et pessimistes.
+1. Analyse de l’Impact Potentiel :
+   - Effets potentiels sur secteurs, industries et aspects sociétaux.
+   - Couvrez les horizons immédiat (1–2 ans), moyen (3–5 ans) et long terme (5–10 ans).
+   - Incluez les effets d’entraînement et de second ordre lorsque c’est étayé.
+
+2. Scénarios d’Évolution :
+   - Décrivez des développements plausibles et voies de manifestation futures.
+   - Identifiez les facteurs influençant la trajectoire.
+   - Fournissez des scénarios optimistes et pessimistes uniquement si tous deux sont suffisamment étayés ; sinon, incluez seulement ceux qui le sont et omettez le reste.
 
 3. Interconnexions et Synergies :
-   - Identifiez comment ce signal pourrait interagir avec d'autres tendances actuelles ou phénomènes émergents.
-   - Discutez des synergies ou conflits potentiels avec les systèmes ou paradigmes existants.
+   - Interactions avec les tendances actuelles ou phénomènes émergents.
+   - Synergies ou conflits avec les systèmes ou paradigmes existants.
 
 4. Moteurs et Inhibiteurs :
-   - Analysez les facteurs qui pourraient accélérer ou amplifier ce signal.
-   - Examinez les obstacles ou résistances potentiels qui pourraient entraver son développement.
+   - Facteurs accélérateurs/amplificateurs du signal.
+   - Obstacles, contraintes ou résistances.
 
-Votre analyse doit être approfondie et nuancée, allant au-delà des observations superficielles. Appuyez-vous sur votre expertise pour fournir des insights qui capturent la complexité et l'importance potentielle de ce signal. N'hésitez pas à faire des prédictions bien raisonnées sur sa trajectoire et son impact potentiels.
-
-Concentrez-vous sur la fourniture d'une analyse claire, perspicace et exploitable qui peut éclairer la prise de décision stratégique et la planification future.
-Si l'analyse ne peut être étayée par un raisonnement clair, omettez cette section.
+Votre analyse doit être approfondie, nuancée et ancrée dans le contenu fourni. Proposez des prédictions bien raisonnées uniquement lorsqu’elles sont logiquement étayées par l’entrée. Si une section ne peut être étayée par un raisonnement clair, omettez-la.
 
 === STANDARDS DE QUALITÉ DE SORTIE ===
-Votre analyse doit éviter :
+À éviter :
+- Généralisations vagues
+- Conclusions évidentes sans nouveaux éclairages
+- Preuves insuffisantes
+- Observations génériques
+- Raisonnement circulaire
+- Traitement superficiel
+- Spéculation non étayée
+- Perspectives obsolètes
 
-- **Généralisations Vagues** : Déclarations larges et non spécifiques sans fondement concret
-- **Conclusions Évidentes** : Faits largement connus ou résultats prévisibles sans nouveaux insights
-- **Preuves Insuffisantes** : Affirmations manquant d'exemples concrets, de données spécifiques, ou de preuves substantielles
-- **Observations Génériques** : Analyse qui pourrait s'appliquer à n'importe quel contexte sans spécificité
-- **Raisonnement Circulaire** : Implications qui ne font que reformuler l'observation originale
-- **Traitement Superficiel** : Analyse de surface sans profondeur ni nuances
-- **Spéculation Non Étayée** : Prédictions ou scénarios sans fondement logique
-- **Perspectives Obsolètes** : Analyse basée sur des informations ou cadres dépassés
-
-=== EXIGENCES MINIMALES DE QUALITÉ ===
-Chaque section d'analyse doit démontrer au moins 2 des éléments suivants :
-
-- **Contexte Spécifique** : Limites temporelles, géographiques, ou sectorielles claires avec exemples
-- **Preuves Concrètes** : Insights quantifiables, exemples vérifiables, ou affirmations étayées
-- **Perspectives Nouvelles** : Angles frais, connexions non évidentes, ou modèles émergents
-- **Intelligence Actionnable** : Insights permettant une prise de décision éclairée ou une planification stratégique
-- **Impact Trans-Domaine** : Implications sur plusieurs secteurs, industries, ou domaines
-- **Dimensions Mesurables** : Métriques, indicateurs, ou mécanismes de suivi identifiables
-- **Analyse Causale** : Relations de cause à effet claires ou identification de facteurs contributifs
-- **Pertinence Stratégique** : Connexion directe avec la prise de décision business, politique, ou sociétale
+=== EXIGENCES MINIMALES DE QUALITÉ (PAR SECTION) ===
+Chaque section incluse doit démontrer au moins 2 des éléments suivants :
+- Contexte Spécifique : Limites temporelles, géographiques ou sectorielles claires avec exemples
+- Preuves Concrètes : Insights quantifiables, exemples vérifiables, ou affirmations étayées par l’entrée
+- Perspectives Nouvelles : Connexions non évidentes ou schémas émergents ancrés dans l’entrée
+- Intelligence Actionnable : Conseils permettant la décision ou la planification
+- Impact Trans-Domaine : Implications multi-sectorielles
+- Dimensions Mesurables : Métriques, indicateurs ou mécanismes de suivi
+- Analyse Causale : Relations de cause à effet ou facteurs contributifs clairs
+- Pertinence Stratégique : Lien direct avec décisions business, politiques ou sociétales
 
 === EXIGENCES DE SORTIE ===
-- **Contrôle Qualité** : Chaque section doit respecter les standards minimaux ci-dessus - omettez toute section qui ne peut atteindre ce seuil
-- **Basé sur les Preuves** : Utilisez un langage spécifique et quantifiable avec des exemples concrets et des preuves
-- **Niveaux de Confiance** : Distinguez clairement entre évaluations haute confiance et insights spéculatifs
-- **Orienté Décision** : Priorisez l'intelligence actionnable pour les décideurs stratégiques
-- **Objectivité Équilibrée** : Maintenez la rigueur analytique tout en reconnaissant les incertitudes et limitations
-- **Structure Temporelle** : Organisez les insights sur les horizons immédiats (1-2 ans), moyens (3-5 ans), et long terme (5-10 ans)
-- **Protocole d'Omission** : Si une section d'analyse ne peut être étayée par un raisonnement et des preuves clairs, omettez-la entièrement plutôt que de fournir un contenu faible
+- Omission par Section : Omettez toute section qui ne peut atteindre les exigences minimales avec les informations disponibles.
+- Basé sur les Preuves : Utilisez un langage spécifique et quantifiable avec des exemples concrets tirés de l’entrée.
+- Niveaux de Confiance : Distinguez clairement les évaluations à haute confiance des insights spéculatifs.
+- Orienté Décision : Priorisez l’intelligence actionnable pour les décideurs stratégiques.
+- Objectivité Équilibrée : Rigueur analytique en reconnaissant les incertitudes et limitations.
+- Structure Temporelle : Organisez les insights sur les horizons immédiat (1–2 ans), moyen (3–5 ans) et long terme (5–10 ans) lorsque pertinent.
+- Validation Finale : Avant de finaliser, retirez toute affirmation qui ne peut être retracée ou logiquement dérivée du résumé fourni.
 
+Si aucune section ne peut respecter ces standards, renvoyez un dictionnaire JSON vide : {}
 """,
 }
 
