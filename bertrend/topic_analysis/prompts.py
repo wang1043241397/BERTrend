@@ -13,7 +13,7 @@ Input:
 
 Requirements:
 1) Title:
-   - Be concise (max 10 words)
+   - Be concise (max 8 words)
    - Be informative and specific
    - Use Title Case
    - Avoid jargon and buzzwords unless present in the context
@@ -33,10 +33,8 @@ Requirements:
    - Start directly with substantive content (e.g., a key concept, scope, or claim), not with meta-introductions
 
 Output format (strict JSON; no prose outside JSON):
-{
-  "title": "Your title here",
-  "description": "Your ~100-word description here."
-}
+"title": "Your title here",  
+"description": "Your ~100-word description here."
 """
 
 TOPIC_DESCRIPTION_PROMPT_FR = """
@@ -49,7 +47,7 @@ Entrée :
 
 Exigences :
 1) Titre :
-   - Concis (max. 10 mots)
+   - Concis (max. 8 mots)
    - Informatif et spécifique
    - Éviter le jargon sauf s’il apparaît dans le contexte
 
@@ -68,10 +66,8 @@ Exigences :
    - Commencer directement par le contenu substantiel (concept clé, périmètre, ou idée centrale), sans méta-introduction
 
 Format de sortie (JSON strict ; aucun texte hors du JSON) :
-{
-  "title": "Votre titre ici",
-  "description": "Votre description (~100 mots) ici."
-}
+"title": "Votre titre ici",  
+"description": "Votre description (~100 mots) ici."
 """
 
 TOPIC_DESCRIPTION_PROMPT = {
