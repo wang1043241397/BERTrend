@@ -312,6 +312,7 @@ def email(temp_path: Path, mail_title: str, recipients: list[str]) -> None:
                     with open(temp_path, "r") as file:
                         # Read the entire contents of the file into a string
                         # content = file.read()
+                        st.info(translate("email_being_sent"))
                         send_email(
                             credentials=credentials,
                             subject=mail_title,

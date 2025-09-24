@@ -360,6 +360,10 @@ TRANSLATIONS = {
         "en": "Error sending email",
     },
     # Success Messages
+    "email_being_sent": {
+        "fr": "Email en cours d'envoi...",
+        "en": "Email being sent...",
+    },
     "email_sent_successfully": {
         "fr": "Email envoyé avec succès!",
         "en": "Email sent successfully!",
