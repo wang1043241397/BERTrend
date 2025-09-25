@@ -24,7 +24,7 @@ Requirements:
    - Highlight key themes, entities, or recurring concepts from the context
    - Avoid copying long verbatim text from the context; paraphrase instead
    - Be neutral, factual, and free of speculation
-   - Do not begin with generic phrases such as "This theme...", "This topic...", or "The theme..."
+   - Do not begin with generic phrases such as "This theme...", "This topic...", or "The theme...", or "The topic..."
 
 3) Style & Quality:
    - No placeholders, no extraneous commentary
@@ -57,7 +57,7 @@ Exigences :
    - Mettre en avant les thèmes, entités ou concepts récurrents du contexte
    - Ne pas copier de longs passages ; reformuler
    - Ton neutre, factuel, sans spéculation
-   - Ne pas commencer par des formules génériques telles que « Ce thème… », « Ce sujet… » ou « Le thème… »
+   - Ne pas commencer par des formules génériques telles que « Ce thème… », « Ce sujet… » ou « Le thème… » ou « Le sujet… »
 
 3) Style & Qualité :
    - Pas d’espaces réservés, pas de commentaires superflus
