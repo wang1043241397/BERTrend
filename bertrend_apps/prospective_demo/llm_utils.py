@@ -17,7 +17,7 @@ def generate_bertrend_topic_description(
     """Generates a LLM-based human-readable description of a topic composed of a title and a description (as a dict)"""
     if not texts:
         logger.warning(f"No text found for topic number {topic_number}")
-        return None
+        return None, None
 
     topic_representation = ", ".join(topic_words.split("_"))  # Get top 10 words
 
