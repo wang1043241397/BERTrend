@@ -15,6 +15,7 @@ import toml
 from loguru import logger
 
 from bertrend import BERTREND_LOG_PATH, BEST_CUDA_DEVICE, load_toml_config
+from bertrend.config.parameters import LANGUAGES
 from bertrend.demos.demos_utils.i18n import translate
 from bertrend.demos.demos_utils.icons import (
     EDIT_ICON,
@@ -65,12 +66,7 @@ def models_monitoring():
             # align language with the feed
             st.session_state.model_analysis_cfg[model_id]["model_config"][
                 "language"
-            ] = (
-                "French"
-                if st.session_state.user_feeds[model_id]["data-feed"]["language"]
-                == "fr"
-                else "English"
-            )
+            ] = st.session_state.user_feeds[model_id]["data-feed"]["language"]
             # special case for split by paragraphs
             st.session_state.model_analysis_cfg[model_id]["model_config"][
                 "split_by_paragraph"
@@ -157,6 +153,20 @@ def edit_model_parameters(row_dict: dict):
         help=f"{INFO_ICON} {translate('split_by_paragraph_help')}",
     )
 
+    language = st.segmented_control(
+        translate("feed_language_label"),
+        selection_mode="single",
+        options=LANGUAGES,
+        default=(
+            LANGUAGES[0]
+            if st.session_state.model_analysis_cfg[model_id]["model_config"]["language"]
+            == "fr"
+            else LANGUAGES[1]
+        ),
+        format_func=lambda lang: translate(f"language_{lang.lower()}"),
+        help=translate("feed_language_help"),
+    )
+
     st.write(f"**{translate('analysis_params_title').format(model_id)}**")
     topic_evolution = st.checkbox(
         translate("topic_evolution"),
@@ -180,11 +190,7 @@ def edit_model_parameters(row_dict: dict):
     model_config = {
         "granularity": new_granularity,
         "window_size": new_window_size,
-        "language": (
-            "French"
-            if st.session_state.user_feeds[model_id]["data-feed"]["language"] == "fr"
-            else "English"
-        ),
+        "language": "fr" if language == "French" else "en",
         "split_by_paragraph": split_by_paragraph,
     }
     analysis_config = {

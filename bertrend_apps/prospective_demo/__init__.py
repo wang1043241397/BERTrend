@@ -28,12 +28,13 @@ URLS_COLUMN = "URLs"
 # Models & analysis
 DEFAULT_GRANULARITY = 7
 DEFAULT_WINDOW_SIZE = 7
+DEFAULT_LANGUAGE = "en"
 
 DEFAULT_ANALYSIS_CFG = {
     "model_config": {
         "granularity": DEFAULT_GRANULARITY,
         "window_size": DEFAULT_WINDOW_SIZE,
-        "language": "English",
+        "language": DEFAULT_LANGUAGE,
         "split_by_paragraph": True,
     },
     "analysis_config": {

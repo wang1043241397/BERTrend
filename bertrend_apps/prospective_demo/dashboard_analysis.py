@@ -118,7 +118,7 @@ def display_detailed_analysis(
         desc["analysis"]
     )
     # Use current language for HTML template
-    lang = get_current_internationalization_language()
+    lang = st.session_state.model_analysis_cfg[model_id]["model_config"]["language"]
     formatted_html = fill_html_template(summaries, signal_analysis, lang)
     st.html(formatted_html)
 

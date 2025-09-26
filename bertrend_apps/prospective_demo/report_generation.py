@@ -197,12 +197,7 @@ def generate_report(
     detailed_newsletter: DetailedNewsletter = create_detailed_newsletter(
         weak_signals, strong_signals, options
     )
-    language = (
-        "en"
-        if st.session_state.model_analysis_cfg[model_id]["model_config"]["language"]
-        == "English"
-        else "fr"
-    )
+    language = st.session_state.model_analysis_cfg[model_id]["model_config"]["language"]
     # Generate the HTML
     output_html = render_html_report(
         newsletter=detailed_newsletter,
