@@ -1,20 +1,22 @@
 name: Build and push Docker images
 
-
 on:
-  workflow_run:
-    workflows: ["publish"]  # To run it **after** publish.yml if this one was successful
-    types:
-      - completed
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Push docker images'
+        required: false
+        default: 'main'
 
 jobs:
   build-and-push:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
     runs-on: ubuntu-latest
     steps:
       # 1. Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
 
       # 2. Set up QEMU (for multi-arch builds, optional)
       - name: Set up QEMU
