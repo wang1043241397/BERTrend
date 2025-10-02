@@ -58,8 +58,8 @@ services:
       - "8084:8084"  # Weak Signals demo
       - "8081:8081"  # Prospective demo
     volumes:
-      - ${BERTREND_BASE_DIR}:/bertrend:rw
-      - ${HF_HOME:-.cache/huggingface}:/app/.cache/huggingface:rw
+      - ${BERTREND_BASE_DIR}:/bertrend
+      - ${HF_HOME:-.cache/huggingface}:/app/.cache/huggingface
     environment:
       - NO_PROXY=$NO_PROXY,embedding_server,bertrend # to avoid communication issues between containers
       - no_proxy=$no_proxy,embedding_server,bertrend # to avoid communication issues between containers
