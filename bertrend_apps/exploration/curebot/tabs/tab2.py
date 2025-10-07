@@ -35,7 +35,7 @@ def show_topic_list():
                 button_title = topic["llm_description"]
                 st.button(
                     str(topic_number + 1) + " - " + button_title,
-                    use_container_width=True,
+                    width="stretch",
                     on_click=set_topic_selection,
                     args=(topic_number,),
                 )

@@ -340,7 +340,7 @@ def display_topic_evolution_dataframe():
             st.session_state.temptopic.final_df[columns_present].sort_values(
                 by=["Topic", "Timestamp"], ascending=[True, True]
             ),
-            use_container_width=True,
+            width="stretch",
         )
 
 
@@ -349,14 +349,14 @@ def display_topic_info_dataframe():
     with st.expander(translate("topic_info_dataframe")):
         st.dataframe(
             st.session_state.temptopic.topic_model.get_topic_info(),
-            use_container_width=True,
+            width="stretch",
         )
 
 
 def display_documents_per_date_dataframe():
     """Display the Documents per Date Dataframe."""
     with st.expander(translate("documents_per_date_dataframe")):
-        st.dataframe(st.session_state.aggregated_df, use_container_width=True)
+        st.dataframe(st.session_state.aggregated_df, width="stretch")
 
 
 def display_temptopic_visualizations():
@@ -423,7 +423,7 @@ def display_topic_evolution(topics_to_show):
         color_palette=color_palette,
     )
     st.plotly_chart(
-        fig_topic_evolution, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True
+        fig_topic_evolution, config=PLOTLY_BUTTON_SAVE_CONFIG, width="stretch"
     )
 
     st.divider()
@@ -447,7 +447,7 @@ def display_overall_topic_stability(topics_to_show):
     st.plotly_chart(
         fig_overall_stability,
         config=PLOTLY_BUTTON_SAVE_CONFIG,
-        use_container_width=True,
+        width="stretch",
     )
 
     st.divider()
@@ -463,7 +463,7 @@ def display_temporal_stability_metrics(topics_to_show):
         topics_to_show=topics_to_show,
     )
     st.plotly_chart(
-        fig_topic_stability, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True
+        fig_topic_stability, config=PLOTLY_BUTTON_SAVE_CONFIG, width="stretch"
     )
 
     fig_representation_stability = plot_temporal_stability_metrics(
@@ -474,7 +474,7 @@ def display_temporal_stability_metrics(topics_to_show):
     st.plotly_chart(
         fig_representation_stability,
         config=PLOTLY_BUTTON_SAVE_CONFIG,
-        use_container_width=True,
+        width="stretch",
     )
 
 
@@ -511,7 +511,7 @@ def display_topics_popularity():
                         st.session_state["topic_model"],
                     ),
                     config=PLOTLY_BUTTON_SAVE_CONFIG,
-                    use_container_width=True,
+                    width="stretch",
                 )
 
 

@@ -83,7 +83,7 @@ def display_data_info_for_feed(feed_id: str):
     )
     st.dataframe(
         df_filtered,
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         column_config={"url": st.column_config.LinkColumn("url")},
     )

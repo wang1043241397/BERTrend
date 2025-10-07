@@ -75,7 +75,7 @@ def display_sankey_diagram(all_merge_histories_df: pd.DataFrame) -> None:
 
         # Display the diagram using Streamlit in an expander
         st.plotly_chart(
-            sankey_diagram, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True
+            sankey_diagram, config=PLOTLY_BUTTON_SAVE_CONFIG, width="stretch"
         )
 
 
@@ -227,7 +227,7 @@ def display_popularity_evolution():
         q1,
         q3,
     )
-    st.plotly_chart(fig, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True)
+    st.plotly_chart(fig, config=PLOTLY_BUTTON_SAVE_CONFIG, width="stretch")
 
 
 def display_signal_types():
@@ -309,7 +309,7 @@ def display_newly_emerged_topics(all_new_topics_df: pd.DataFrame) -> None:
             ].sort_values(by=["Timestamp", "Document_Count"], ascending=[True, False])
         )
         st.plotly_chart(
-            fig_new_topics, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True
+            fig_new_topics, config=PLOTLY_BUTTON_SAVE_CONFIG, width="stretch"
         )
 
 
@@ -330,15 +330,15 @@ def display_topics_per_timestamp(topic_models: dict[pd.Timestamp, BERTopic]) -> 
 
         fig = plot_topics_for_model(selected_model)
 
-        st.plotly_chart(fig, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True)
+        st.plotly_chart(fig, config=PLOTLY_BUTTON_SAVE_CONFIG, width="stretch")
 
         st.dataframe(
             selected_model.doc_info_df[
                 ["Paragraph", "document_id", "Topic", "Representation", "source"]
             ],
-            use_container_width=True,
+            width="stretch",
         )
-        st.dataframe(selected_model.topic_info_df, use_container_width=True)
+        st.dataframe(selected_model.topic_info_df, width="stretch")
 
 
 def display_signal_analysis(topic_number: int):

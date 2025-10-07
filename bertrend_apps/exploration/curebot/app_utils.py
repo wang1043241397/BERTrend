@@ -297,7 +297,7 @@ def display_source_distribution(
         showlegend=False, height=600, width=500, margin=dict(t=0, b=0, l=0, r=0)
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
 def get_website_name(url):

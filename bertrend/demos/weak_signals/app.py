@@ -195,7 +195,7 @@ def training_page():
                 selected_docs[
                     ["timestamp", TEXT_COLUMN, "document_id", "source", "url"]
                 ],
-                use_container_width=True,
+                width="stretch",
             )
         else:
             st.warning(translate("no_data_warning"), icon=WARNING_ICON)
@@ -285,13 +285,13 @@ def analysis_page():
             st.plotly_chart(
                 plot_num_topics(topic_models),
                 config=PLOTLY_BUTTON_SAVE_CONFIG,
-                use_container_width=True,
+                width="stretch",
             )
             # Size of Outlier Topic for each topic model
             st.plotly_chart(
                 plot_size_outliers(topic_models),
                 config=PLOTLY_BUTTON_SAVE_CONFIG,
-                use_container_width=True,
+                width="stretch",
             )
 
         display_topics_per_timestamp(topic_models)
@@ -335,7 +335,7 @@ def analysis_page():
                 st.plotly_chart(
                     fig_trend,
                     config=PLOTLY_BUTTON_SAVE_CONFIG,
-                    use_container_width=True,
+                    width="stretch",
                 )
 
                 # Display the dataframe with zeroshot topics information
@@ -352,7 +352,7 @@ def analysis_page():
                     for timestamp, data in weak_signal_trend.items()
                 ]
                 zeroshot_topics_df = pd.DataFrame(zeroshot_topics_data)
-                st.dataframe(zeroshot_topics_df, use_container_width=True)
+                st.dataframe(zeroshot_topics_df, width="stretch")
 
                 # Save the zeroshot topics data to a JSON file
                 json_file_path = ZEROSHOT_TOPICS_DATA_DIR
@@ -462,7 +462,7 @@ def main():
         # State Management
         st.subheader(translate("state_management"))
 
-        if st.button(translate("restore_previous_run"), use_container_width=True):
+        if st.button(translate("restore_previous_run"), width="stretch"):
             restore_state()
             try:
                 SessionStateManager.set("bertrend", BERTrend.restore_model())
@@ -470,10 +470,10 @@ def main():
             except Exception:
                 st.warning(translate("no_models_warning"), icon=WARNING_ICON)
 
-        if st.button(translate("purge_cache"), use_container_width=True):
+        if st.button(translate("purge_cache"), width="stretch"):
             purge_cache()
 
-        if st.button(translate("clear_session_state"), use_container_width=True):
+        if st.button(translate("clear_session_state"), width="stretch"):
             SessionStateManager.clear()
 
         # BERTopic Hyperparameters

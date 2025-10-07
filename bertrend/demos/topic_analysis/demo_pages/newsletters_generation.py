@@ -158,7 +158,7 @@ def main():
         generate_newsletter_clicked = st.button(
             translate("generate_newsletter_button"),
             type="primary",
-            use_container_width=True,
+            width="stretch",
         )
 
     # Generate newsletters when button is clicked

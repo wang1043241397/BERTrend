@@ -338,5 +338,5 @@ def display_data_loading_component():
         SessionStateManager.get_dataframe("time_filtered_df")[
             [TEXT_COLUMN, "timestamp"]
         ],
-        use_container_width=True,
+        width="stretch",
     )

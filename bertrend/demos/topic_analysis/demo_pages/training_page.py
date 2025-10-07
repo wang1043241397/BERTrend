@@ -70,7 +70,7 @@ def data_distribution(df: pd.DataFrame):
             value="1M",
         )
         fig = plot_docs_repartition_over_time(df, freq)
-        st.plotly_chart(fig, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True)
+        st.plotly_chart(fig, config=PLOTLY_BUTTON_SAVE_CONFIG, width="stretch")
 
 
 def save_model_interface():

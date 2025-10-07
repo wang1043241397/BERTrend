@@ -221,7 +221,7 @@ def display_topic_links(title: str, desc: str, df: pd.DataFrame):
     st.write(desc)
     st.dataframe(
         df,
-        use_container_width=True,
+        width="stretch",
         column_config={
             "value": st.column_config.LinkColumn(translate("reference_articles")),
         },

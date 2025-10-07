@@ -231,7 +231,7 @@ def main():
             st.plotly_chart(
                 overall_results_plot,
                 config=PLOTLY_BUTTON_SAVE_CONFIG,
-                use_container_width=True,
+                width="stretch",
             )
         else:
             st.error(translate("overall_results_display_error"), icon=ERROR_ICON)
@@ -242,7 +242,7 @@ def main():
         with st.spinner(translate("topics_treemap_computation")):
             treemap_plot = create_treemap()
             st.plotly_chart(
-                treemap_plot, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True
+                treemap_plot, config=PLOTLY_BUTTON_SAVE_CONFIG, width="stretch"
             )
 
     # Data Map
@@ -263,7 +263,7 @@ def main():
                     data=get_binary_file_downloader_html(save_path),
                     file_name="datamapplot.html",
                     mime="text/html",
-                    use_container_width=True,
+                    width="stretch",
                     type="secondary",
                 )
             else:

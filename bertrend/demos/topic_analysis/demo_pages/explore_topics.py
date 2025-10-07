@@ -87,7 +87,7 @@ def display_sidebar():
                 button_title += f" :red[+{new_docs_number}]"
             st.button(
                 button_title,
-                use_container_width=True,
+                width="stretch",
                 on_click=set_topic_selection,
                 args=(topic_number,),
             )
@@ -119,7 +119,7 @@ def plot_topic_over_time():
                     st.session_state["topic_model"],
                 ),
                 config=PLOTLY_BUTTON_SAVE_CONFIG,
-                use_container_width=True,
+                width="stretch",
             )
         else:
             st.plotly_chart(
@@ -132,7 +132,7 @@ def plot_topic_over_time():
                     ].max(),
                 ),
                 config=PLOTLY_BUTTON_SAVE_CONFIG,
-                use_container_width=True,
+                width="stretch",
             )
 
 
@@ -203,7 +203,7 @@ def display_source_distribution(
         showlegend=False, height=600, width=500, margin=dict(t=0, b=0, l=0, r=0)
     )
 
-    st.plotly_chart(fig, config=PLOTLY_BUTTON_SAVE_CONFIG, use_container_width=True)
+    st.plotly_chart(fig, config=PLOTLY_BUTTON_SAVE_CONFIG, width="stretch")
 
 
 def get_website_name(url):
