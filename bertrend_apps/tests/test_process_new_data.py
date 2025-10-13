@@ -115,16 +115,16 @@ class TestGetRelevantModelConfig:
         """Test successful loading of model config."""
         mock_get_model_cfg_path.return_value = Path("/test/config.toml")
         mock_load_toml_config.return_value = {
-            "model_config": {"granularity": 7, "window_size": 30, "language": "English"}
+            "model_config": {"granularity": 7, "window_size": 30, "language": "en"}
         }
 
-        granularity, window_size, language = get_relevant_model_config(
+        granularity, window_size, language_code = get_relevant_model_config(
             "test_model", "test_user"
         )
 
         assert granularity == 7
         assert window_size == 30
-        assert language == "English"
+        assert language_code == "en"
 
     @patch("bertrend_apps.prospective_demo.process_new_data.get_model_cfg_path")
     @patch("bertrend_apps.prospective_demo.process_new_data.load_toml_config")
@@ -159,11 +159,11 @@ class TestGetRelevantModelConfig:
             }
         }
 
-        granularity, window_size, language = get_relevant_model_config(
+        granularity, window_size, language_code = get_relevant_model_config(
             "test_model", "test_user"
         )
 
-        assert language == "English"  # Should fallback to English
+        assert language_code == "en"  # Should fallback to English
 
 
 class TestGenerateLLMInterpretation:
@@ -484,7 +484,7 @@ class TestRegenerateModels:
     ):
         """Test successful model regeneration."""
         # Setup mocks
-        mock_get_config.return_value = (7, 30, "English")
+        mock_get_config.return_value = (7, 30, "en")
 
         mock_data = pd.DataFrame(
             {
@@ -510,7 +510,7 @@ class TestRegenerateModels:
 
         # Verify
         mock_load_all_data.assert_called_once_with(
-            model_id="test_model", user="test_user", language="English"
+            model_id="test_model", user="test_user", language_code="en"
         )
         mock_split_data.assert_called_once()
         assert mock_train_new_model.call_count == 2  # Should train for each period
@@ -519,7 +519,7 @@ class TestRegenerateModels:
     @patch("bertrend_apps.prospective_demo.process_new_data.load_all_data")
     def test_regenerate_models_no_data(self, mock_load_all_data, mock_get_config):
         """Test behavior when no data is available."""
-        mock_get_config.return_value = (7, 30, "English")
+        mock_get_config.return_value = (7, 30, "en")
         mock_load_all_data.return_value = None
 
         # Should handle None case gracefully - function should return early

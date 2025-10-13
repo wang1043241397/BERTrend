@@ -40,7 +40,7 @@ from bertrend_apps.prospective_demo.llm_utils import generate_bertrend_topic_des
 DEFAULT_TOP_K = 5
 
 
-def load_all_data(model_id: str, user: str, language: str):
+def load_all_data(model_id: str, user: str, language_code: str):
     # TODO: to be improved
     cfg_file = get_user_feed_path(user, model_id)
     if not cfg_file.exists():
@@ -57,7 +57,10 @@ def load_all_data(model_id: str, user: str, language: str):
         logger.warning(f"No new data for '{model_id}', nothing to do")
         return
 
-    dfs = [load_data(Path(f), language=language) for f in files]
+    dfs = [
+        load_data(Path(f), language="French" if language_code == "fr" else "English")
+        for f in files
+    ]
     new_data = pd.concat(dfs).drop_duplicates(
         subset=["title"], keep="first", inplace=False
     )
@@ -77,10 +80,10 @@ def get_relevant_model_config(
     # Extract relevant values
     granularity = model_analysis_cfg["model_config"]["granularity"]
     window_size = model_analysis_cfg["model_config"]["window_size"]
-    language = model_analysis_cfg["model_config"]["language"]
-    if language not in ["French", "English"]:
-        language = "English"
-    return granularity, window_size, language
+    language_code = model_analysis_cfg["model_config"]["language"]
+    if language_code not in ["fr", "en"]:
+        language_code = "en"
+    return granularity, window_size, language_code
 
 
 def generate_llm_interpretation(
@@ -178,10 +181,9 @@ def train_new_model_for_period(
     bertrend_models_path = get_user_models_path(user_name, model_id)
 
     # Get relevant model info from config
-    granularity, window_size, language = get_relevant_model_config(
+    granularity, window_size, language_code = get_relevant_model_config(
         model_id=model_id, user=user_name
     )
-    language_code = "fr" if language == "French" else "en"
 
     # Process new data
     bertrend = train_new_data(
@@ -189,7 +191,7 @@ def train_new_model_for_period(
         new_data=new_data,
         bertrend_models_path=bertrend_models_path,
         embedding_service=embedding_service,
-        language=language,
+        language="English" if language_code == "fr" else "French",
         granularity=granularity,
     )
 
@@ -268,12 +270,12 @@ def regenerate_models(
     for the specified user."""
 
     # Get relevant model info from config
-    granularity, window_size, language = get_relevant_model_config(
+    granularity, window_size, language_code = get_relevant_model_config(
         model_id=model_id, user=user
     )
 
     # Load model config
-    df = load_all_data(model_id=model_id, user=user, language=language)
+    df = load_all_data(model_id=model_id, user=user, language_code=language_code)
     logger.info(f"Size of dataset: {len(df)}")
 
     if since:
@@ -298,7 +300,13 @@ def regenerate_models(
 
         # Train BERTrend
         bertrend = BERTrend(
-            topic_model=BERTopicModel({"global": {"language": language}})
+            topic_model=BERTopicModel(
+                {
+                    "global": {
+                        "language": "French" if language_code == "fr" else "English"
+                    }
+                }
+            )
         )
         embeddings, _, _ = embedding_service.embed(
             texts=df[TEXT_COLUMN],
@@ -346,12 +354,14 @@ if __name__ == "__main__":
         logger.info(f"Splitting data by paragraphs: {split_by_paragraph}")
 
         # Get relevant model info from config
-        granularity, window_size, language = get_relevant_model_config(
+        granularity, window_size, language_code = get_relevant_model_config(
             model_id=model_id, user=user_name
         )
 
         # Load data for last period
-        new_data = load_all_data(model_id=model_id, user=user_name, language=language)
+        new_data = load_all_data(
+            model_id=model_id, user=user_name, language_code=language_code
+        )
         # filter data according to granularity
         # Calculate the date X days ago
         reference_timestamp = pd.Timestamp(

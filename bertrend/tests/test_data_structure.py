@@ -42,7 +42,7 @@ def test_topic_description_dict_conversion():
     )
 
     # Convert to dict
-    topic_dict = original.dict()
+    topic_dict = original.model_dump()
     assert isinstance(topic_dict, dict)
     assert topic_dict["title"] == "Test Topic"
     assert topic_dict["description"] == "This is a test topic description"
