@@ -45,9 +45,7 @@ from bertrend_apps.prospective_demo.process_new_data import regenerate_models
 @st.cache_data(ttl=60)
 def load_model_config(model_id: str, username: str):
     """Loads the model config from the disk"""
-    return load_toml_config(
-        get_model_cfg_path(user_name=username, model_id=model_id)
-    )
+    return load_toml_config(get_model_cfg_path(user_name=username, model_id=model_id))
 
 
 @st.fragment
@@ -60,7 +58,9 @@ def models_monitoring():
 
     for model_id in sorted(st.session_state.user_feeds.keys()):
         try:
-            st.session_state.model_analysis_cfg[model_id] = load_model_config(model_id, st.session_state.username)
+            st.session_state.model_analysis_cfg[model_id] = load_model_config(
+                model_id, st.session_state.username
+            )
         except Exception:
             # create default config if not found
             st.session_state.model_analysis_cfg[model_id] = DEFAULT_ANALYSIS_CFG
@@ -206,7 +206,9 @@ def edit_model_parameters(row_dict: dict):
         )
         # reload model config to update correctly memory cache
         st.cache_data.clear()
-        st.session_state.model_analysis_cfg[model_id] = load_model_config(model_id, st.session_state.username)
+        st.session_state.model_analysis_cfg[model_id] = load_model_config(
+            model_id, st.session_state.username
+        )
         update_scheduled_training_for_user(model_id, st.session_state.username)
         st.rerun()
 
