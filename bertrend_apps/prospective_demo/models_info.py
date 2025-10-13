@@ -42,10 +42,11 @@ from bertrend_apps.prospective_demo.perf_utils import get_least_used_gpu
 from bertrend_apps.prospective_demo.process_new_data import regenerate_models
 
 
-def load_model_config(model_id: str):
+@st.cache_data(ttl=60)
+def load_model_config(model_id: str, username: str):
     """Loads the model config from the disk"""
-    st.session_state.model_analysis_cfg[model_id] = load_toml_config(
-        get_model_cfg_path(user_name=st.session_state.username, model_id=model_id)
+    return load_toml_config(
+        get_model_cfg_path(user_name=username, model_id=model_id)
     )
 
 
@@ -59,7 +60,7 @@ def models_monitoring():
 
     for model_id in sorted(st.session_state.user_feeds.keys()):
         try:
-            load_model_config(model_id)
+            st.session_state.model_analysis_cfg[model_id] = load_model_config(model_id, st.session_state.username)
         except Exception:
             # create default config if not found
             st.session_state.model_analysis_cfg[model_id] = DEFAULT_ANALYSIS_CFG
@@ -76,7 +77,7 @@ def models_monitoring():
             )
             save_model_config(model_id, st.session_state.model_analysis_cfg[model_id])
 
-        list_models = get_models_info(model_id)
+        list_models = get_models_info(model_id, st.session_state.username)
         displayed_list.append(
             {
                 translate("col_id"): model_id,
@@ -204,7 +205,8 @@ def edit_model_parameters(row_dict: dict):
             model_id, {"model_config": model_config, "analysis_config": analysis_config}
         )
         # reload model config to update correctly memory cache
-        load_model_config(model_id)
+        st.cache_data.clear()
+        st.session_state.model_analysis_cfg[model_id] = load_model_config(model_id, st.session_state.username)
         update_scheduled_training_for_user(model_id, st.session_state.username)
         st.rerun()
 
@@ -233,6 +235,8 @@ def handle_delete_models(row_dict: dict):
             )
             delete_cached_models(model_id)
             logger.info(translate("models_deleted_success").format(model_id))
+            # Clear cache to reflect deleted models
+            st.cache_data.clear()
             time.sleep(0.2)
             st.rerun()
     with col2:
@@ -255,6 +259,8 @@ def handle_regenerate_models(row_dict: dict):
             # Delete previously stored model
             delete_cached_models(model_id)
             logger.info(translate("models_deleted_success").format(model_id))
+            # Clear cache to reflect deleted models
+            st.cache_data.clear()
 
             # Regenerate new models
             # Launch model generation in a separate thread to avoid blocking the app
@@ -300,6 +306,8 @@ def toggle_learning(cfg: dict):
         schedule_training_for_user(model_id, st.session_state.username)
         st.toast(translate("learning_activated").format(model_id), icon=WARNING_ICON)
         logger.info(f"Learning for {model_id} activated !")
+    # Clear cache to reflect updated crontab state
+    st.cache_data.clear()
     time.sleep(0.2)
     st.rerun()
 
@@ -342,6 +350,7 @@ def toggle_icon(df: pd.DataFrame, index: int) -> str:
     )
 
 
+@st.cache_data(ttl=30)
 def check_if_learning_active_for_user(model_id: str, user: str):
     """Checks if a given scrapping feed is active (registered in the crontab"""
     if user:
@@ -414,9 +423,10 @@ def safe_timestamp(x: str) -> pd.Timestamp | None:
         return None
 
 
-def get_models_info(model_id: str) -> list:
+@st.cache_data(ttl=60)
+def get_models_info(model_id: str, username: str) -> list:
     """Returns the list of topic models that are stored, identified by their timestamp"""
-    user_model_dir = get_user_models_path(st.session_state.username, model_id)
+    user_model_dir = get_user_models_path(username, model_id)
     if not user_model_dir.exists():
         return []
     matching_files = user_model_dir.glob(r"????-??-??")
