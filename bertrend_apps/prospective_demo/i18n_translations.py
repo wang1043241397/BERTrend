@@ -142,6 +142,14 @@ TRANSLATIONS = {
         "fr": "URL du flux de données ATOM",
         "en": "ATOM data feed URL",
     },
+    "feed_rss_label": {
+        "fr": "RSS feed",
+        "en": "RSS feed",
+    },
+    "feed_rss_help": {
+        "fr": "URL du flux de données RSS",
+        "en": "RSS data feed URL",
+    },
     # Language options
     "language_english": {
         "fr": "Anglais",

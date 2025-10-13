@@ -46,7 +46,7 @@ DEFAULT_ATOM_CRONTAB_EXPRESSION = "42 0,6,12,18 * * *"  # 4 times a day
 DEFAULT_MAX_RESULTS = 25
 DEFAULT_MAX_RESULTS_ARXIV = 1000
 DEFAULT_NUMBER_OF_DAYS = 7
-FEED_SOURCES = ["google", "atom", "arxiv"]
+FEED_SOURCES = ["google", "atom", "rss", "arxiv"]
 
 
 @st.dialog(translate("feed_config_dialog_title"))
@@ -133,6 +133,13 @@ def edit_feed_monitoring(config: dict | None = None):
             help=translate("feed_atom_help"),
         )
 
+    elif provider == "rss":
+        query = st.text_input(
+            translate("feed_rss_label") + " :red[*]",
+            value="" if not config else config["query"],
+            help=translate("feed_rss_help"),
+        )
+
     try:
         get_understandable_cron_description(st.session_state.update_frequency)
         valid_cron = True
@@ -143,7 +150,8 @@ def edit_feed_monitoring(config: dict | None = None):
         translate("ok_button"),
         disabled=not chosen_id
         or not query
-        or (query and provider == "atom" and not re.match(URL_PATTERN, query)),
+        or (query and provider == "atom" and not re.match(URL_PATTERN, query))
+        or (query and provider == "rss" and not re.match(URL_PATTERN, query)),
     ):
         if not config:
             config = {}
@@ -169,6 +177,9 @@ def edit_feed_monitoring(config: dict | None = None):
                 else DEFAULT_CRONTAB_EXPRESSION
             )
         elif provider == "atom":
+            config["language"] = "fr"
+            config["update_frequency"] = DEFAULT_ATOM_CRONTAB_EXPRESSION
+        elif provider == "rss":
             config["language"] = "fr"
             config["update_frequency"] = DEFAULT_ATOM_CRONTAB_EXPRESSION
 
