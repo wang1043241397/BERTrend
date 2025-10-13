@@ -35,6 +35,7 @@ DOWNLOAD_ICON = ":material/download:"
 EMAIL_ICON = ":material/mail:"
 RESTART_ICON = ":material/restart_alt:"
 PERSON_ADD_ICON = ":material/person_add:"
+PERSON_REMOVE_ICON = ":material/person_remove:"
 
 JSON_ICON = "🧾"
 PARQUET_ICON = "📦️"

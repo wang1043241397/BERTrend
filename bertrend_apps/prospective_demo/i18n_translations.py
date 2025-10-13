@@ -288,6 +288,51 @@ TRANSLATIONS = {
         "fr": "Analyse multifactorielle",
         "en": "Multifactorial analysis",
     },
+    # Report parameters
+    "report_params_title": {
+        "fr": "Paramètres de rapport de la veille {}: configuration de l'envoi automatique",
+        "en": "Report parameters for monitoring {}: automatic sending configuration",
+    },
+    "auto_send_reports": {
+        "fr": "Envoi automatique des rapports",
+        "en": "Automatic report sending",
+    },
+    "auto_send_reports_help": {
+        "fr": "Active l'envoi automatique des rapports par email après chaque analyse",
+        "en": "Enable automatic email sending of reports after each analysis",
+    },
+    "report_title_label": {
+        "fr": "Titre du rapport",
+        "en": "Report title",
+    },
+    "report_title_help": {
+        "fr": "Titre personnalisé pour l'objet de l'email",
+        "en": "Custom title for the email subject",
+    },
+    "email_recipients_label": {
+        "fr": "Destinataires (emails séparés par des virgules)",
+        "en": "Recipients (comma-separated emails)",
+    },
+    "email_recipients_help": {
+        "fr": "Adresses email des destinataires du rapport, séparées par des virgules",
+        "en": "Email addresses of report recipients, separated by commas",
+    },
+    "max_emerging_topics_label": {
+        "fr": "Nombre maximum de sujets émergents",
+        "en": "Maximum number of emerging topics",
+    },
+    "max_emerging_topics_help": {
+        "fr": "Nombre maximum de sujets émergents (signaux faibles) à inclure dans le rapport",
+        "en": "Maximum number of emerging topics (weak signals) to include in the report",
+    },
+    "max_strong_topics_label": {
+        "fr": "Nombre maximum de sujets forts",
+        "en": "Maximum number of strong topics",
+    },
+    "max_strong_topics_help": {
+        "fr": "Nombre maximum de sujets forts à inclure dans le rapport",
+        "en": "Maximum number of strong topics to include in the report",
+    },
     # Buttons and actions
     "btn_ok": {"fr": "OK", "en": "OK"},
     "btn_yes": {"fr": "Oui", "en": "Yes"},

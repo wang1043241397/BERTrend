@@ -57,7 +57,7 @@ def choose_id_and_ts():
             ),
         )
     with col2:
-        list_models = get_models_info(model_id)
+        list_models = get_models_info(model_id, st.session_state.username)
         if not list_models:
             st.warning(translate("no_available_model_warning"), icon=WARNING_ICON)
             st.stop()
