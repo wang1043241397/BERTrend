@@ -40,7 +40,8 @@ if __name__ == "__main__":
     def scrape(
         keywords: str = typer.Argument(help="keywords for data search engine."),
         provider: str = typer.Option(
-            "google", help="source for data [arxiv, atom, rss, google, bing, newscatcher]"
+            "google",
+            help="source for data [arxiv, atom, rss, google, bing, newscatcher]",
         ),
         after: str = typer.Option(
             None, help="date after which to consider news [format YYYY-MM-DD]"
@@ -93,7 +94,8 @@ if __name__ == "__main__":
             50, help="maximum number of results per request"
         ),
         provider: str = typer.Option(
-            "google", help="source for news [arxiv, atom, rss, google, bing, newscatcher]"
+            "google",
+            help="source for news [arxiv, atom, rss, google, bing, newscatcher]",
         ),
         save_path: Path = typer.Option(None, help="Path for writing results."),
         language: str = typer.Option(None, help="Language filter"),
@@ -226,7 +228,9 @@ if __name__ == "__main__":
 
         # Generate a query file
         with tempfile.NamedTemporaryFile() as query_file:
-            if provider == "arxiv" or provider == "atom" or provider == "rss":  # already returns batches
+            if (
+                provider == "arxiv" or provider == "atom" or provider == "rss"
+            ):  # already returns batches
                 scrape(
                     keywords=keywords,
                     provider=provider,
