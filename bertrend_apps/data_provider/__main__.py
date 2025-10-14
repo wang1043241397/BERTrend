@@ -17,6 +17,7 @@ from bertrend_apps.common.crontab_utils import schedule_scrapping
 from bertrend_apps.data_provider.arxiv_provider import ArxivProvider
 from bertrend_apps.data_provider.bing_news_provider import BingNewsProvider
 from bertrend_apps.data_provider.atom_feed_provider import ATOMFeedProvider
+from bertrend_apps.data_provider.rss_feed_provider import RSSFeedProvider
 from bertrend_apps.data_provider.google_news_provider import GoogleNewsProvider
 from bertrend_apps.data_provider.newscatcher_provider import NewsCatcherProvider
 
@@ -26,6 +27,7 @@ os.umask(0o002)
 PROVIDERS = {
     "arxiv": ArxivProvider,
     "atom": ATOMFeedProvider,
+    "rss": RSSFeedProvider,
     "google": GoogleNewsProvider,
     "bing": BingNewsProvider,
     "newscatcher": NewsCatcherProvider,
@@ -38,7 +40,8 @@ if __name__ == "__main__":
     def scrape(
         keywords: str = typer.Argument(help="keywords for data search engine."),
         provider: str = typer.Option(
-            "google", help="source for data [arxiv, google, bing, newscatcher]"
+            "google",
+            help="source for data [arxiv, atom, rss, google, bing, newscatcher]",
         ),
         after: str = typer.Option(
             None, help="date after which to consider news [format YYYY-MM-DD]"
@@ -54,14 +57,14 @@ if __name__ == "__main__":
         ),
         language: str = typer.Option(None, help="Language filter"),
     ):
-        """Scrape data from Arxiv, Google, Bing or NewsCatcher news (single request).
+        """Scrape data from Arxiv, ATOM/RSS feeds, Google, Bing or NewsCatcher news (single request).
 
         Parameters
         ----------
         keywords: str
             query described as keywords
         provider: str
-            News data provider. Current authorized values [google, bing, newscatcher]
+            News data provider. Current authorized values [arxiv, atom, rss, google, bing, newscatcher]
         after: str
             "from" date, formatted as YYYY-MM-DD
         before: str
@@ -91,7 +94,8 @@ if __name__ == "__main__":
             50, help="maximum number of results per request"
         ),
         provider: str = typer.Option(
-            "google", help="source for news [google, bing, newscatcher]"
+            "google",
+            help="source for news [arxiv, atom, rss, google, bing, newscatcher]",
         ),
         save_path: Path = typer.Option(None, help="Path for writing results."),
         language: str = typer.Option(None, help="Language filter"),
@@ -103,7 +107,7 @@ if __name__ == "__main__":
             help="Minimum quality level to consider an article as relevant. (among: poor, fair, average, good, excellent)",
         ),
     ):
-        """Scrape data from Arxiv, Google, Bing news or NewsCatcher (multiple requests from a configuration file: each line of the file shall be compliant with the following format:
+        """Scrape data from Arxiv, ATOM/RSS feeds, Google, Bing news or NewsCatcher (multiple requests from a configuration file: each line of the file shall be compliant with the following format:
         <keyword list>;<after_date, format YYYY-MM-DD>;<before_date, format YYYY-MM-DD>)
 
         Parameters
@@ -113,7 +117,7 @@ if __name__ == "__main__":
         max_results: int
             Maximum number of results per request
         provider: str
-            News data provider. Current authorized values [google, bing, newscatcher]
+            News data provider. Current authorized values [arxiv, atom, rss, google, bing, newscatcher]
         save_path: Path
             Path to the output file (jsonl format)
         language: str
@@ -198,7 +202,7 @@ if __name__ == "__main__":
     def scrape_from_feed(
         feed_cfg: Path = typer.Argument(help="Path of the data feed config file"),
     ):
-        """Scrape data from Arxiv, Google, Bing news or NewsCatcher on the basis of a feed configuration file"""
+        """Scrape data from Arxiv, ATOM/RSS feeds, Google, Bing news or NewsCatcher on the basis of a feed configuration file"""
         data_feed_cfg = load_toml_config(feed_cfg)
         current_date = datetime.today()
         current_date_str = current_date.strftime("%Y-%m-%d")
@@ -224,7 +228,9 @@ if __name__ == "__main__":
 
         # Generate a query file
         with tempfile.NamedTemporaryFile() as query_file:
-            if provider == "arxiv" or provider == "atom":  # already returns batches
+            if (
+                provider == "arxiv" or provider == "atom" or provider == "rss"
+            ):  # already returns batches
                 scrape(
                     keywords=keywords,
                     provider=provider,

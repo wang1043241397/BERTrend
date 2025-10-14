@@ -28,6 +28,9 @@ from bertrend.demos.demos_utils.icons import (
     RESTART_ICON,
 )
 from bertrend.demos.streamlit_components.clickable_df_component import clickable_df
+from bertrend.demos.streamlit_components.input_with_pills_component import (
+    input_with_pills,
+)
 from bertrend_apps.common.crontab_utils import (
     check_cron_job,
     remove_from_crontab,
@@ -40,13 +43,13 @@ from bertrend_apps.prospective_demo import (
 )
 from bertrend_apps.prospective_demo.perf_utils import get_least_used_gpu
 from bertrend_apps.prospective_demo.process_new_data import regenerate_models
+from bertrend_apps.prospective_demo.utils import is_valid_email
 
 
-def load_model_config(model_id: str):
+@st.cache_data(ttl=60)
+def load_model_config(model_id: str, username: str):
     """Loads the model config from the disk"""
-    st.session_state.model_analysis_cfg[model_id] = load_toml_config(
-        get_model_cfg_path(user_name=st.session_state.username, model_id=model_id)
-    )
+    return load_toml_config(get_model_cfg_path(user_name=username, model_id=model_id))
 
 
 @st.fragment
@@ -59,7 +62,9 @@ def models_monitoring():
 
     for model_id in sorted(st.session_state.user_feeds.keys()):
         try:
-            load_model_config(model_id)
+            st.session_state.model_analysis_cfg[model_id] = load_model_config(
+                model_id, st.session_state.username
+            )
         except Exception:
             # create default config if not found
             st.session_state.model_analysis_cfg[model_id] = DEFAULT_ANALYSIS_CFG
@@ -76,7 +81,7 @@ def models_monitoring():
             )
             save_model_config(model_id, st.session_state.model_analysis_cfg[model_id])
 
-        list_models = get_models_info(model_id)
+        list_models = get_models_info(model_id, st.session_state.username)
         displayed_list.append(
             {
                 translate("col_id"): model_id,
@@ -116,34 +121,36 @@ def models_monitoring():
     clickable_df(df, clickable_df_buttons)
 
 
-@st.dialog(translate("dialog_parameters"))
+@st.dialog(translate("dialog_parameters"), width="large")
 def edit_model_parameters(row_dict: dict):
     model_id = row_dict[translate("col_id")]
     st.write(f"**{translate('model_params_title').format(model_id)}**")
-
-    new_granularity = st.slider(
-        translate("update_frequency_label"),
-        min_value=1,
-        max_value=30,
-        value=st.session_state.model_analysis_cfg[model_id]["model_config"][
-            "granularity"
-        ],
-        step=1,
-        help=f"{INFO_ICON} {translate('update_frequency_help')}",
-    )
-    new_window_size = st.slider(
-        translate("time_window_label"),
-        min_value=new_granularity,
-        max_value=30,
-        value=max(
-            st.session_state.model_analysis_cfg[model_id]["model_config"][
-                "window_size"
+    c1, c2 = st.columns([1, 1])
+    with c1:
+        new_granularity = st.slider(
+            translate("update_frequency_label"),
+            min_value=1,
+            max_value=30,
+            value=st.session_state.model_analysis_cfg[model_id]["model_config"][
+                "granularity"
             ],
-            new_granularity,
-        ),
-        step=1,
-        help=f"{INFO_ICON} {translate('time_window_help')}",
-    )
+            step=1,
+            help=f"{INFO_ICON} {translate('update_frequency_help')}",
+        )
+    with c2:
+        new_window_size = st.slider(
+            translate("time_window_label"),
+            min_value=new_granularity,
+            max_value=30,
+            value=max(
+                st.session_state.model_analysis_cfg[model_id]["model_config"][
+                    "window_size"
+                ],
+                new_granularity,
+            ),
+            step=1,
+            help=f"{INFO_ICON} {translate('time_window_help')}",
+        )
 
     split_by_paragraph = st.checkbox(
         translate("split_by_paragraph"),
@@ -168,24 +175,80 @@ def edit_model_parameters(row_dict: dict):
     )
 
     st.write(f"**{translate('analysis_params_title').format(model_id)}**")
-    topic_evolution = st.checkbox(
-        translate("topic_evolution"),
-        value=st.session_state.model_analysis_cfg[model_id]["analysis_config"][
-            "topic_evolution"
-        ],
+    cols = st.columns(3)
+    with cols[0]:
+        topic_evolution = st.checkbox(
+            translate("topic_evolution"),
+            value=st.session_state.model_analysis_cfg[model_id]["analysis_config"][
+                "topic_evolution"
+            ],
+        )
+    with cols[1]:
+        evolution_scenarios = st.checkbox(
+            translate("evolution_scenarios"),
+            value=st.session_state.model_analysis_cfg[model_id]["analysis_config"][
+                "evolution_scenarios"
+            ],
+        )
+    with cols[2]:
+        multifactorial_analysis = st.checkbox(
+            translate("multifactorial_analysis"),
+            value=st.session_state.model_analysis_cfg[model_id]["analysis_config"][
+                "multifactorial_analysis"
+            ],
+        )
+
+    st.write(f"**{translate('report_params_title').format(model_id)}**")
+
+    # Get current report_config or use defaults
+    current_report_config = st.session_state.model_analysis_cfg[model_id].get(
+        "report_config", DEFAULT_ANALYSIS_CFG["report_config"]
     )
-    evolution_scenarios = st.checkbox(
-        translate("evolution_scenarios"),
-        value=st.session_state.model_analysis_cfg[model_id]["analysis_config"][
-            "evolution_scenarios"
-        ],
+
+    auto_send = st.checkbox(
+        translate("auto_send_reports"),
+        value=current_report_config.get("auto_send", False),
+        help=f"{INFO_ICON} {translate('auto_send_reports_help')}",
     )
-    multifactorial_analysis = st.checkbox(
-        translate("multifactorial_analysis"),
-        value=st.session_state.model_analysis_cfg[model_id]["analysis_config"][
-            "multifactorial_analysis"
-        ],
-    )
+
+    report_title = ""
+    email_recipients = []
+    max_emerging_topics = 1
+    max_strong_topics = 1
+    if auto_send:
+        report_title = st.text_input(
+            translate("report_title_label"),
+            value=current_report_config.get("report_title", ""),
+            help=f"{INFO_ICON} {translate('report_title_help')}",
+        )
+        email_recipients = input_with_pills(
+            label=translate("email_recipients_label"),
+            placeholder=translate("email_recipients"),
+            validate_fn=is_valid_email,
+            help=f"{INFO_ICON} {translate('email_recipients_help')}",
+            value=current_report_config.get("email_recipients", []),
+            key=f"{model_id}_config_email_recipients",
+        )
+
+        cols = st.columns(2)
+        with cols[0]:
+            max_emerging_topics = st.slider(
+                translate("max_emerging_topics_label"),
+                min_value=1,
+                max_value=10,
+                value=current_report_config.get("max_emerging_topics", 3),
+                step=1,
+                help=f"{INFO_ICON} {translate('max_emerging_topics_help')}",
+            )
+        with cols[1]:
+            max_strong_topics = st.slider(
+                translate("max_strong_topics_label"),
+                min_value=1,
+                max_value=10,
+                value=current_report_config.get("max_strong_topics", 5),
+                step=1,
+                help=f"{INFO_ICON} {translate('max_strong_topics_help')}",
+            )
 
     model_config = {
         "granularity": new_granularity,
@@ -198,14 +261,31 @@ def edit_model_parameters(row_dict: dict):
         "evolution_scenarios": evolution_scenarios,
         "multifactorial_analysis": multifactorial_analysis,
     }
+    report_config = {
+        "auto_send": auto_send,
+        "email_recipients": email_recipients,
+        "report_title": report_title,
+        "max_emerging_topics": max_emerging_topics,
+        "max_strong_topics": max_strong_topics,
+    }
 
     if st.button(translate("btn_ok")):
         save_model_config(
-            model_id, {"model_config": model_config, "analysis_config": analysis_config}
+            model_id,
+            {
+                "model_config": model_config,
+                "analysis_config": analysis_config,
+                "report_config": report_config,
+            },
         )
         # reload model config to update correctly memory cache
-        load_model_config(model_id)
+        st.cache_data.clear()
+        st.session_state.model_analysis_cfg[model_id] = load_model_config(
+            model_id, st.session_state.username
+        )
+
         update_scheduled_training_for_user(model_id, st.session_state.username)
+        update_scheduled_report_generation_for_user(model_id, st.session_state.username)
         st.rerun()
 
 
@@ -233,6 +313,8 @@ def handle_delete_models(row_dict: dict):
             )
             delete_cached_models(model_id)
             logger.info(translate("models_deleted_success").format(model_id))
+            # Clear cache to reflect deleted models
+            st.cache_data.clear()
             time.sleep(0.2)
             st.rerun()
     with col2:
@@ -255,6 +337,8 @@ def handle_regenerate_models(row_dict: dict):
             # Delete previously stored model
             delete_cached_models(model_id)
             logger.info(translate("models_deleted_success").format(model_id))
+            # Clear cache to reflect deleted models
+            st.cache_data.clear()
 
             # Regenerate new models
             # Launch model generation in a separate thread to avoid blocking the app
@@ -296,10 +380,23 @@ def toggle_learning(cfg: dict):
                 icon=INFO_ICON,
             )
             logger.info(f"Learning for {model_id} deactivated !")
+            # Also remove report generation if it was scheduled
+            if check_if_report_generation_active_for_user(
+                model_id, st.session_state.username
+            ):
+                remove_scheduled_report_generation_for_user(
+                    model_id, st.session_state.username
+                )
+                logger.info(f"Automated report generation for {model_id} deactivated !")
     else:
         schedule_training_for_user(model_id, st.session_state.username)
         st.toast(translate("learning_activated").format(model_id), icon=WARNING_ICON)
         logger.info(f"Learning for {model_id} activated !")
+        # Also schedule report generation if configured
+        if schedule_report_generation_for_user(model_id, st.session_state.username):
+            logger.info(f"Automated report generation for {model_id} activated !")
+    # Clear cache to reflect updated crontab state
+    st.cache_data.clear()
     time.sleep(0.2)
     st.rerun()
 
@@ -342,6 +439,7 @@ def toggle_icon(df: pd.DataFrame, index: int) -> str:
     )
 
 
+@st.cache_data(ttl=30)
 def check_if_learning_active_for_user(model_id: str, user: str):
     """Checks if a given scrapping feed is active (registered in the crontab"""
     if user:
@@ -373,16 +471,10 @@ def schedule_training_for_user(model_id: str, user: str):
     schedule = generate_crontab_expression(
         st.session_state.model_analysis_cfg[model_id]["model_config"]["granularity"]
     )
-    split_by_paragraph = st.session_state.model_analysis_cfg[model_id]["model_config"][
-        "split_by_paragraph"
-    ]
-    split_by_paragraph_option = (
-        "--split-by-paragraph" if split_by_paragraph else "--no-split-by-paragraph"
-    )
     logpath = BERTREND_LOG_PATH / "users" / user
     logpath.mkdir(parents=True, exist_ok=True)
     command = (
-        f"{sys.prefix}/bin/python -m bertrend_apps.prospective_demo.process_new_data train-new-model {user} {model_id} {split_by_paragraph_option} "
+        f"{sys.prefix}/bin/python -m bertrend_apps.prospective_demo.process_new_data train-new-model {user} {model_id} "
         f"> {logpath}/learning_{model_id}.log 2>&1"
     )
     env_vars = f"CUDA_VISIBLE_DEVICES={BEST_CUDA_DEVICE}"
@@ -407,6 +499,75 @@ def generate_crontab_expression(days_interval: int) -> str:
     return crontab_expression
 
 
+def check_if_report_generation_active_for_user(model_id: str, user: str) -> bool:
+    """Checks if automated report generation is active (registered in the crontab)"""
+    if user:
+        return check_cron_job(rf"automated_report_generation.*{user}.*{model_id}")
+    else:
+        return False
+
+
+def remove_scheduled_report_generation_for_user(model_id: str, user: str) -> bool:
+    """Removes from the crontab the report generation job matching the provided model_id"""
+    if user:
+        return remove_from_crontab(rf"automated_report_generation {user} {model_id}")
+    return False
+
+
+def schedule_report_generation_for_user(model_id: str, user: str) -> bool:
+    """Schedule automated report generation based on model configuration"""
+    # Check if report generation is configured in the model config
+    if model_id not in st.session_state.model_analysis_cfg:
+        logger.warning(f"Model config not found for {model_id}")
+        return False
+
+    report_config = st.session_state.model_analysis_cfg[model_id].get(
+        "report_config", {}
+    )
+    auto_send = report_config.get("auto_send", False)
+    recipients = report_config.get("email_recipients", [])
+
+    if not auto_send:
+        logger.info(f"auto_send is disabled for model {model_id}")
+        return False
+
+    if not recipients:
+        logger.warning(f"No email recipients configured for model {model_id}")
+        return False
+
+    # Generate cron schedule based on granularity (same as training)
+    schedule = generate_crontab_expression(
+        st.session_state.model_analysis_cfg[model_id]["model_config"]["granularity"]
+    )
+
+    # Add a small delay after training completes (run 1 hour after training schedule)
+    # Parse the schedule and add 1 hour
+    parts = schedule.split()
+    hour = int(parts[1])
+    # Add 1 hour, wrapping around if necessary
+    hour = (hour + 1) % 24
+    parts[1] = str(hour)
+    adjusted_schedule = " ".join(parts)
+
+    logpath = BERTREND_LOG_PATH / "users" / user
+    logpath.mkdir(parents=True, exist_ok=True)
+
+    command = (
+        f"{sys.prefix}/bin/python -m bertrend_apps.prospective_demo.automated_report_generation {user} {model_id} "
+        f"> {logpath}/report_{model_id}.log 2>&1"
+    )
+
+    return add_job_to_crontab(adjusted_schedule, command, "")
+
+
+def update_scheduled_report_generation_for_user(model_id: str, user: str) -> bool:
+    """Updates the crontab with the new report generation job"""
+    if check_if_report_generation_active_for_user(model_id, user):
+        remove_scheduled_report_generation_for_user(model_id, user)
+        return schedule_report_generation_for_user(model_id, user)
+    return False
+
+
 def safe_timestamp(x: str) -> pd.Timestamp | None:
     try:
         return pd.Timestamp(x)
@@ -414,9 +575,10 @@ def safe_timestamp(x: str) -> pd.Timestamp | None:
         return None
 
 
-def get_models_info(model_id: str) -> list:
+@st.cache_data(ttl=60)
+def get_models_info(model_id: str, username: str) -> list:
     """Returns the list of topic models that are stored, identified by their timestamp"""
-    user_model_dir = get_user_models_path(st.session_state.username, model_id)
+    user_model_dir = get_user_models_path(username, model_id)
     if not user_model_dir.exists():
         return []
     matching_files = user_model_dir.glob(r"????-??-??")

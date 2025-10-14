@@ -14,7 +14,7 @@ import shutil
 
 from bertrend_apps.prospective_demo.process_new_data import (
     load_all_data,
-    get_relevant_model_config,
+    get_model_config,
     generate_llm_interpretation,
     train_new_model_for_period,
     regenerate_models,
@@ -60,7 +60,7 @@ class TestLoadAllData:
         mock_load_data.side_effect = [df1, df2]
 
         # Execute
-        result = load_all_data("test_model", "test_user", "English")
+        result = load_all_data("test_model", "test_user", "en")
 
         # Verify
         assert result is not None
@@ -76,7 +76,7 @@ class TestLoadAllData:
         mock_cfg_file.exists.return_value = False
         mock_get_user_feed_path.return_value = mock_cfg_file
 
-        result = load_all_data("test_model", "test_user", "English")
+        result = load_all_data("test_model", "test_user", "en")
 
         assert result is None
 
@@ -99,17 +99,17 @@ class TestLoadAllData:
         mock_path_instance.glob.return_value = []
         mock_path.return_value = mock_path_instance
 
-        result = load_all_data("test_model", "test_user", "English")
+        result = load_all_data("test_model", "test_user", "en")
 
         assert result is None
 
 
-class TestGetRelevantModelConfig:
-    """Test the get_relevant_model_config function."""
+class TestGetModelConfig:
+    """Test the get_model_config function."""
 
     @patch("bertrend_apps.prospective_demo.process_new_data.get_model_cfg_path")
     @patch("bertrend_apps.prospective_demo.process_new_data.load_toml_config")
-    def test_get_relevant_model_config_success(
+    def test_get_model_config_success(
         self, mock_load_toml_config, mock_get_model_cfg_path
     ):
         """Test successful loading of model config."""
@@ -118,52 +118,47 @@ class TestGetRelevantModelConfig:
             "model_config": {"granularity": 7, "window_size": 30, "language": "en"}
         }
 
-        granularity, window_size, language_code = get_relevant_model_config(
-            "test_model", "test_user"
-        )
+        model_config = get_model_config("test_model", "test_user")
 
-        assert granularity == 7
-        assert window_size == 30
-        assert language_code == "en"
+        assert model_config["granularity"] == 7
+        assert model_config["window_size"] == 30
+        assert model_config["language"] == "en"
 
     @patch("bertrend_apps.prospective_demo.process_new_data.get_model_cfg_path")
     @patch("bertrend_apps.prospective_demo.process_new_data.load_toml_config")
-    def test_get_relevant_model_config_exception(
+    def test_get_model_config_exception(
         self, mock_load_toml_config, mock_get_model_cfg_path
     ):
         """Test fallback to default config when loading fails."""
         mock_get_model_cfg_path.return_value = Path("/test/config.toml")
         mock_load_toml_config.side_effect = Exception("Config loading failed")
 
-        granularity, window_size, language = get_relevant_model_config(
-            "test_model", "test_user"
-        )
+        model_config = get_model_config("test_model", "test_user")
 
         # Should use DEFAULT_ANALYSIS_CFG values
-        assert granularity is not None
-        assert window_size is not None
-        assert language is not None
+        assert "granularity" in model_config
+        assert "window_size" in model_config
+        assert "language" in model_config
 
     @patch("bertrend_apps.prospective_demo.process_new_data.get_model_cfg_path")
     @patch("bertrend_apps.prospective_demo.process_new_data.load_toml_config")
-    def test_get_relevant_model_config_invalid_language(
+    def test_get_model_config_split_by_paragraph(
         self, mock_load_toml_config, mock_get_model_cfg_path
     ):
-        """Test language fallback for invalid language."""
+        """Test split_by_paragraph parameter handling."""
         mock_get_model_cfg_path.return_value = Path("/test/config.toml")
         mock_load_toml_config.return_value = {
             "model_config": {
                 "granularity": 7,
                 "window_size": 30,
-                "language": "InvalidLanguage",
+                "language": "en",
+                "split_by_paragraph": False,
             }
         }
 
-        granularity, window_size, language_code = get_relevant_model_config(
-            "test_model", "test_user"
-        )
+        model_config = get_model_config("test_model", "test_user")
 
-        assert language_code == "en"  # Should fallback to English
+        assert model_config["split_by_paragraph"] == False
 
 
 class TestGenerateLLMInterpretation:
@@ -341,7 +336,7 @@ class TestTrainNewModelForPeriod:
 
     @patch("bertrend_apps.prospective_demo.process_new_data.EmbeddingService")
     @patch("bertrend_apps.prospective_demo.process_new_data.get_user_models_path")
-    @patch("bertrend_apps.prospective_demo.process_new_data.get_relevant_model_config")
+    @patch("bertrend_apps.prospective_demo.process_new_data.get_model_config")
     @patch("bertrend_apps.prospective_demo.process_new_data.train_new_data")
     @patch(
         "bertrend_apps.prospective_demo.process_new_data.get_model_interpretation_path"
@@ -365,7 +360,11 @@ class TestTrainNewModelForPeriod:
         """Test successful model training for period."""
         # Setup mocks
         mock_get_models_path.return_value = Path("/test/models")
-        mock_get_config.return_value = (7, 30, "English")
+        mock_get_config.return_value = {
+            "granularity": 7,
+            "window_size": 30,
+            "language": "en",
+        }
 
         # Mock BERTrend instance
         mock_bertrend = Mock()
@@ -434,7 +433,7 @@ class TestTrainNewModelForPeriod:
 
     @patch("bertrend_apps.prospective_demo.process_new_data.EmbeddingService")
     @patch("bertrend_apps.prospective_demo.process_new_data.get_user_models_path")
-    @patch("bertrend_apps.prospective_demo.process_new_data.get_relevant_model_config")
+    @patch("bertrend_apps.prospective_demo.process_new_data.get_model_config")
     @patch("bertrend_apps.prospective_demo.process_new_data.train_new_data")
     def test_train_new_model_for_period_insufficient_doc_groups(
         self,
@@ -445,7 +444,11 @@ class TestTrainNewModelForPeriod:
     ):
         """Test early return when insufficient doc groups."""
         mock_get_models_path.return_value = Path("/test/models")
-        mock_get_config.return_value = (7, 30, "English")
+        mock_get_config.return_value = {
+            "granularity": 7,
+            "window_size": 30,
+            "language": "en",
+        }
 
         # Mock BERTrend instance with only 1 doc group
         mock_bertrend = Mock()
@@ -469,7 +472,7 @@ class TestTrainNewModelForPeriod:
 class TestRegenerateModels:
     """Test the regenerate_models function."""
 
-    @patch("bertrend_apps.prospective_demo.process_new_data.get_relevant_model_config")
+    @patch("bertrend_apps.prospective_demo.process_new_data.get_model_config")
     @patch("bertrend_apps.prospective_demo.process_new_data.load_all_data")
     @patch("bertrend_apps.prospective_demo.process_new_data.split_data")
     @patch("bertrend_apps.prospective_demo.process_new_data.group_by_days")
@@ -484,7 +487,12 @@ class TestRegenerateModels:
     ):
         """Test successful model regeneration."""
         # Setup mocks
-        mock_get_config.return_value = (7, 30, "en")
+        mock_get_config.return_value = {
+            "granularity": 7,
+            "window_size": 30,
+            "language": "en",
+            "split_by_paragraph": True,
+        }
 
         mock_data = pd.DataFrame(
             {
@@ -515,11 +523,16 @@ class TestRegenerateModels:
         mock_split_data.assert_called_once()
         assert mock_train_new_model.call_count == 2  # Should train for each period
 
-    @patch("bertrend_apps.prospective_demo.process_new_data.get_relevant_model_config")
+    @patch("bertrend_apps.prospective_demo.process_new_data.get_model_config")
     @patch("bertrend_apps.prospective_demo.process_new_data.load_all_data")
     def test_regenerate_models_no_data(self, mock_load_all_data, mock_get_config):
         """Test behavior when no data is available."""
-        mock_get_config.return_value = (7, 30, "en")
+        mock_get_config.return_value = {
+            "granularity": 7,
+            "window_size": 30,
+            "language": "en",
+            "split_by_paragraph": True,
+        }
         mock_load_all_data.return_value = None
 
         # Should handle None case gracefully - function should return early
@@ -531,7 +544,7 @@ class TestRegenerateModels:
         # Verify function attempted to load data
         mock_load_all_data.assert_called_once()
 
-    @patch("bertrend_apps.prospective_demo.process_new_data.get_relevant_model_config")
+    @patch("bertrend_apps.prospective_demo.process_new_data.get_model_config")
     @patch("bertrend_apps.prospective_demo.process_new_data.load_all_data")
     @patch("bertrend_apps.prospective_demo.process_new_data.split_data")
     @patch("bertrend_apps.prospective_demo.process_new_data.train_new_model_for_period")
@@ -539,7 +552,12 @@ class TestRegenerateModels:
         self, mock_train_new_model, mock_split_data, mock_load_all_data, mock_get_config
     ):
         """Test model regeneration with 'since' date filter."""
-        mock_get_config.return_value = (7, 30, "English")
+        mock_get_config.return_value = {
+            "granularity": 7,
+            "window_size": 30,
+            "language": "en",
+            "split_by_paragraph": True,
+        }
 
         mock_data = pd.DataFrame(
             {

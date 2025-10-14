@@ -96,8 +96,11 @@ class DataProvider(ABC):
                 "quality_metrics": results[i].output.model_dump(),
                 "overall_quality": results[i].output.quality_level.name,
             }
+            # 1. Ensure output is NOT None before proceeding
             for i, article in enumerate(articles)
-            if results[i].output.quality_level >= minimum_quality_level
+            if results[i].output is not None
+            # 2. Then, check the quality level
+            and results[i].output.quality_level >= minimum_quality_level
         ]
         assert len(results) == len(texts)
         logger.info(

@@ -42,6 +42,13 @@ DEFAULT_ANALYSIS_CFG = {
         "evolution_scenarios": True,
         "multifactorial_analysis": True,
     },
+    "report_config": {
+        "auto_send": False,
+        "email_recipients": [],
+        "report_title": "",
+        "max_emerging_topics": 3,
+        "max_strong_topics": 5,
+    },
 }
 
 

@@ -4,7 +4,6 @@
 #  This file is part of BERTrend.
 import inspect
 import tempfile
-import re
 
 import pandas as pd
 import streamlit as st
@@ -22,7 +21,7 @@ from bertrend.demos.demos_utils.icons import (
     DOWNLOAD_ICON,
     EMAIL_ICON,
 )
-from bertrend.demos.streamlit_components.input_with_pills_components import (
+from bertrend.demos.streamlit_components.input_with_pills_component import (
     input_with_pills,
 )
 from bertrend.llm_utils.newsletter_features import generate_newsletter
@@ -42,9 +41,7 @@ from bertrend_apps.prospective_demo import (
 )
 from bertrend_apps.prospective_demo.dashboard_common import choose_id_and_ts
 from bertrend_apps.prospective_demo.data_model import DetailedNewsletter, TopicOverTime
-
-WEAK_SIGNAL_NB = 3
-STRONG_SIGNAL_NB = 5
+from bertrend_apps.prospective_demo.utils import is_valid_email
 
 MAXIMUM_NUMBER_OF_ARTICLES = 3
 
@@ -91,13 +88,6 @@ def choose_from_df(df: pd.DataFrame):
     df["Sujet"] = df[LLM_TOPIC_TITLE_COLUMN]
     df["Description"] = df[LLM_TOPIC_DESCRIPTION_COLUMN]
     columns = ["Topic", "A retenir", "Sujet", "Description"]
-    pd.DataFrame(
-        [
-            {"command": "st.selectbox", "rating": 4, "is_widget": True},
-            {"command": "st.balloons", "rating": 5, "is_widget": False},
-            {"command": "st.time_input", "rating": 3, "is_widget": True},
-        ]
-    )
     edited_df = st.data_editor(df[columns], num_rows="dynamic", column_order=columns)
     selection = edited_df[edited_df["A retenir"] == True]["Topic"].tolist()
     return selection
@@ -283,12 +273,6 @@ def download(temp_path: Path, model_id: str):
             mime="text/html",
             icon=DOWNLOAD_ICON,
         )
-
-
-def is_valid_email(email: str) -> bool:
-    """Checks if an email address is valid using a regular expression."""
-    regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-    return re.match(regex, email) is not None
 
 
 def email(temp_path: Path, mail_title: str, recipients: list[str]) -> None:
