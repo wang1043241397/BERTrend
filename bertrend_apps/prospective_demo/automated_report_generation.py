@@ -101,8 +101,8 @@ def load_signal_data(
     """
     interpretation_path = get_model_interpretation_path(user, model_id, reference_ts)
 
-    weak_signals_path = interpretation_path / f"{WEAK_SIGNALS}.jsonl"
-    strong_signals_path = interpretation_path / f"{STRONG_SIGNALS}.jsonl"
+    weak_signals_path = interpretation_path / f"{WEAK_SIGNALS}_interpretation.jsonl"
+    strong_signals_path = interpretation_path / f"{STRONG_SIGNALS}_interpretation.jsonl"
 
     weak_signals = None
     strong_signals = None
