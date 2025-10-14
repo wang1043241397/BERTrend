@@ -101,14 +101,38 @@ def load_signal_data(
     """
     interpretation_path = get_model_interpretation_path(user, model_id, reference_ts)
 
-    weak_signals_path = interpretation_path / f"{WEAK_SIGNALS}_interpretation.jsonl"
-    strong_signals_path = interpretation_path / f"{STRONG_SIGNALS}_interpretation.jsonl"
+    # Load from parquet files which contain all necessary columns
+    # (URLs, LLM Title, LLM Description, Topic, etc.) along with interpretation data
+    weak_signals_path = interpretation_path / f"{WEAK_SIGNALS}.parquet"
+    strong_signals_path = interpretation_path / f"{STRONG_SIGNALS}.parquet"
+
+    # Also check for interpretation JSONL files
+    weak_signals_jsonl_path = (
+        interpretation_path / f"{WEAK_SIGNALS}_interpretation.jsonl"
+    )
+    strong_signals_jsonl_path = (
+        interpretation_path / f"{STRONG_SIGNALS}_interpretation.jsonl"
+    )
 
     weak_signals = None
     strong_signals = None
 
+    # Try loading weak signals from parquet first, then JSONL as fallback
     if weak_signals_path.exists():
-        weak_signals = pd.read_json(weak_signals_path, lines=True)
+        weak_signals = pd.read_parquet(weak_signals_path)
+        # Merge with interpretation data if available
+        if weak_signals_jsonl_path.exists():
+            interpretation_df = pd.read_json(weak_signals_jsonl_path, lines=True)
+            # Rename 'topic' column to 'Topic' for consistency
+            if "topic" in interpretation_df.columns:
+                interpretation_df = interpretation_df.rename(columns={"topic": "Topic"})
+            # Merge interpretation data with parquet data
+            weak_signals = pd.merge(
+                weak_signals,
+                interpretation_df[["Topic", "summary", "analysis"]],
+                on="Topic",
+                how="left",
+            )
         logger.info(f"Loaded {len(weak_signals)} weak signals")
         if max_emerging_topics is not None and len(weak_signals) > max_emerging_topics:
             weak_signals = weak_signals.head(max_emerging_topics)
@@ -116,8 +140,22 @@ def load_signal_data(
     else:
         logger.warning(f"No weak signals found at {weak_signals_path}")
 
+    # Try loading strong signals from parquet first, then JSONL as fallback
     if strong_signals_path.exists():
-        strong_signals = pd.read_json(strong_signals_path, lines=True)
+        strong_signals = pd.read_parquet(strong_signals_path)
+        # Merge with interpretation data if available
+        if strong_signals_jsonl_path.exists():
+            interpretation_df = pd.read_json(strong_signals_jsonl_path, lines=True)
+            # Rename 'topic' column to 'Topic' for consistency
+            if "topic" in interpretation_df.columns:
+                interpretation_df = interpretation_df.rename(columns={"topic": "Topic"})
+            # Merge interpretation data with parquet data
+            strong_signals = pd.merge(
+                strong_signals,
+                interpretation_df[["Topic", "summary", "analysis"]],
+                on="Topic",
+                how="left",
+            )
         logger.info(f"Loaded {len(strong_signals)} strong signals")
         if max_strong_topics is not None and len(strong_signals) > max_strong_topics:
             strong_signals = strong_signals.head(max_strong_topics)
