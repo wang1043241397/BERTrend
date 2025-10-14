@@ -67,23 +67,14 @@ def load_all_data(model_id: str, user: str, language_code: str):
     return new_data
 
 
-def get_relevant_model_config(
-    model_id: str,
-    user: str,
-):
-    # Load model & analysis config
+def get_model_config(model_id: str, user: str) -> dict:
     model_cfg_path = get_model_cfg_path(user, model_id)
     try:
         model_analysis_cfg = load_toml_config(model_cfg_path)
     except Exception:
+        logger.warning(f"Model config not found at {model_cfg_path}, using defaults")
         model_analysis_cfg = DEFAULT_ANALYSIS_CFG
-    # Extract relevant values
-    granularity = model_analysis_cfg["model_config"]["granularity"]
-    window_size = model_analysis_cfg["model_config"]["window_size"]
-    language_code = model_analysis_cfg["model_config"]["language"]
-    if language_code not in ["fr", "en"]:
-        language_code = "en"
-    return granularity, window_size, language_code
+    return model_analysis_cfg["model_config"]
 
 
 def generate_llm_interpretation(
@@ -181,9 +172,10 @@ def train_new_model_for_period(
     bertrend_models_path = get_user_models_path(user_name, model_id)
 
     # Get relevant model info from config
-    granularity, window_size, language_code = get_relevant_model_config(
-        model_id=model_id, user=user_name
-    )
+    model_config = get_model_config(model_id=model_id, user=user_name)
+    granularity = model_config["granularity"]
+    language_code = model_config["language"]
+    window_size = model_config["window_size"]
 
     # Process new data
     bertrend = train_new_data(
@@ -270,9 +262,10 @@ def regenerate_models(
     for the specified user."""
 
     # Get relevant model info from config
-    granularity, window_size, language_code = get_relevant_model_config(
-        model_id=model_id, user=user
-    )
+    model_config = get_model_config(model_id=model_id, user=user)
+    granularity = model_config["granularity"]
+    language_code = model_config["language"]
+    split_by_paragraph = model_config.get("split_by_paragraph", True)
 
     # Load model config
     df = load_all_data(model_id=model_id, user=user, language_code=language_code)
@@ -284,7 +277,8 @@ def regenerate_models(
         logger.info(f"Size of dataset (after date {since}): {len(df)}")
 
     # Split data by paragraphs
-    df = split_data(df)
+    if split_by_paragraph:
+        df = split_data(df)
 
     # Process new data and save models
     # - Group data based on granularity
@@ -345,18 +339,17 @@ if __name__ == "__main__":
     def train_new_model(
         user_name: str = typer.Argument(help="Identifier of the user"),
         model_id: str = typer.Argument(help="ID of the model/data to train"),
-        split_by_paragraph: bool = typer.Option(
-            default=True, help="Split data by paragraphs"
-        ),
     ):
         """Incrementally enrich the BERTrend model with new data"""
         logger.info(f'Processing new data for user "{user_name}" about "{model_id}"...')
-        logger.info(f"Splitting data by paragraphs: {split_by_paragraph}")
 
         # Get relevant model info from config
-        granularity, window_size, language_code = get_relevant_model_config(
-            model_id=model_id, user=user_name
-        )
+        model_config = get_model_config(model_id=model_id, user=user_name)
+        granularity = model_config["granularity"]
+        language_code = model_config["language"]
+        split_by_paragraph = model_config.get("split_by_paragraph", True)
+
+        logger.info(f"Splitting data by paragraphs: {split_by_paragraph}")
 
         # Load data for last period
         new_data = load_all_data(

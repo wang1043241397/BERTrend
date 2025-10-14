@@ -471,16 +471,10 @@ def schedule_training_for_user(model_id: str, user: str):
     schedule = generate_crontab_expression(
         st.session_state.model_analysis_cfg[model_id]["model_config"]["granularity"]
     )
-    split_by_paragraph = st.session_state.model_analysis_cfg[model_id]["model_config"][
-        "split_by_paragraph"
-    ]
-    split_by_paragraph_option = (
-        "--split-by-paragraph" if split_by_paragraph else "--no-split-by-paragraph"
-    )
     logpath = BERTREND_LOG_PATH / "users" / user
     logpath.mkdir(parents=True, exist_ok=True)
     command = (
-        f"{sys.prefix}/bin/python -m bertrend_apps.prospective_demo.process_new_data train-new-model {user} {model_id} {split_by_paragraph_option} "
+        f"{sys.prefix}/bin/python -m bertrend_apps.prospective_demo.process_new_data train-new-model {user} {model_id} "
         f"> {logpath}/learning_{model_id}.log 2>&1"
     )
     env_vars = f"CUDA_VISIBLE_DEVICES={BEST_CUDA_DEVICE}"
