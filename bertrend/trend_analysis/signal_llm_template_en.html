@@ -88,11 +88,11 @@
                 <h3>{{ summary.date }}: {{ summary.title }}</h3>
                 <p>{{ summary.description }}</p>
                 <div class="whats-new">
-                    <strong>Nouveauté :</strong> {{ summary.novelty }}
+                    <strong>Novelty:</strong> {{ summary.novelty }}
                 </div>
                 {% if summary.key_developments %}
                 <div class="developments">
-                    <strong>Développements clés :</strong>
+                    <strong>Key developments:</strong>
                     <ul>
                         {% for development in summary.key_developments %}
                         <li>{{ development }}</li>
