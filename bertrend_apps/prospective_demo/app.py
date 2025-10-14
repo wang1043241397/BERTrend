@@ -25,6 +25,7 @@ from bertrend.demos.demos_utils.icons import (
 from bertrend.demos.demos_utils.state_utils import SessionStateManager
 from bertrend_apps.prospective_demo.authentication import check_password
 from bertrend_apps.prospective_demo.dashboard_analysis import dashboard_analysis
+from bertrend_apps.prospective_demo.dashboard_comparative import dashboard_comparative
 from bertrend_apps.prospective_demo.feeds_config import configure_information_sources
 from bertrend_apps.prospective_demo.feeds_data import display_data_status
 from bertrend.demos.demos_utils.i18n import (
@@ -99,12 +100,13 @@ def main():
         create_internationalization_language_selector()
 
     # Main content
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
         [
             NEWSLETTER_ICON + " " + translate("tab_monitoring"),
             MODELS_ICON + " " + translate("tab_models"),
             TREND_ICON + " " + translate("tab_trends"),
             ANALYSIS_ICON + " " + translate("tab_analysis"),
+            ANALYSIS_ICON + " " + translate("tab_comparative"),
             NEWSLETTER_ICON + " " + translate("tab_reports"),
         ]
     )
@@ -134,6 +136,9 @@ def main():
         dashboard_analysis()
 
     with tab5:
+        dashboard_comparative()
+
+    with tab6:
         reporting()
 
 
