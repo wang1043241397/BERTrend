@@ -191,7 +191,7 @@ def train_new_model_for_period(
         new_data=new_data,
         bertrend_models_path=bertrend_models_path,
         embedding_service=embedding_service,
-        language="English" if language_code == "fr" else "French",
+        language="French" if language_code == "fr" else "English",
         granularity=granularity,
     )
 
