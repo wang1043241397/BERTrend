@@ -116,6 +116,12 @@ def choose_two_periods() -> tuple[str, datetime, datetime]:
             st.session_state.period_1 = (
                 list_models[1] if len(list_models) >= 2 else list_models[0]
             )
+        # Validate that period_1 exists in current list_models
+        elif st.session_state.period_1 not in list_models:
+            # Reset to default if stored period is not in current list
+            st.session_state.period_1 = (
+                list_models[1] if len(list_models) >= 2 else list_models[0]
+            )
         period_1 = st.selectbox(
             translate("period_1"),
             options=list_models,
@@ -130,6 +136,10 @@ def choose_two_periods() -> tuple[str, datetime, datetime]:
         period2_key = uuid.uuid4()
         if "period_2" not in st.session_state:
             # Default to most recent period
+            st.session_state.period_2 = list_models[-1]
+        # Validate that period_2 exists in current list_models
+        elif st.session_state.period_2 not in list_models:
+            # Reset to default if stored period is not in current list
             st.session_state.period_2 = list_models[-1]
         period_2 = st.selectbox(
             translate("period_2"),
@@ -473,7 +483,7 @@ def display_topic_list(data: dict[str, pd.DataFrame], topic_ids: list[int]) -> N
 
             styled_df = df_display.style.apply(color_rows, axis=1)
 
-            st.dataframe(styled_df, use_container_width="stretch")
+            st.dataframe(styled_df, width="stretch")
         else:
             st.info(translate("no_data"))
 
@@ -570,7 +580,7 @@ def compare_stable_topics(
             # Display table with formatted columns
             st.dataframe(
                 styled_df,
-                use_container_width="stretch",
+                width="stretch",
                 column_config={
                     translate("popularity_change"): st.column_config.NumberColumn(
                         translate("popularity_change"),
