@@ -95,7 +95,12 @@ def get_all_data(files: list[Path]) -> pd.DataFrame:
     if not files:
         return pd.DataFrame()
     dfs = [load_data(Path(f)) for f in files]
-    new_df = pd.concat(dfs).drop_duplicates(
-        subset=["title"], keep="first", inplace=False
-    )
+    # Filter out None/empty DataFrames before concatenation
+    dfs = [df for df in dfs if df is not None and not df.empty]
+    if not dfs:
+        return pd.DataFrame()
+    # Optimize concat: ignore_index speeds up concatenation, copy=False avoids unnecessary copies
+    new_df = pd.concat(dfs, ignore_index=True, copy=False)
+    # Drop duplicates - keep='first' ensures we keep the first occurrence
+    new_df = new_df.drop_duplicates(subset=["title"], keep="first")
     return new_df
