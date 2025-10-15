@@ -97,6 +97,18 @@ TRANSLATIONS = {
         "fr": "Comparaison de Périodes",
         "en": "Period Comparison",
     },
+    "topic_popularity_over_time": {
+        "fr": "Popularité des Sujets au Fil du Temps",
+        "en": "Topic Popularity Over Time",
+    },
+    "insufficient_periods_for_trend": {
+        "fr": "Pas assez de périodes disponibles pour afficher les tendances (minimum 2 requises)",
+        "en": "Insufficient periods available to display trends (minimum 2 required)",
+    },
+    "popularity": {
+        "fr": "Popularité",
+        "en": "Popularity",
+    },
     # dashboard_signals.py translations
     "title": {"fr": "Titre", "en": "Title"},
     "todo_message": {

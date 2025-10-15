@@ -21,6 +21,7 @@ from bertrend.demos.demos_utils.icons import (
     SERVER_STORAGE_ICON,
     TREND_ICON,
     MODELS_ICON,
+    TIMELINE_ICON,
 )
 from bertrend.demos.demos_utils.state_utils import SessionStateManager
 from bertrend_apps.prospective_demo.authentication import check_password
@@ -105,8 +106,8 @@ def main():
             NEWSLETTER_ICON + " " + translate("tab_monitoring"),
             MODELS_ICON + " " + translate("tab_models"),
             TREND_ICON + " " + translate("tab_trends"),
+            TIMELINE_ICON + " " + translate("tab_comparative"),
             ANALYSIS_ICON + " " + translate("tab_analysis"),
-            ANALYSIS_ICON + " " + translate("tab_comparative"),
             NEWSLETTER_ICON + " " + translate("tab_reports"),
         ]
     )
@@ -133,10 +134,10 @@ def main():
         signal_analysis()
 
     with tab4:
-        dashboard_analysis()
+        dashboard_comparative()
 
     with tab5:
-        dashboard_comparative()
+        dashboard_analysis()
 
     with tab6:
         reporting()
