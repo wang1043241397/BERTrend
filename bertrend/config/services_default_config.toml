@@ -26,7 +26,7 @@ embedding_max_seq_length = 512
 # - models deployed on Azure cloud
 api_key = "$OPENAI_API_KEY"
 endpoint = "$OPENAI_BASE_URL"
-model = "$OPENAI_DEFAULT_MODEL_NAME_DEV"
+model = "$OPENAI_DEFAULT_MODEL_NAME"
 temperature = 0.1
 max_output_tokens = 2048
 system_prompt = "You are a helpful assistant, skilled in detailing topic evolution over time for the detection of emerging trends and signals."

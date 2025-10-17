@@ -28,14 +28,7 @@ EN_SYSTEM_SUMMARY_WORDS = (
 )
 # num_words: number of words the summary should contain
 
-
-FR_USER_SUMMARY_WORDS = FR_SYSTEM_SUMMARY_WORDS + (" Texte :\n {text}")
-# num_words: number of words the summary should contain
-# text: text to be summarized
-
-EN_USER_SUMMARY_WORDS = EN_SYSTEM_SUMMARY_WORDS + (" Text :\n {text}")
-# num_words: number of words the summary should contain
-# text: text to be summarized
+SYSTEM_SUMMARY_WORDS = {"en": EN_SYSTEM_SUMMARY_WORDS, "fr": FR_SYSTEM_SUMMARY_WORDS}
 
 FR_SYSTEM_SUMMARY_SENTENCES = FR_SYSTEM_SUMMARY_WORDS.replace(
     "{num_words} mots", "{num_sentences} phrases"
@@ -44,3 +37,7 @@ EN_SYSTEM_SUMMARY_SENTENCES = EN_SYSTEM_SUMMARY_WORDS.replace(
     "{num_words} words", "{num_sentences} sentences"
 )
 # num_sentences: number of sentences the summary should contain
+SYSTEM_SUMMARY_SENTENCES = {
+    "en": EN_SYSTEM_SUMMARY_SENTENCES,
+    "fr": FR_SYSTEM_SUMMARY_SENTENCES,
+}

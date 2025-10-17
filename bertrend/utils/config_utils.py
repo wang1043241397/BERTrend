@@ -6,6 +6,10 @@ import os
 import tomllib
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+load_dotenv()  # load .env into os.environ
+
 
 def _resolve_env_variables(config_dict: dict) -> dict:
     """

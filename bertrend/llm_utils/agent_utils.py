@@ -15,14 +15,29 @@ from bertrend.llm_utils.openai_client import AZURE_API_VERSION
 run_config = RunConfig(tracing_disabled=True)
 
 
+def run_runner_sync(*args, **kwargs):
+    # Create a new event loop in a script thread (useful for Jupyter notebooks, ipython, streamlit)
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        # If Runner.run is async, run it to completion
+        return loop.run_until_complete(Runner.run(*args, **kwargs))
+    finally:
+        loop.close()
+
+
 class BaseAgentFactory:
     def __init__(
         self,
-        model_name: str = "gpt-4.1-mini",
+        model_name: str = None,
         api_key: str = None,
         base_url: str = None,
     ):
-        self.model_name = model_name or os.getenv("OPENAI_DEFAULT_MODEL_NAME")
+        self.model_name = (
+            model_name
+            if model_name is not None
+            else os.getenv("OPENAI_DEFAULT_MODEL_NAME")
+        )
         self.api_key = api_key if api_key is not None else os.getenv("OPENAI_API_KEY")
         if not self.api_key:
             logger.error(
