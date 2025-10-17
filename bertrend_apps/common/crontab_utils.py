@@ -104,7 +104,7 @@ def schedule_scrapping(feed_cfg: Path, user: str = None):
     id = data_feed_cfg["data-feed"]["id"]
     log_path = BERTREND_LOG_PATH if not user else BERTREND_LOG_PATH / "users" / user
     log_path.mkdir(parents=True, exist_ok=True)
-    command = f"{sys.prefix}/bin/python -m bertrend_apps.data_provider scrape-feed {feed_cfg.resolve()} > {log_path}/cron_feed_{id}.log 2>&1"
+    command = f"{sys.executable} -m bertrend_apps.data_provider scrape-feed {feed_cfg.resolve()} > {log_path}/cron_feed_{id}.log 2>&1"
     add_job_to_crontab(schedule, command, "")
 
 
@@ -117,7 +117,7 @@ def schedule_newsletter(
     newsletter_cfg = load_toml_config(newsletter_cfg_path)
     schedule = newsletter_cfg["newsletter"]["update_frequency"]
     id = newsletter_cfg["newsletter"]["id"]
-    command = f"{sys.prefix}/bin/python -m bertrend_apps.newsletters newsletters {newsletter_cfg_path.resolve()} {data_feed_cfg_path.resolve()} > {BERTREND_LOG_PATH}/cron_newsletter_{id}.log 2>&1"
+    command = f"{sys.executable} -m bertrend_apps.newsletters newsletters {newsletter_cfg_path.resolve()} {data_feed_cfg_path.resolve()} > {BERTREND_LOG_PATH}/cron_newsletter_{id}.log 2>&1"
     env_vars = f"CUDA_VISIBLE_DEVICES={cuda_devices}"
     add_job_to_crontab(schedule, command, env_vars)
 

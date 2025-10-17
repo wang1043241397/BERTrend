@@ -32,12 +32,15 @@ The easiest way to run BERTrend is using Docker Compose, which will start both t
    ```
 
 2. Create a `.env` file with your configuration (optional):
-   ```
-   OPENAI_API_KEY=your_openai_api_key
-   OPENAI_ENDPOINT=your_openai_endpoint
-   OPENAI_DEFAULT_MODEL_NAME=gpt-4o-mini
-   BERTREND_BASE_DIR=/path/to/your/data/directory
-   ```
+   - You can reuse the `.env` template at the repository root and fill in your values.
+   - Note: When running outside Docker, BERTrend auto-loads the repo `.env` if `python-dotenv` is installed.
+```
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_ENDPOINT=your_openai_endpoint
+OPENAI_BASE_URL=
+OPENAI_DEFAULT_MODEL_NAME=gpt-4o-mini
+BERTREND_BASE_DIR=/path/to/your/data/directory
+```
 
 3. Start the containers:
    ```bash
