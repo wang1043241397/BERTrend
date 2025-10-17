@@ -36,9 +36,8 @@ The easiest way to run BERTrend is using Docker Compose, which will start both t
    - Note: When running outside Docker, BERTrend auto-loads the repo `.env` if `python-dotenv` is installed.
 ```
 OPENAI_API_KEY=your_openai_api_key
-OPENAI_ENDPOINT=your_openai_endpoint
-OPENAI_BASE_URL=
-OPENAI_DEFAULT_MODEL_NAME=gpt-4o-mini
+OPENAI_BASE_URL=your_openai_endpoint_or_base_url
+OPENAI_DEFAULT_MODEL_NAME=gpt-5-mini
 BERTREND_BASE_DIR=/path/to/your/data/directory
 ```
 
@@ -84,7 +83,7 @@ docker run --gpus all \
   -p 8501:8501 -p 8502:8502 -p 8503:8503 \
   -v /path/to/bertrend/data:/bertrend \
   -e OPENAI_API_KEY=your_key \
-  -e OPENAI_ENDPOINT=your_endpoint \
+  -e OPENAI_BASE_URL=your_endpoint \
   -e EMBEDDING_SERVICE_URL=https://your-embedding-server:6464 \
   -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) \
   bertrend:latest
@@ -96,16 +95,16 @@ docker run --gpus all \
 
 #### Main BERTrend Application
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `OPENAI_API_KEY` | Your OpenAI API key | - |
-| `OPENAI_ENDPOINT` | OpenAI API endpoint | - |
-| `OPENAI_DEFAULT_MODEL_NAME` | Default OpenAI model to use | `gpt-4o-mini` |
-| `BERTREND_BASE_DIR` | Base directory for BERTrend data | `/bertrend/` |
-| `EMBEDDING_SERVICE_URL` | URL of the embedding server | `https://embedding_server:6464` |
+| Variable                      | Description | Default |
+|-------------------------------|-------------|---------|
+| `OPENAI_API_KEY`              | Your OpenAI API key | - |
+| `OPENAI_BASE_URL`     | OpenAI API endpoint | - |
+| `OPENAI_DEFAULT_MODEL_NAME`   | Default OpenAI model to use | `gpt-4o-mini` |
+| `BERTREND_BASE_DIR`           | Base directory for BERTrend data | `/bertrend/` |
+| `EMBEDDING_SERVICE_URL`       | URL of the embedding server | `https://embedding_server:6464` |
 | `EMBEDDING_SERVICE_USE_LOCAL` | Whether to use local embeddings | `false` |
-| `HOST_UID` | User ID for file permissions | `1000` |
-| `HOST_GID` | Group ID for file permissions | `1000` |
+| `HOST_UID`                    | User ID for file permissions | `1000` |
+| `HOST_GID`                    | Group ID for file permissions | `1000` |
 
 #### Embedding Server
 

@@ -39,7 +39,7 @@ def get_summarizer(summary_model):
     kwargs = {}
     if summary_model == "GPTSummarizer":
         kwargs["api_key"] = st.session_state.openai_api_key
-        kwargs["endpoint"] = st.session_state.openai_endpoint
+        kwargs["base_url"] = st.session_state.openai_base_url
 
     summarizer_class = SUMMARIZER_OPTIONS_MAPPER[summary_model]
     return summarizer_class(**kwargs)
@@ -70,7 +70,7 @@ def app():
         type="password",
     )
     st.text_input(
-        "Openai endpoint", key="openai_endpoint", value=os.getenv("OPENAI_ENDPOINT")
+        "Openai base URL", key="openai_base_url", value=os.getenv("OPENAI_BASE_URL")
     )
     st.text_input(
         "Openai model name",

@@ -22,20 +22,20 @@ def mock_api_key():
 @pytest.fixture
 def mock_azure_endpoint():
     os.environ["OPENAI_API_KEY"] = "test_api_key"
-    os.environ["OPENAI_ENDPOINT"] = "https://azure.com"
+    os.environ["OPENAI_BASE_URL"] = "https://azure.com"
     yield
     del os.environ["OPENAI_API_KEY"]
-    del os.environ["OPENAI_ENDPOINT"]
+    del os.environ["OPENAI_BASE_URL"]
 
 
 def test_initialization_with_azure(mock_azure_endpoint):
     """Test client initialization when using Azure endpoint"""
-    client = OpenAI_Client(api_key="test_api_key", endpoint="https://azure.com")
+    client = OpenAI_Client(api_key="test_api_key", base_url="https://azure.com")
     assert isinstance(client.llm_client, AzureOpenAI)
 
 
 def test_initialization_without_azure(mock_api_key):
-    """Test client initialization when using OpenAI endpoint"""
+    """Test client initialization when using OpenAI base_url"""
     client = OpenAI_Client(api_key="test_api_key")
     assert isinstance(client.llm_client, OpenAI)
 

@@ -19,11 +19,11 @@ from bertrend.services.summarizer import Summarizer
 class GPTSummarizer(Summarizer):
     """Class that uses the GPT service to provide a summary of a text"""
 
-    def __init__(self, api_key: str = None, endpoint: str = None):
+    def __init__(self, api_key: str = None, base_url: str = None):
         # retrieve chatGPT config
         self.api = OpenAI_Client(
             api_key=LLM_CONFIG["api_key"] if not api_key else api_key,
-            endpoint=LLM_CONFIG["endpoint"] if not endpoint else endpoint,
+            base_url=LLM_CONFIG["endpoint"] if not base_url else base_url,
             model=LLM_CONFIG["model"],
         )
         logger.debug("GPTSummarizer initialized")

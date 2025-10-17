@@ -53,7 +53,7 @@ The Prospective Demo provides a comprehensive web application for prospective an
 ### Environment (.env)
 BERTrend supports configuration via a repository-level .env file that is auto-loaded on import when python-dotenv is installed. Create and fill .env at the repo root (a template exists) and set values like:
 - BERTREND_BASE_DIR: base directory for BERTrend data/models/logs
-- OpenAI/LLM: OPENAI_API_KEY, OPENAI_ENDPOINT (or OPENAI_BASE_URL), OPENAI_DEFAULT_MODEL_NAME
+- OpenAI/LLM: OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_DEFAULT_MODEL_NAME
 - Optional providers: SEMANTIC_SCHOLAR_API_KEY, NEWSCATCHER_API_KEY, DBPEDIA_REST_API_URL
 - Optional email, embedding server security, and CUDA_VISIBLE_DEVICES
 

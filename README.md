@@ -81,8 +81,7 @@ Recommended steps:
      - `BERTREND_BASE_DIR`: base directory for BERTrend data/models/logs
      - OpenAI/LLM:
        - `OPENAI_API_KEY`
-       - `OPENAI_ENDPOINT` (leave empty for OpenAI public API)
-       - `OPENAI_BASE_URL` (optional for OpenAI-compatible providers)
+       - `OPENAI_BASE_URL` (optional for OpenAI-compatible providers such as LiteLLM and Azure)
        - `OPENAI_DEFAULT_MODEL_NAME`
      - Providers (optional): `SEMANTIC_SCHOLAR_API_KEY`, `NEWSCATCHER_API_KEY`, `DBPEDIA_REST_API_URL`
      - Embedding service security (optional): `BERTREND_SECRET_KEY`, `DEFAULT_RATE_LIMIT`, `DEFAULT_RATE_WINDOW`, `CLIENT_REGISTRY_FILE`

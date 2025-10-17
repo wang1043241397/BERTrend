@@ -29,14 +29,14 @@ class OpenAI_Client:
 
     Notes
     -----
-    The API key and the ENDPOINT must be set using environment variables OPENAI_API_KEY and
-    OPENAI_ENDPOINT respectively. The endpoint should only be set for Azure or local deployments.
+    The API key and the BASE_URL must be set using environment variables OPENAI_API_KEY and
+    OPENAI_BASE_URL respectively. The base_url should only be set for Azure or local deployments (such as LiteLLM)..
     """
 
     def __init__(
         self,
         api_key: str = None,
-        endpoint: str = None,
+        base_url: str = None,
         model: str = None,
         temperature: float = DEFAULT_TEMPERATURE,
         api_version: str = AZURE_API_VERSION,
@@ -48,8 +48,8 @@ class OpenAI_Client:
         ----------
         api_key : str, optional
             OpenAI API key. If None, will try to get from OPENAI_API_KEY environment variable.
-        endpoint : str, optional
-            API endpoint URL. If None, will try to get from OPENAI_ENDPOINT environment variable.
+        base_url : str, optional
+            API endpoint (Azure) or base_url URL (LiteLLM and openAI compatible deployments). If None, will try to get from OPENAI_BASE_URL environment variable.
             Should be set for Azure or local deployments.
         model : str, optional
             Name of the model to use. If None, will try to get from OPENAI_DEFAULT_MODEL_NAME environment variable.
@@ -71,11 +71,11 @@ class OpenAI_Client:
             )
             raise EnvironmentError(f"OPENAI_API_KEY environment variable not found.")
 
-        endpoint = endpoint or os.getenv("OPENAI_ENDPOINT", None)
-        if endpoint == "":  # check empty env var
-            endpoint = None
+        base_url = base_url or os.getenv("OPENAI_BASE_URL", None)
+        if base_url == "":  # check empty env var
+            base_url = None
 
-        run_on_azure = "azure.com" in endpoint if endpoint else False
+        run_on_azure = "azure.com" in base_url if base_url else False
 
         common_params = {
             "api_key": api_key,
@@ -83,10 +83,10 @@ class OpenAI_Client:
             "max_retries": MAX_ATTEMPTS,
         }
         openai_params = {
-            "base_url": endpoint,
+            "base_url": base_url,
         }
         azure_params = {
-            "azure_endpoint": endpoint,
+            "azure_endpoint": base_url,
             "api_version": api_version or AZURE_API_VERSION,
         }
 

@@ -80,7 +80,7 @@ services:
       - EMBEDDING_SERVICE_USE_LOCAL=false
       # OpenAI environment variables (replace with your own values)
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - OPENAI_ENDPOINT=${OPENAI_ENDPOINT:-}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
       - OPENAI_DEFAULT_MODEL_NAME=${OPENAI_DEFAULT_MODEL_NAME:-gpt-4o-mini}
     healthcheck:
       test: curl -f http://localhost:8081/_stcore/health && curl -f http://localhost:8083/_stcore/health && curl -f http://localhost:8084/_stcore/health || exit 1

@@ -6,4 +6,4 @@
 #
 
 # Starts the Summarizer app (a comparison of various method of text summarization)
-CUDA_VISIBLE_DEVICES=0 OPENAI_API_KEY=$AZURE_WATTELSE_OPENAI_API_KEY OPENAI_ENDPOINT=$AZURE_WATTELSE_OPENAI_ENDPOINT OPENAI_DEFAULT_MODEL_NAME=$AZURE_WATTELSE_OPENAI_DEFAULT_MODEL_NAME streamlit run --theme.primaryColor royalblue summarization/summarizer_app.py
+CUDA_VISIBLE_DEVICES=0 OPENAI_API_KEY=$OPENAI_API_KEY OPENAI_BASE_URL=$OPENAI_BASE_URL OPENAI_DEFAULT_MODEL_NAME=$OPENAI_DEFAULT_MODEL_NAME streamlit run --theme.primaryColor royalblue summarization/summarizer_app.py

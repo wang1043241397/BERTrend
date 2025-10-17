@@ -338,11 +338,11 @@ class EnhancedExtractiveSummarizer(ExtractiveSummarizer):
     def __init__(
         self,
         api_key: str = None,
-        endpoint: str = None,
+        base_url: str = None,
         model_name=DEFAULT_SUMMARIZER_MODEL,
     ):
         super().__init__(model_name=model_name)
-        self.api = OpenAI_Client(api_key=api_key, endpoint=endpoint)
+        self.api = OpenAI_Client(api_key=api_key, base_url=base_url)
 
     def generate_summary(
         self,

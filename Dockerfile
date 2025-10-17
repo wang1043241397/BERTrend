@@ -49,7 +49,7 @@ EXPOSE 8081 8083 8084
 ENTRYPOINT ["/app/run_demos.sh"]
 
 # To run this container with GPU support, use:
-# docker run --gpus all -p 8501:8501 -p 8502:8502 -p 8503:8503 -e OPENAI_API_KEY=your_key -e OPENAI_ENDPOINT=your_endpoint bertrend:latest
+# docker run --gpus all -p 8501:8501 -p 8502:8502 -p 8503:8503 -e OPENAI_API_KEY=your_key -e OPENAI_BASE_URL=your_endpoint bertrend:latest
 #
 # To mount a host directory to BERTREND_BASE_DIR, use:
 # docker run --gpus all -p 8501:8501 -p 8502:8502 -p 8503:8503 -v /path/on/host:/bertrend/ bertrend:latest
