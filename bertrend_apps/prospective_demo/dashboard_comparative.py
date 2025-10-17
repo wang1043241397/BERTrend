@@ -649,6 +649,31 @@ def dashboard_comparative() -> None:
         # Select two periods to compare
         model_id, period_1, period_2 = choose_two_periods()
 
+        # Add a button to explicitly trigger rendering to avoid useless computations
+        # Reset render state when selection changes
+        current_selection = (model_id, period_1, period_2)
+        prev_selection = st.session_state.get("comparative_prev_selection")
+        if prev_selection != current_selection:
+            st.session_state["comparative_prev_selection"] = current_selection
+            st.session_state["comparative_render"] = False
+
+        # Render button
+        render_label = (
+            translate("render_comparison")
+            if hasattr(translate, "render_comparison")
+            else "Render comparison"
+        )
+        if st.button(
+            render_label + " " + ANALYSIS_ICON,
+            key="comparative_render_button",
+            type="primary",
+        ):
+            st.session_state["comparative_render"] = True
+
+        if not st.session_state.get("comparative_render", False):
+            st.info(translate("click_to_render_comparison"))
+            st.stop()
+
         # Validate that periods are different
         if period_1 == period_2:
             st.warning(translate("select_two_periods"), icon=WARNING_ICON)

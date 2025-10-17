@@ -109,6 +109,14 @@ TRANSLATIONS = {
         "fr": "Popularité",
         "en": "Popularity",
     },
+    "render_comparison": {
+        "fr": "Lancer la comparaison",
+        "en": "Render comparison",
+    },
+    "click_to_render_comparison": {
+        "fr": "Sélectionnez deux périodes, puis cliquez sur le bouton ci-dessus pour lancer la comparaison.",
+        "en": "Select two periods, then click the button above to render the comparison.",
+    },
     # dashboard_signals.py translations
     "title": {"fr": "Titre", "en": "Title"},
     "todo_message": {
