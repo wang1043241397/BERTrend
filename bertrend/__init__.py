@@ -8,6 +8,7 @@ from pathlib import Path
 # Auto-load .env if python-dotenv is available
 try:
     from dotenv import load_dotenv  # type: ignore
+
     load_dotenv()
 except Exception:
     pass
