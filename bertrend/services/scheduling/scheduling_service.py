@@ -43,6 +43,7 @@ scheduler.start()
 # Pydantic models
 class JobCreate(BaseModel):
     job_id: str = Field(..., description="Unique identifier for the job")
+    job_name: Optional[str] = Field(None, description="Human-readable job name (defaults to job_id)")
     job_type: str = Field(..., description="Type: 'interval', 'cron', or 'date'")
     function_name: str = Field(..., description="Name of the function to execute")
     args: Optional[List[Any]] = Field(
@@ -348,7 +349,7 @@ def create_job(job: JobCreate):
             func,
             trigger=trigger,
             id=job.job_id,
-            name=job.job_id,
+            name=job.job_name or job.job_id,
             args=job.args,
             kwargs=job.kwargs,
             max_instances=job.max_instances,

@@ -68,18 +68,21 @@ class APSchedulerUtils(SchedulerUtils):
         We preserve the original signature; internally we create a cron job calling
         the service's sample_job with the command embedded as a message. To allow
         regex-based discovery like the legacy crontab, we embed the command text in
-        the job_id so that listing jobs exposes it.
+        the job name (which is searchable) and use a hash-based job_id (URL-safe).
         """
         logger.debug(f"Scheduling via service (HTTP): {schedule} {env_vars} {command}")
-        # Make job id readable for regex checks
-        job_id = f"cron|{schedule}|{(env_vars + ' ').strip()}{command}"
+        # Use hash for job_id (URL-safe), but put full command in name for regex checks
+        full_command = f"{env_vars} {command}".strip() if env_vars else command
+        job_id = _job_id_from_string(f"cron|{schedule}|{full_command}")
+        job_name = f"cron|{schedule}|{full_command}"
         payload = {
             "job_id": job_id,
+            "job_name": job_name,
             "job_type": "cron",
             "function_name": "sample_job",
             "cron_expression": schedule,
             "args": [],
-            "kwargs": {"message": f"{env_vars} {command}".strip()},
+            "kwargs": {"message": full_command},
             "max_instances": 3,
             "coalesce": True,
         }

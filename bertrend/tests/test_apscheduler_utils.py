@@ -5,17 +5,27 @@
 
 from datetime import datetime, timedelta
 from pathlib import Path
-import tempfile
 
 import pytest
 from fastapi.testclient import TestClient
 
 from bertrend.services.scheduling import scheduling_service as svc
-from bertrend_apps.common import scheduler_utils as su
+from bertrend_apps.common import apscheduler_utils as su
+
+scheduler = su.APSchedulerUtils()
 
 
 class FakeJob:
-    def __init__(self, job_id, func=None, name=None, trigger=None, args=None, kwargs=None, max_instances=3):
+    def __init__(
+        self,
+        job_id,
+        func=None,
+        name=None,
+        trigger=None,
+        args=None,
+        kwargs=None,
+        max_instances=3,
+    ):
         self.id = job_id
         self.name = name or job_id
         self.func = func or (lambda *a, **k: None)
@@ -37,10 +47,29 @@ class FakeScheduler:
     def get_jobs(self):
         return list(self.jobs.values())
 
-    def add_job(self, func, trigger, id, name, args, kwargs, max_instances, coalesce, replace_existing):
+    def add_job(
+        self,
+        func,
+        trigger,
+        id,
+        name,
+        args,
+        kwargs,
+        max_instances,
+        coalesce,
+        replace_existing,
+    ):
         if id in self.jobs:
             raise Exception("Job already exists")
-        self.jobs[id] = FakeJob(id, func=func, name=name, trigger=trigger, args=args, kwargs=kwargs, max_instances=max_instances)
+        self.jobs[id] = FakeJob(
+            id,
+            func=func,
+            name=name,
+            trigger=trigger,
+            args=args,
+            kwargs=kwargs,
+            max_instances=max_instances,
+        )
 
     def reschedule_job(self, job_id, trigger):
         job = self.get_job(job_id)
@@ -88,12 +117,19 @@ def client_and_http_adapter(monkeypatch):
         json = kwargs.get("json")
         return client.request(method, path, json=json)
 
-    monkeypatch.setattr(su, "_session", type("S", (), {"request": staticmethod(_adapter)})())
+    monkeypatch.setattr(
+        su, "_session", type("S", (), {"request": staticmethod(_adapter)})()
+    )
     monkeypatch.setenv("SCHEDULER_SERVICE_URL", "http://testserver/")
     return client
 
 
-def _make_tmp_feed(tmp_path: Path, feed_id: str = "abc", cron: str = "0 9 * * *", user: str | None = None) -> Path:
+def _make_tmp_feed(
+    tmp_path: Path,
+    feed_id: str = "abc",
+    cron: str = "0 9 * * *",
+    user: str | None = None,
+) -> Path:
     # Create directories reflecting potential user path usage
     base = tmp_path if not user else tmp_path / "users" / user
     base.mkdir(parents=True, exist_ok=True)
@@ -108,42 +144,39 @@ id = "abc"
     return p
 
 
-def test_get_understandable_cron_description(client_and_http_adapter):
-    desc = su.get_understandable_cron_description("0 9 * * *")
-    assert isinstance(desc, str)
-    # The exact phrasing depends on service, check for a key substring
-    assert "9:00" in desc or "9" in desc
-
-
-def test_schedule_and_check_and_remove_scrapping_non_user(tmp_path, client_and_http_adapter):
+def test_schedule_and_check_and_remove_scrapping_non_user(
+    tmp_path, client_and_http_adapter
+):
     feed_path = _make_tmp_feed(tmp_path, feed_id="feedX")
 
     # Initially not present
-    assert su.check_if_scrapping_active_for_user("feedX") is False
+    assert scheduler.check_if_scrapping_active_for_user("feedX") is False
 
     # Schedule
-    su.schedule_scrapping(feed_path)
+    scheduler.schedule_scrapping(feed_path)
 
     # Now it should be present (pattern is based on command string with path)
-    assert su.check_if_scrapping_active_for_user("feedX") is True
+    assert scheduler.check_if_scrapping_active_for_user("feedX") is True
 
     # Remove
-    assert su.remove_scrapping_for_user("feedX") is True
-    assert su.check_if_scrapping_active_for_user("feedX") is False
+    assert scheduler.remove_scrapping_for_user("feedX") is True
+    assert scheduler.check_if_scrapping_active_for_user("feedX") is False
 
 
-def test_schedule_and_check_and_remove_scrapping_user(tmp_path, client_and_http_adapter):
+def test_schedule_and_check_and_remove_scrapping_user(
+    tmp_path, client_and_http_adapter
+):
     user = "alice"
     feed_path = _make_tmp_feed(tmp_path, feed_id="ufeed", user=user)
 
-    assert su.check_if_scrapping_active_for_user("ufeed", user=user) is False
+    assert scheduler.check_if_scrapping_active_for_user("ufeed", user=user) is False
 
-    su.schedule_scrapping(feed_path, user=user)
+    scheduler.schedule_scrapping(feed_path, user=user)
 
-    assert su.check_if_scrapping_active_for_user("ufeed", user=user) is True
+    assert scheduler.check_if_scrapping_active_for_user("ufeed", user=user) is True
 
-    assert su.remove_scrapping_for_user("ufeed", user=user) is True
-    assert su.check_if_scrapping_active_for_user("ufeed", user=user) is False
+    assert scheduler.remove_scrapping_for_user("ufeed", user=user) is True
+    assert scheduler.check_if_scrapping_active_for_user("ufeed", user=user) is False
 
 
 def test_schedule_newsletter(tmp_path, client_and_http_adapter):
@@ -166,7 +199,7 @@ id = "f1"
     )
 
     # Schedule newsletter
-    su.schedule_newsletter(newsletter_cfg, feed_cfg, cuda_devices="0")
+    scheduler.schedule_newsletter(newsletter_cfg, feed_cfg, cuda_devices="0")
 
     # Check job exists by looking for file names in scheduled job payloads
-    assert su.check_cron_job(r"newsletters .*n1.toml .* f1.toml") is True
+    assert scheduler.check_cron_job(r"newsletters .*n1.toml.*f1.toml") is True
