@@ -9,6 +9,7 @@ from datetime import datetime
 from collections import defaultdict
 
 import arxiv
+from dotenv import load_dotenv
 
 from loguru import logger
 import requests
@@ -16,6 +17,8 @@ import requests
 from bertrend.utils.data_loading import TEXT_COLUMN
 from bertrend_apps.data_provider.data_provider import DataProvider
 from bertrend_apps.data_provider.utils import wait
+
+load_dotenv(override=True)
 
 PAGE_SIZE = 2000
 DELAY_SECONDS = 3

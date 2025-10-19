@@ -76,7 +76,7 @@ def test_get_topic_description(mock_openai_client):
     # Call the function with test data
     with patch(
         "bertrend.topic_analysis.topic_description.LLM_CONFIG",
-        {"api_key": "test_key", "endpoint": "test_endpoint", "model": "test_model"},
+        {"api_key": "test_key", "base_url": "test_endpoint", "model": "test_model"},
     ):
         result = get_topic_description(
             topic_representation="word1, word2, word3",
@@ -104,7 +104,7 @@ def test_get_topic_description_error_handling(mock_openai_client):
     # Call the function with test data
     with patch(
         "bertrend.topic_analysis.topic_description.LLM_CONFIG",
-        {"api_key": "test_key", "endpoint": "test_endpoint", "model": "test_model"},
+        {"api_key": "test_key", "base_url": "test_endpoint", "model": "test_model"},
     ):
         result = get_topic_description(
             topic_representation="word1, word2, word3",
@@ -121,7 +121,7 @@ def test_generate_topic_description(mock_bertopic, sample_docs, mock_openai_clie
     # Call the function with test data
     with patch(
         "bertrend.topic_analysis.topic_description.LLM_CONFIG",
-        {"api_key": "test_key", "endpoint": "test_endpoint", "model": "test_model"},
+        {"api_key": "test_key", "base_url": "test_endpoint", "model": "test_model"},
     ):
         result = generate_topic_description(
             topic_model=mock_bertopic,

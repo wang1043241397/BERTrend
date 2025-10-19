@@ -6,22 +6,28 @@ from typing import Optional
 
 from agents import RunConfig, Agent, Runner, OpenAIChatCompletionsModel
 from agents.extensions.models.litellm_model import LitellmModel
+from dotenv import load_dotenv
 from loguru import logger
 from openai import AsyncAzureOpenAI
 
 from bertrend.llm_utils.openai_client import AZURE_API_VERSION
 
+# Load environment variables at module import
+load_dotenv(override=True)
+
 # Disable tracing
-run_config = RunConfig(tracing_disabled=True)
+run_config_no_tracing = RunConfig(tracing_disabled=True)
 
 
 def run_runner_sync(*args, **kwargs):
-    # Create a new event loop in a script thread (useful for Jupyter notebooks, ipython, streamlit)
+    """Create a new event loop in a script thread (useful for Jupyter notebooks, ipython, streamlit)"""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
         # If Runner.run is async, run it to completion
-        return loop.run_until_complete(Runner.run(*args, **kwargs))
+        return loop.run_until_complete(
+            Runner.run(*args, run_config=run_config_no_tracing, **kwargs)
+        )
     finally:
         loop.close()
 
@@ -33,11 +39,13 @@ class BaseAgentFactory:
         api_key: str = None,
         base_url: str = None,
     ):
-        self.model_name = (
-            model_name
-            if model_name is not None
-            else os.getenv("OPENAI_DEFAULT_MODEL_NAME")
-        )
+        # Determine model name with sensible defaults
+        env_default_model = os.getenv("OPENAI_DEFAULT_MODEL")
+        # If caller provided a model_name, always use it
+        if model_name is not None:
+            self.model_name = model_name
+        else:
+            self.model_name = env_default_model
         self.api_key = api_key if api_key is not None else os.getenv("OPENAI_API_KEY")
         if not self.api_key:
             logger.error(
@@ -71,6 +79,7 @@ class BaseAgentFactory:
             )
 
     def create_agent(self, **kwargs) -> Agent:
+        # Keep the Agent API surface minimal for tests; additional settings can be provided via kwargs
         return Agent(model=self.model, **kwargs)
 
 
@@ -128,7 +137,7 @@ class AsyncAgentConcurrentProcessor:
                         response = await Runner.run(
                             starting_agent=self.agent,
                             input=item,
-                            run_config=run_config,
+                            run_config=run_config_no_tracing,
                         )
                         result.output = (
                             response.final_output

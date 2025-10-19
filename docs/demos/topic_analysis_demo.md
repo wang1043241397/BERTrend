@@ -70,7 +70,7 @@ The package includes predefined messages (`messages.py`) for user feedback and e
 
 BERTrend auto-loads a repository-level .env on import when python-dotenv is installed. Before running the Topic Analysis Demo, set relevant variables in the repo .env, for example:
 - BERTREND_BASE_DIR: base directory for BERTrend data/models/logs
-- OpenAI/LLM: OPENAI_API_KEY, OPENAI_ENDPOINT (or OPENAI_BASE_URL), OPENAI_DEFAULT_MODEL_NAME
+- OpenAI/LLM: OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_DEFAULT_MODEL
 - Optional providers and CUDA_VISIBLE_DEVICES as needed
 
 If python-dotenv isn’t installed, export these variables via your shell.

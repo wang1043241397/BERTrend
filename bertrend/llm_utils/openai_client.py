@@ -4,19 +4,33 @@
 #  This file is part of BERTrend.
 
 import os
+import re
+from enum import Enum
 from typing import Type
 
+from dotenv import load_dotenv
 from openai import OpenAI, AzureOpenAI, Timeout, Stream
 from loguru import logger
 from openai.types.chat import ChatCompletion, ChatCompletionChunk
 from pydantic import BaseModel
 
+# Load environment variables at module import
+load_dotenv(override=True)
+
 MAX_ATTEMPTS = 3
 TIMEOUT = 60.0
 DEFAULT_TEMPERATURE = 0.1
 DEFAULT_MAX_OUTPUT_TOKENS = 512
-
+DEFAULT_MODEL = "gpt-4.1-mini"
 AZURE_API_VERSION = "2025-03-01-preview"
+
+
+class APIType(Enum):
+    """Allow choosing between completions and responses API from OpenAI"""
+
+    # NB. LiteLLM does not support responses API for <=gpt4* models
+    COMPLETIONS = "completions"
+    RESPONSES = "responses"
 
 
 class OpenAI_Client:
@@ -40,6 +54,7 @@ class OpenAI_Client:
         model: str = None,
         temperature: float = DEFAULT_TEMPERATURE,
         api_version: str = AZURE_API_VERSION,
+        api_type: APIType = APIType.COMPLETIONS,
     ):
         """
         Initialize the OpenAI client.
@@ -52,7 +67,7 @@ class OpenAI_Client:
             API endpoint (Azure) or base_url URL (LiteLLM and openAI compatible deployments). If None, will try to get from OPENAI_BASE_URL environment variable.
             Should be set for Azure or local deployments.
         model : str, optional
-            Name of the model to use. If None, will try to get from OPENAI_DEFAULT_MODEL_NAME environment variable.
+            Name of the model to use. If None, will try to get from OPENAI_DEFAULT_MODEL environment variable.
         temperature : float, default=DEFAULT_TEMPERATURE
             Temperature parameter for controlling randomness in generation.
         api_version : str, default=AZURE_API_VERSION
@@ -100,9 +115,11 @@ class OpenAI_Client:
                 **common_params,
                 **azure_params,
             )
-        self.model_name = model or os.getenv("OPENAI_DEFAULT_MODEL_NAME")
+        self.model_name = model or os.getenv("OPENAI_DEFAULT_MODEL") or DEFAULT_MODEL
         self.temperature = temperature
         self.max_output_tokens = DEFAULT_MAX_OUTPUT_TOKENS
+
+        self.api_type = api_type
 
     def generate(
         self,
@@ -159,23 +176,47 @@ class OpenAI_Client:
         # For important parameters, set a default value if not given
         if not kwargs.get("model"):
             kwargs["model"] = self.model_name
+
         if not kwargs.get("temperature"):
             kwargs["temperature"] = self.temperature
-        if not kwargs.get("max_output_tokens"):
-            kwargs["max_output_tokens"] = self.max_output_tokens
+        if test_gpt_version(kwargs["model"]):  # gpt >=5
+            kwargs["temperature"] = 1
 
-        try:
-            response = self.llm_client.responses.create(input=messages, **kwargs)
-            logger.debug(f"API returned: {response}")
-            if kwargs.get("stream", False):
-                return response
-            else:
-                return response.output_text
-            # Details of errors available here: https://platform.openai.com/docs/guides/error-codes/api-errors
-        except Exception as e:
-            msg = f"OpenAI API fatal error: {e}"
-            logger.error(msg)
-            return msg
+        if self.api_type == APIType.COMPLETIONS:
+            if not kwargs.get("max_tokens"):
+                kwargs["max_tokens"] = self.max_output_tokens
+            try:
+                answer = self.llm_client.chat.completions.create(
+                    messages=messages,
+                    **kwargs,
+                )
+                logger.debug(f"API returned: {answer}")
+                if kwargs.get("stream", False):
+                    return answer
+                else:
+                    return answer.choices[0].message.content
+                # Details of errors available here: https://platform.openai.com/docs/guides/error-codes/api-errors
+            except Exception as e:
+                msg = f"OpenAI API fatal error: {e}"
+                logger.error(msg)
+                return msg
+
+        elif self.api_type == APIType.RESPONSES:
+            if not kwargs.get("max_output_tokens"):
+                kwargs["max_output_tokens"] = self.max_output_tokens
+            try:
+                response = self.llm_client.responses.create(input=messages, **kwargs)
+                logger.debug(f"API returned: {response}")
+                if kwargs.get("stream", False):
+                    return response
+                else:
+                    return response.output_text
+                # Details of errors available here: https://platform.openai.com/docs/guides/error-codes/api-errors
+            except Exception as e:
+                msg = f"OpenAI API fatal error: {e}"
+                logger.error(msg)
+                return msg
+        return ""
 
     def parse(
         self,
@@ -206,7 +247,7 @@ class OpenAI_Client:
 
         Notes
         -----
-        This method uses the beta.chat.completions.parse API which supports
+        This method uses the chat.completions.parse API which supports
         structured outputs in the format defined by the response_format parameter.
         """
         # Transform messages into OpenAI API compatible format
@@ -222,7 +263,7 @@ class OpenAI_Client:
 
         try:
             # NB. here use beta.chat...parse to support structured outputs
-            answer = self.llm_client.beta.chat.completions.parse(
+            answer = self.llm_client.chat.completions.parse(
                 messages=messages,
                 response_format=response_format,
                 **kwargs,
@@ -233,3 +274,16 @@ class OpenAI_Client:
         except Exception as e:
             msg = f"OpenAI API fatal error: {e}"
             logger.error(msg)
+
+
+def test_gpt_version(version_string):
+    # Regular expression to match "gpt-" followed by a number (integer or float)
+    pattern = r"^gpt-(\d+(\.\d+)?).*$"  # Matches numbers like 4, 4.1, 5, 10.0
+    match = re.match(pattern, version_string)
+
+    if match:
+        # Extract the version number as a float
+        version_number = float(match.group(1))
+        if version_number >= 5:
+            return True
+    return False

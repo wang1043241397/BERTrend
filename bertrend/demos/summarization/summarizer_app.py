@@ -3,8 +3,8 @@
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
 import os
-
 import streamlit as st
+from dotenv import load_dotenv
 from loguru import logger
 
 from bertrend.demos.demos_utils.icons import WARNING_ICON
@@ -14,6 +14,9 @@ from bertrend.services.summary.extractive_summarizer import (
     EnhancedExtractiveSummarizer,
     ExtractiveSummarizer,
 )
+
+load_dotenv(override=True)
+
 
 SUMMARIZER_OPTIONS_MAPPER = {
     "GPTSummarizer": GPTSummarizer,
@@ -63,6 +66,7 @@ def app():
         )
         / 100
     )
+
     st.text_input(
         "Openai API key",
         key="openai_api_key",
@@ -75,7 +79,7 @@ def app():
     st.text_input(
         "Openai model name",
         key="openai_model_name",
-        value=os.getenv("OPENAI_DEFAULT_MODEL_NAME"),
+        value=os.getenv("OPENAI_DEFAULT_MODEL"),
     )
 
     col1, col2 = st.columns(2)

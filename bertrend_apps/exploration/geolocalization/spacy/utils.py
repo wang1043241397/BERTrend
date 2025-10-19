@@ -8,11 +8,14 @@ import time
 from pathlib import Path
 from typing import Union
 
+from dotenv import load_dotenv
 from loguru import logger
 from spacy.lang.fr import French
 from thinc.config import Config
 
 from bertrend_apps.exploration.geolocalization.spacy import common_factory
+
+load_dotenv(override=True)
 
 # Those imports are not explicitly used, but mandatory to have a working nlp pipeline... - DO NOT REMOVE!
 

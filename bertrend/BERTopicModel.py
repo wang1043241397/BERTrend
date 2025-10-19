@@ -177,7 +177,7 @@ class BERTopicModel:
         return OpenAI(
             client=OpenAI_Client(
                 api_key=LLM_CONFIG["api_key"],
-                endpoint=LLM_CONFIG["endpoint"],
+                base_url=LLM_CONFIG["base_url"],
                 model=LLM_CONFIG["model"],
             ).llm_client,
             model=LLM_CONFIG["model"],

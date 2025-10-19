@@ -147,7 +147,7 @@ def get_improved_topic_description(
     # Get llm client
     llm_client = OpenAI_Client(
         api_key=LLM_CONFIG["api_key"],
-        endpoint=LLM_CONFIG["endpoint"],
+        base_url=LLM_CONFIG["base_url"],
         model=LLM_CONFIG["model"],
     )
 
@@ -242,7 +242,7 @@ def create_newsletter(
         )
         llm_client = OpenAI_Client(
             api_key=LLM_CONFIG["api_key"],
-            endpoint=LLM_CONFIG["endpoint"],
+            base_url=LLM_CONFIG["base_url"],
             model=LLM_CONFIG["model"],
         )
         response = llm_client.parse(

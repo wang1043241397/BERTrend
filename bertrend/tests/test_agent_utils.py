@@ -58,7 +58,9 @@ class TestBaseAgentFactory:
     def test_base_agent_factory_creation_default(self):
         """Test creating BaseAgentFactory with default parameters."""
         # Use explicit parameters to avoid environment dependency
-        factory = BaseAgentFactory(api_key="test-api-key", base_url=None)
+        factory = BaseAgentFactory(
+            api_key="test-api-key", model_name="gpt-4.1-mini", base_url=None
+        )
         assert factory.model_name == "gpt-4.1-mini"
         assert factory.api_key == "test-api-key"
         assert factory.base_url is None
@@ -82,7 +84,7 @@ class TestBaseAgentFactory:
 
     @patch.dict(
         os.environ,
-        {"OPENAI_API_KEY": "test-key", "OPENAI_DEFAULT_MODEL_NAME": "custom-model"},
+        {"OPENAI_API_KEY": "test-key", "OPENAI_DEFAULT_MODEL": "custom-model"},
         clear=True,
     )
     def test_base_agent_factory_env_model_name(self):
@@ -104,7 +106,9 @@ class TestBaseAgentFactory:
     def test_base_agent_factory_litellm_model(self, mock_litellm_model):
         """Test creating BaseAgentFactory with custom base URL."""
         factory = BaseAgentFactory(
-            api_key="test-key", base_url="https://custom-api.com"
+            api_key="test-key",
+            model_name="gpt-4.1-mini",
+            base_url="https://custom-api.com",
         )
         mock_litellm_model.assert_called_once_with(
             model="gpt-4.1-mini", api_key="test-key", base_url="https://custom-api.com"

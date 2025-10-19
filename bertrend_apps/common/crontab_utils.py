@@ -15,10 +15,13 @@ from cron_descriptor import (
     ExpressionDescriptor,
     DescriptionTypeEnum,
 )
+from dotenv import load_dotenv
 from loguru import logger
 
 from bertrend import BEST_CUDA_DEVICE, BERTREND_LOG_PATH, load_toml_config
 from bertrend.demos.demos_utils.i18n import get_current_internationalization_language
+
+load_dotenv(override=True)
 
 
 def get_understandable_cron_description(cron_expression: str) -> str:

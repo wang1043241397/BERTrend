@@ -9,7 +9,7 @@ from pathlib import Path
 try:
     from dotenv import load_dotenv  # type: ignore
 
-    load_dotenv()
+    load_dotenv(override=True)
 except Exception:
     pass
 
