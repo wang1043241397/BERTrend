@@ -32,9 +32,7 @@ from bertrend.demos.streamlit_components.input_with_pills_component import (
     input_with_pills,
 )
 from bertrend_apps.common.crontab_utils import (
-    check_cron_job,
-    remove_from_crontab,
-    add_job_to_crontab,
+    CrontabSchedulerUtils,
 )
 from bertrend_apps.prospective_demo import (
     get_user_models_path,
@@ -44,6 +42,8 @@ from bertrend_apps.prospective_demo import (
 from bertrend_apps.prospective_demo.perf_utils import get_least_used_gpu
 from bertrend_apps.prospective_demo.process_new_data import regenerate_models
 from bertrend_apps.prospective_demo.utils import is_valid_email
+
+scheduler_utils = CrontabSchedulerUtils()
 
 
 @st.cache_data(ttl=60)
@@ -443,7 +443,9 @@ def toggle_icon(df: pd.DataFrame, index: int) -> str:
 def check_if_learning_active_for_user(model_id: str, user: str):
     """Checks if a given scrapping feed is active (registered in the crontab"""
     if user:
-        return check_cron_job(rf"process_new_data train-new-model.*{user}.*{model_id}")
+        return scheduler_utils.check_cron_job(
+            rf"process_new_data train-new-model.*{user}.*{model_id}"
+        )
     else:
         return False
 
@@ -451,7 +453,7 @@ def check_if_learning_active_for_user(model_id: str, user: str):
 def remove_scheduled_training_for_user(model_id: str, user: str):
     """Removes from the crontab the training job matching the provided model_id"""
     if user:
-        return remove_from_crontab(
+        return scheduler_utils.remove_from_crontab(
             rf"process_new_data train-new-model {user} {model_id}"
         )
     return False
@@ -478,7 +480,7 @@ def schedule_training_for_user(model_id: str, user: str):
         f"> {logpath}/learning_{model_id}.log 2>&1"
     )
     env_vars = f"CUDA_VISIBLE_DEVICES={BEST_CUDA_DEVICE}"
-    add_job_to_crontab(schedule, command, env_vars)
+    scheduler_utils.add_job_to_crontab(schedule, command, env_vars)
 
 
 def delete_cached_models(model_id: str):
@@ -502,7 +504,9 @@ def generate_crontab_expression(days_interval: int) -> str:
 def check_if_report_generation_active_for_user(model_id: str, user: str) -> bool:
     """Checks if automated report generation is active (registered in the crontab)"""
     if user:
-        return check_cron_job(rf"automated_report_generation.*{user}.*{model_id}")
+        return scheduler_utils.check_cron_job(
+            rf"automated_report_generation.*{user}.*{model_id}"
+        )
     else:
         return False
 
@@ -510,7 +514,9 @@ def check_if_report_generation_active_for_user(model_id: str, user: str) -> bool
 def remove_scheduled_report_generation_for_user(model_id: str, user: str) -> bool:
     """Removes from the crontab the report generation job matching the provided model_id"""
     if user:
-        return remove_from_crontab(rf"automated_report_generation {user} {model_id}")
+        return scheduler_utils.remove_from_crontab(
+            rf"automated_report_generation {user} {model_id}"
+        )
     return False
 
 
@@ -557,7 +563,7 @@ def schedule_report_generation_for_user(model_id: str, user: str) -> bool:
         f"> {logpath}/report_{model_id}.log 2>&1"
     )
 
-    return add_job_to_crontab(adjusted_schedule, command, "")
+    return scheduler_utils.add_job_to_crontab(adjusted_schedule, command, "")
 
 
 def update_scheduled_report_generation_for_user(model_id: str, user: str) -> bool:

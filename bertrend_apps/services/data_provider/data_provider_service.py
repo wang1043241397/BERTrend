@@ -14,7 +14,7 @@ from loguru import logger
 
 from bertrend import FEED_BASE_PATH, load_toml_config
 from bertrend.article_scoring.article_scoring import QualityLevel
-from bertrend_apps.common.crontab_utils import schedule_scrapping
+from bertrend_apps.common.crontab_utils import CrontabSchedulerUtils
 from bertrend_apps.data_provider.arxiv_provider import ArxivProvider
 from bertrend_apps.data_provider.atom_feed_provider import ATOMFeedProvider
 from bertrend_apps.data_provider.rss_feed_provider import RSSFeedProvider
@@ -35,6 +35,8 @@ PROVIDERS = {
     "bing": BingNewsProvider,
     "newscatcher": NewsCatcherProvider,
 }
+
+scheduler_utils = CrontabSchedulerUtils()
 
 
 # Request/Response models
@@ -99,6 +101,7 @@ class ScheduleScrappingRequest(BaseModel):
 
 
 # Utilities copied from CLI implementation
+
 
 def _daterange(start_date: datetime, end_date: datetime, ndays: int):
     for n in range(int((end_date - start_date).days / ndays)):
@@ -232,7 +235,7 @@ def scrape_from_feed(req: ScrapeFeedRequest):
 @app.post("/schedule-scrapping")
 def automate_scrapping(req: ScheduleScrappingRequest):
     try:
-        schedule_scrapping(req.feed_cfg)
+        scheduler_utils.schedule_scrapping(req.feed_cfg)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     return {"status": "scheduled"}

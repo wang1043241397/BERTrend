@@ -35,7 +35,7 @@ from bertrend.llm_utils.newsletter_features import (
     render_newsletter,
 )
 from bertrend_apps.common.mail_utils import get_credentials, send_email
-from bertrend_apps.common.crontab_utils import schedule_newsletter
+from bertrend_apps.common.crontab_utils import CrontabSchedulerUtils
 
 # Config sections
 BERTOPIC_CONFIG_SECTION = "bertopic_parameters"
@@ -48,6 +48,8 @@ LEARN_FROM_SCRATCH = (
 )
 LEARN_FROM_LAST = "learn_from_last"  # only the last feed data to create the model
 INFERENCE_ONLY = "inference_only"  # do not retrain model; reuse existing bertopic model if available, otherwise, fallback to learn_from_scratch for the first run
+
+scheduler_utils = CrontabSchedulerUtils()
 
 # Ensures to write with +rw for both user and groups
 os.umask(0o002)
@@ -285,7 +287,7 @@ if __name__ == "__main__":
         ),
     ):
         """Schedule data scrapping on the basis of a feed configuration file"""
-        schedule_newsletter(
+        scheduler_utils.schedule_newsletter(
             newsletter_toml_cfg_path, data_feed_toml_cfg_path, cuda_devices
         )
 

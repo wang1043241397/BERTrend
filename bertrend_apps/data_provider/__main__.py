@@ -13,7 +13,7 @@ from pathlib import Path
 
 from bertrend import FEED_BASE_PATH, load_toml_config
 from bertrend.article_scoring.article_scoring import QualityLevel
-from bertrend_apps.common.crontab_utils import schedule_scrapping
+from bertrend_apps.common.crontab_utils import CrontabSchedulerUtils
 from bertrend_apps.data_provider.arxiv_provider import ArxivProvider
 from bertrend_apps.data_provider.bing_news_provider import BingNewsProvider
 from bertrend_apps.data_provider.atom_feed_provider import ATOMFeedProvider
@@ -32,6 +32,8 @@ PROVIDERS = {
     "bing": BingNewsProvider,
     "newscatcher": NewsCatcherProvider,
 }
+
+scheduler_utils = CrontabSchedulerUtils()
 
 if __name__ == "__main__":
     app = typer.Typer()
@@ -259,7 +261,7 @@ if __name__ == "__main__":
         feed_cfg: Path = typer.Argument(help="Path of the data feed config file"),
     ):
         """Schedule data scrapping on the basis of a feed configuration file"""
-        schedule_scrapping(feed_cfg)
+        scheduler_utils.schedule_scrapping(feed_cfg)
 
     ##################
     app()
