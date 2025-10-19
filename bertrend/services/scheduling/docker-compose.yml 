@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: job-scheduler
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount data directory for persistent SQLite database
+      - ./data:/app/data
+      # Mount logs directory
+      - ./logs:/app/logs
+      # Optional: Mount source code for development (comment out for production)
+      # - ./main.py:/app/main.py
+    environment:
+      # Application settings
+      - TZ=Europe/Paris
+      - PYTHONUNBUFFERED=1
+      # Optional: Database path (if you want to customize)
+      - DB_PATH=/app/data/jobs.sqlite
+      # Optional: Log level
+      - LOG_LEVEL=INFO
+      # Optional: Number of worker processes
+      - MAX_WORKERS=5
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - scheduler-network
+    # Resource limits (adjust based on your needs)
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+networks:
+  scheduler-network:
+    driver: bridge
+
+volumes:
+  scheduler-data:
+    driver: local

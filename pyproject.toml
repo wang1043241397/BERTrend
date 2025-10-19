@@ -18,6 +18,7 @@ keywords = ["topics", "BERTopic", "transformers", "weak signals", "LLM", "trend 
 classifiers = [ "Topic :: Scientific/Engineering :: Artificial Intelligence"]
 
 dependencies = [
+    "APScheduler (>=3.11.0)",
     "ipython (>=8.28.0)",
     "bertopic (==0.16.2)", # not fully tested with more recent versions
     "black (>=24.10.0)",
