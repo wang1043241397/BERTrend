@@ -39,6 +39,7 @@ PERSON_ADD_ICON = ":material/person_add:"
 PERSON_REMOVE_ICON = ":material/person_remove:"
 POPULARITY_ICON = ":material/thumbs_up_down:"
 SIGNAL_EVOLUTION_ICON = ":material/signal_cellular_alt:"
+CYCLE_ICON = ":material/cycle:"
 
 JSON_ICON = "🧾"
 PARQUET_ICON = "📦️"

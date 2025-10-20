@@ -106,9 +106,9 @@ def main():
             NEWSLETTER_ICON + " " + translate("tab_monitoring"),
             MODELS_ICON + " " + translate("tab_models"),
             TREND_ICON + " " + translate("tab_trends"),
-            TIMELINE_ICON + " " + translate("tab_comparative"),
             ANALYSIS_ICON + " " + translate("tab_analysis"),
             NEWSLETTER_ICON + " " + translate("tab_reports"),
+            TIMELINE_ICON + " " + translate("tab_comparative"),
         ]
     )
 
@@ -134,14 +134,13 @@ def main():
         signal_analysis()
 
     with tab4:
-        dashboard_comparative()
-
-    with tab5:
         dashboard_analysis()
 
-    with tab6:
+    with tab5:
         reporting()
 
+    with tab6:
+        dashboard_comparative()
 
 if __name__ == "__main__":
     main()

@@ -11,6 +11,7 @@ import pandas as pd
 import streamlit as st
 
 from bertrend.demos.demos_utils.i18n import translate
+from bertrend.demos.demos_utils.icons import CYCLE_ICON
 from bertrend.utils.data_loading import (
     load_data,
     TIMESTAMP_COLUMN,
@@ -25,7 +26,7 @@ def display_data_status():
     if not st.session_state.user_feeds:
         return
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns([45, 45, 10])
     with col1:
         st.selectbox(
             translate("monitoring_selection_label"),
@@ -44,7 +45,11 @@ def display_data_status():
             key="data_time_window",
         )
 
-    display_data_info_for_feed(st.session_state.id_data)
+    with col3:
+        clicked = st.button(CYCLE_ICON + " " + translate("check_data_button_label"))
+
+    if clicked:
+        display_data_info_for_feed(st.session_state.id_data)
 
 
 def display_data_info_for_feed(feed_id: str):

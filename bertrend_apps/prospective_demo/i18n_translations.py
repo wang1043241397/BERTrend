@@ -10,6 +10,7 @@ TRANSLATIONS = {
         "fr": "BERTrend - Démo Veille & Analyse",
         "en": "BERTrend - Monitoring & Analysis Demo",
     },
+    "check_data_button_label": {"fr": "Vérifier les données", "en": "Check data"},
     "tab_monitoring": {"fr": "Veilles", "en": "Monitoring"},
     "tab_models": {"fr": "Modèles", "en": "Models"},
     "tab_trends": {"fr": "Tendances", "en": "Trends"},
