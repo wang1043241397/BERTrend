@@ -5,11 +5,14 @@
 import os
 
 import dateparser
+from dotenv import load_dotenv
 from loguru import logger
 from newscatcherapi import NewsCatcherApiClient
 
 from bertrend_apps.data_provider.data_provider import DataProvider
 from bertrend_apps.data_provider.utils import wait
+
+load_dotenv(override=True)
 
 API_KEY = os.getenv("NEWSCATCHER_API_KEY")
 if not API_KEY:

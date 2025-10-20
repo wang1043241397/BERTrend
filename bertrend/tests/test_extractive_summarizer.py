@@ -66,7 +66,7 @@ def mock_enhanced_summarizer(mock_sentence_transformer, mock_openai_client):
         ),
     ):
         summarizer = EnhancedExtractiveSummarizer(
-            api_key="test_key", endpoint="test_endpoint"
+            api_key="test_key", base_url="test_base_url"
         )
         # Set the mocks directly to ensure they're used
         summarizer.model = mock_sentence_transformer
@@ -94,7 +94,7 @@ def test_enhanced_summarizer_initialization():
         ) as mock_client,
     ):
         summarizer = EnhancedExtractiveSummarizer(
-            api_key="test_key", endpoint="test_endpoint"
+            api_key="test_key", base_url="test_base_url"
         )
         mock_transformer.assert_called_once()
         mock_client.assert_called_once()

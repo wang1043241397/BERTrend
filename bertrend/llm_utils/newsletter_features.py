@@ -85,7 +85,7 @@ def generate_newsletter(
         openai_model_name = LLM_CONFIG["model"]
     openai_api = OpenAI_Client(
         api_key=LLM_CONFIG["api_key"],
-        endpoint=LLM_CONFIG["endpoint"],
+        base_url=LLM_CONFIG["base_url"],
         model=openai_model_name,
     )
 

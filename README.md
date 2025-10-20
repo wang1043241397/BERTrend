@@ -69,15 +69,36 @@ https://github.com/user-attachments/assets/d79368d9-d4e0-4324-8a98-a888f0ab3b65
 
 ## Installation
 
-### Environment Variables
+### Environment Setup (.env and .venv)
 
-BERTrend requires the following environment variables to be set:
+BERTrend now supports configuration via a repository-level `.env` file. On import, the package attempts to load environment variables automatically using `python-dotenv`.
 
-- `BERTREND_BASE_DIR`: the home directory for BERTrend data, models, and logs
-- OpenAI variables (for LLM integration):
-  - `OPENAI_API_KEY`: the API key for your LLM deployment
-  - `OPENAI_ENDPOINT`: the endpoint for your LLM deployment (empty if using OpenAI services)
-  - `OPENAI_DEFAULT_MODEL_NAME`: the name of the default LLM model to use
+Recommended steps:
+
+1. Create and fill your `.env` at the repo root (a template is provided):
+   - Copy `.env` and set your values (do not commit secrets).
+   - Common keys:
+     - `BERTREND_BASE_DIR`: base directory for BERTrend data/models/logs
+     - OpenAI/LLM:
+       - `OPENAI_API_KEY`
+       - `OPENAI_BASE_URL` (optional for OpenAI-compatible providers such as LiteLLM and Azure)
+       - `OPENAI_DEFAULT_MODEL`
+     - Providers (optional): `SEMANTIC_SCHOLAR_API_KEY`, `NEWSCATCHER_API_KEY`, `DBPEDIA_REST_API_URL`
+     - Embedding service security (optional): `BERTREND_SECRET_KEY`, `DEFAULT_RATE_LIMIT`, `DEFAULT_RATE_WINDOW`, `CLIENT_REGISTRY_FILE`
+     - Email (optional): `BERTREND_EMAIL_BACKEND`, `GMAIL_*`, `SMTP_*`, `SENDGRID_API_KEY`
+     - Misc: `CUDA_VISIBLE_DEVICES`
+2. Use a virtual environment and install dependencies inside it:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
+   pip install -U pip
+   pip install .  # or pip install ".[apps]"
+   pip install python-dotenv  # ensures .env is auto-loaded
+   ```
+3. Notes
+   - If `python-dotenv` isn’t installed, `.env` won’t be auto-loaded; you can either install it or export variables via your shell/runner.
+   - Scheduled jobs created from the apps use the exact interpreter of your active environment (`sys.executable`), ensuring `.venv/bin/python` is used. Keep your venv path stable on the machine running cron.
+   - Cron entries source your shell profile and pass through any required variables. You can also rely on `.env` for most settings.
 
 ### Hardware and Software Requirements
 

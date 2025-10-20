@@ -10,10 +10,12 @@ TRANSLATIONS = {
         "fr": "BERTrend - Démo Veille & Analyse",
         "en": "BERTrend - Monitoring & Analysis Demo",
     },
+    "check_data_button_label": {"fr": "Vérifier les données", "en": "Check data"},
     "tab_monitoring": {"fr": "Veilles", "en": "Monitoring"},
     "tab_models": {"fr": "Modèles", "en": "Models"},
     "tab_trends": {"fr": "Tendances", "en": "Trends"},
     "tab_analysis": {"fr": "Analyses", "en": "Analysis"},
+    "tab_comparative": {"fr": "Comparatif", "en": "Comparative"},
     "tab_reports": {"fr": "Génération de rapports", "en": "Report Generation"},
     "data_flow_config": {
         "fr": "Configuration des flux de données",
@@ -49,6 +51,72 @@ TRANSLATIONS = {
     "analysis_date_help": {
         "fr": "Sélection de la date d'analyse parmi celles disponibles",
         "en": "Selection of the analysis date from those available",
+    },
+    # dashboard_comparative.py translations
+    "comparative_analysis_title": {
+        "fr": "Analyse Comparative entre Périodes",
+        "en": "Comparative Analysis Between Periods",
+    },
+    "period_1": {"fr": "Période 1", "en": "Period 1"},
+    "period_2": {"fr": "Période 2", "en": "Period 2"},
+    "select_period": {
+        "fr": "Sélectionner la période",
+        "en": "Select period",
+    },
+    "comparison_metrics": {
+        "fr": "Métriques de Comparaison",
+        "en": "Comparison Metrics",
+    },
+    "signal_evolution": {
+        "fr": "Évolution des Signaux",
+        "en": "Signal Evolution",
+    },
+    "new_topics": {"fr": "Nouveaux Sujets", "en": "New Topics"},
+    "disappeared_topics": {"fr": "Sujets Disparus", "en": "Disappeared Topics"},
+    "stable_topics": {"fr": "Sujets Stables", "en": "Stable Topics"},
+    "popularity_change": {
+        "fr": "Changement de Popularité",
+        "en": "Popularity Change",
+    },
+    "topic_count_comparison": {
+        "fr": "Comparaison du Nombre de Sujets",
+        "en": "Topic Count Comparison",
+    },
+    "source_diversity_comparison": {
+        "fr": "Comparaison de la Diversité des Sources",
+        "en": "Source Diversity Comparison",
+    },
+    "no_data_for_comparison": {
+        "fr": "Aucune donnée disponible pour la comparaison",
+        "en": "No data available for comparison",
+    },
+    "select_two_periods": {
+        "fr": "Veuillez sélectionner deux périodes différentes pour la comparaison",
+        "en": "Please select two different periods for comparison",
+    },
+    "period_comparison": {
+        "fr": "Comparaison de Périodes",
+        "en": "Period Comparison",
+    },
+    "topic_popularity_over_time": {
+        "fr": "Popularité des Sujets au Fil du Temps",
+        "en": "Topic Popularity Over Time",
+    },
+    "insufficient_periods_for_trend": {
+        "fr": "Pas assez de périodes disponibles pour afficher les tendances (minimum 2 requises)",
+        "en": "Insufficient periods available to display trends (minimum 2 required)",
+    },
+    "popularity": {
+        "fr": "Popularité",
+        "en": "Popularity",
+    },
+    "render_comparison": {
+        "fr": "Lancer la comparaison",
+        "en": "Render comparison",
+    },
+    "click_to_render_comparison": {
+        "fr": "Sélectionnez deux périodes, puis cliquez sur le bouton ci-dessus pour lancer la comparaison.",
+        "en": "Select two periods, then click the button above to render the comparison.",
     },
     # dashboard_signals.py translations
     "title": {"fr": "Titre", "en": "Title"},

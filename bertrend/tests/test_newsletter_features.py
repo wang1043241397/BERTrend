@@ -118,7 +118,7 @@ class TestNewsletterGenerator:
 
     @patch(
         "bertrend.LLM_CONFIG",
-        {"model": "gpt-4", "api_key": "test-key", "endpoint": "test-endpoint"},
+        {"model": "gpt-4", "api_key": "test-key", "base_url": "test-base_url"},
     )
     @patch("bertrend.llm_utils.newsletter_features.OpenAI_Client")
     @patch("bertrend.services.summary.chatgpt_summarizer.GPTSummarizer")
@@ -173,7 +173,7 @@ class TestNewsletterGenerator:
 
     @patch(
         "bertrend.LLM_CONFIG",
-        {"model": "gpt-4", "api_key": "test-key", "endpoint": "test-endpoint"},
+        {"model": "gpt-4", "api_key": "test-key", "base_url": "test-base_url"},
     )
     @patch("bertrend.llm_utils.newsletter_features.OpenAI_Client")
     @patch("bertrend.services.summary.chatgpt_summarizer.GPTSummarizer")
@@ -219,7 +219,7 @@ class TestNewsletterGenerator:
 
     @patch(
         "bertrend.LLM_CONFIG",
-        {"model": "gpt-4", "api_key": "test-key", "endpoint": "test-endpoint"},
+        {"model": "gpt-4", "api_key": "test-key", "base_url": "test-base_url"},
     )
     @patch("bertrend.llm_utils.newsletter_features.OpenAI_Client")
     @patch("bertrend.services.summary.chatgpt_summarizer.GPTSummarizer")
@@ -262,7 +262,7 @@ class TestNewsletterGenerator:
 
     @patch(
         "bertrend.LLM_CONFIG",
-        {"model": "gpt-4", "api_key": "test-key", "endpoint": "test-endpoint"},
+        {"model": "gpt-4", "api_key": "test-key", "base_url": "test-base_url"},
     )
     @patch("bertrend.llm_utils.newsletter_features.OpenAI_Client")
     @patch("bertrend.services.summary.chatgpt_summarizer.GPTSummarizer")
@@ -307,7 +307,7 @@ class TestNewsletterGenerator:
 
     @patch(
         "bertrend.LLM_CONFIG",
-        {"model": "gpt-4", "api_key": "test-key", "endpoint": "test-endpoint"},
+        {"model": "gpt-4", "api_key": "test-key", "base_url": "test-base_url"},
     )
     @patch("bertrend.llm_utils.newsletter_features.OpenAI_Client")
     @patch("bertrend.services.summary.chatgpt_summarizer.GPTSummarizer")
@@ -347,7 +347,7 @@ class TestNewsletterGenerator:
 
     @patch(
         "bertrend.LLM_CONFIG",
-        {"model": "gpt-4", "api_key": "test-key", "endpoint": "test-endpoint"},
+        {"model": "gpt-4", "api_key": "test-key", "base_url": "test-base_url"},
     )
     @patch("bertrend.llm_utils.newsletter_features.OpenAI_Client")
     @patch("bertrend.services.summary.chatgpt_summarizer.GPTSummarizer")

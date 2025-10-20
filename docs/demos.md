@@ -50,6 +50,15 @@ The Prospective Demo provides a comprehensive web application for prospective an
 
 ## Getting Started
 
+### Environment (.env)
+BERTrend supports configuration via a repository-level .env file that is auto-loaded on import when python-dotenv is installed. Create and fill .env at the repo root (a template exists) and set values like:
+- BERTREND_BASE_DIR: base directory for BERTrend data/models/logs
+- OpenAI/LLM: OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_DEFAULT_MODEL
+- Optional providers: SEMANTIC_SCHOLAR_API_KEY, NEWSCATCHER_API_KEY, DBPEDIA_REST_API_URL
+- Optional email, embedding server security, and CUDA_VISIBLE_DEVICES
+
+If python-dotenv is not installed, export these variables via your shell before starting the demos.
+
 To run any of the demos, navigate to the respective directory and run the Streamlit application:
 
 ### Topic Analysis Demo

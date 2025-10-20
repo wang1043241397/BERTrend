@@ -86,11 +86,7 @@
 
                         {% if article.summary %}
                         <p class="summary">
-                            {% if language == 'en' %}
-                                {{ article.summary | e}}
-                            {% else %}
-                                {{ article.summary | e}}
-                            {% endif %}
+                            {{ article.summary | e}}
                         </p>
                         {% endif %}
 
@@ -99,7 +95,7 @@
                 </div>
 
                 <!-- Placeholder for additional info -->
-                {% block detailed_topic_analysis with topic=topic %}
+                {% block detailed_topic_analysis %}
                 {% endblock %}
 
             </section>

@@ -2,14 +2,12 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
-
 from loguru import logger
 
 from bertrend import LLM_CONFIG
 from bertrend.llm_utils.openai_client import OpenAI_Client
 from bertrend.services.summary.prompts import (
-    FR_SYSTEM_SUMMARY_SENTENCES,
-    EN_SYSTEM_SUMMARY_SENTENCES,
+    SYSTEM_SUMMARY_SENTENCES,
 )
 from bertrend.services.summarizer import DEFAULT_MAX_SENTENCES
 
@@ -19,11 +17,11 @@ from bertrend.services.summarizer import Summarizer
 class GPTSummarizer(Summarizer):
     """Class that uses the GPT service to provide a summary of a text"""
 
-    def __init__(self, api_key: str = None, endpoint: str = None):
+    def __init__(self, api_key: str = None, base_url: str = None):
         # retrieve chatGPT config
         self.api = OpenAI_Client(
             api_key=LLM_CONFIG["api_key"] if not api_key else api_key,
-            endpoint=LLM_CONFIG["endpoint"] if not endpoint else endpoint,
+            base_url=LLM_CONFIG["base_url"] if not base_url else base_url,
             model=LLM_CONFIG["model"],
         )
         logger.debug("GPTSummarizer initialized")
@@ -40,14 +38,10 @@ class GPTSummarizer(Summarizer):
         # Limit input length in case the text is large
         article_text = keep_first_n_words(article_text, max_article_length)
 
-        # Create answer object
-        prompt = (
-            FR_SYSTEM_SUMMARY_SENTENCES
-            if prompt_language == "fr"
-            else EN_SYSTEM_SUMMARY_SENTENCES
-        )
         answer = self.api.generate(
-            system_prompt=prompt.format(num_sentences=max_sentences),
+            system_prompt=SYSTEM_SUMMARY_SENTENCES[prompt_language].format(
+                num_sentences=max_sentences
+            ),
             user_prompt=article_text,
         )
         return answer

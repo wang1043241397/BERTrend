@@ -11,6 +11,7 @@ import pandas as pd
 import requests
 import torch
 from bertopic.backend import BaseEmbedder
+from dotenv import load_dotenv
 from loguru import logger
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
@@ -22,6 +23,8 @@ from bertrend.config.parameters import (
     EMBEDDING_MAX_SEQ_LENGTH,
 )
 from bertrend.services.embedding_client import EmbeddingAPIClient
+
+load_dotenv(override=True)
 
 
 class EmbeddingService(BaseEmbedder):

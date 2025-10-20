@@ -26,7 +26,7 @@ from bertrend.services.summarizer import (
 )
 
 RTE_MODEL_NAME = "models/language_model_rte/lm-distilcamembertbase-rte-saola2_20220826"
-DEFAULT_SUMMARIZER_MODEL = "camembert-base"
+DEFAULT_SUMMARIZER_MODEL = "almanach/camembert-base"
 
 DEFAULT_CHUNKS_NUMBER_SUMMARY = 6
 
@@ -338,11 +338,11 @@ class EnhancedExtractiveSummarizer(ExtractiveSummarizer):
     def __init__(
         self,
         api_key: str = None,
-        endpoint: str = None,
+        base_url: str = None,
         model_name=DEFAULT_SUMMARIZER_MODEL,
     ):
         super().__init__(model_name=model_name)
-        self.api = OpenAI_Client(api_key=api_key, endpoint=endpoint)
+        self.api = OpenAI_Client(api_key=api_key, base_url=base_url)
 
     def generate_summary(
         self,

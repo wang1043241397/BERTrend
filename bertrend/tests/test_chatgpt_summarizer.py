@@ -32,7 +32,7 @@ def gpt_summarizer(mock_openai_client):
         "bertrend.services.summary.chatgpt_summarizer.OpenAI_Client",
         return_value=mock_openai_client,
     ):
-        summarizer = GPTSummarizer(api_key="test_key", endpoint="test_endpoint")
+        summarizer = GPTSummarizer(api_key="test_key", base_url="test_base_url")
         # Set the mock client directly to ensure it's used
         summarizer.api = mock_openai_client
         return summarizer
@@ -43,14 +43,14 @@ def test_initialization():
     with patch(
         "bertrend.services.summary.chatgpt_summarizer.OpenAI_Client"
     ) as mock_client_class:
-        # Create a summarizer with custom API key and endpoint
-        GPTSummarizer(api_key="custom_key", endpoint="custom_endpoint")
+        # Create a summarizer with custom API key and base_url
+        GPTSummarizer(api_key="custom_key", base_url="custom_base_url")
 
         # Check that OpenAI_Client was initialized with the correct parameters
         mock_client_class.assert_called_once()
         args, kwargs = mock_client_class.call_args
         assert kwargs["api_key"] == "custom_key"
-        assert kwargs["endpoint"] == "custom_endpoint"
+        assert kwargs["base_url"] == "custom_base_url"
 
 
 def test_generate_summary_french(gpt_summarizer, mock_openai_client):

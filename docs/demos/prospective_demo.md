@@ -75,6 +75,15 @@ The package provides functionality for generating reports:
 - `report_utils.py` - Utilities for report generation
 - `detailed_report_template.html` - HTML template for reports
 
+## Environment (.env)
+
+BERTrend auto-loads a repository-level .env on import when python-dotenv is installed. Before running the Prospective Demo, ensure your .env at the repo root includes relevant variables, for example:
+- BERTREND_BASE_DIR: base directory for BERTrend data/models/logs
+- OpenAI/LLM: OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_DEFAULT_MODEL
+- Optional: email settings for report sending, provider keys, and CUDA_VISIBLE_DEVICES
+
+GPU selection: you can set CUDA_VISIBLE_DEVICES (e.g., "0" or "0,1"). When launching via Streamlit, you may prefix the command with CUDA_VISIBLE_DEVICES=<gpu>.
+
 ## Usage
 
 ### Starting the Application

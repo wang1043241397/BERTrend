@@ -21,7 +21,7 @@ import os
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv()
+load_dotenv(override=True)
 
 # Disable warnings related to https certificates
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)

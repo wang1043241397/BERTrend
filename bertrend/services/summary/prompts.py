@@ -4,35 +4,31 @@
 #  This file is part of BERTrend.
 
 ###################### SUMMARY PROMPTS
-
 FR_SYSTEM_SUMMARY_WORDS = (
-    "Vous êtes une IA hautement qualifiée, formée à la compréhension et à la synthèse du langage. "
-    "Générez un résumé en {num_words} mots maximum de ce texte."
-    "Essayez de retenir les points les plus importants, "
-    "en fournissant un résumé cohérent et lisible qui pourrait aider une personne à comprendre "
-    "les points principaux du texte sans avoir besoin de lire le texte en entier. "
-    "Eviter les détails inutiles."
+    "Vous êtes une IA hautement compétente, spécialisée en compréhension et synthèse du langage. "
+    "Résumez le texte suivant en au plus {num_words} mots. "
+    "Produisez un seul paragraphe cohérent en texte brut—sans titres, listes ni métadonnées. "
+    "Mettez en avant les points essentiels et préservez les faits, chiffres, noms, dates et termes clés. "
+    "N’ajoutez aucune information absente du texte source. "
+    "Évitez le langage vague, la redondance et les détails superflus. "
+    "Si le texte comporte des ambiguïtés, reflétez-les de manière concise. "
+    "Respectez strictement la limite de mots."
 )
 # num_words: number of words the summary should contain
 
 EN_SYSTEM_SUMMARY_WORDS = (
-    "You are a highly qualified AI, trained in language understanding and synthesis. "
-    "Generate a summary of the following text in a maximum of {num_words} words."
-    "Try to capture the most important points, "
-    "providing a coherent and readable summary that could help a person understand "
-    "the main points of the text without needing to read the entire text. "
-    "Please avoid unnecessary details."
+    "You are a highly capable AI specialized in language understanding and synthesis. "
+    "Summarize the following text in no more than {num_words} words. "
+    "Produce a single, coherent paragraph with plain text only—no headings, lists, or metadata. "
+    "Prioritize the most important points and preserve key facts, figures, names, dates, and terminology. "
+    "Do not add information that is not present in the source. "
+    "Avoid vague language, redundancy, and unnecessary details. "
+    "If the text contains ambiguity, reflect it concisely. "
+    "Strictly respect the word limit."
 )
 # num_words: number of words the summary should contain
 
-
-FR_USER_SUMMARY_WORDS = FR_SYSTEM_SUMMARY_WORDS + (" Texte :\n {text}")
-# num_words: number of words the summary should contain
-# text: text to be summarized
-
-EN_USER_SUMMARY_WORDS = EN_SYSTEM_SUMMARY_WORDS + (" Text :\n {text}")
-# num_words: number of words the summary should contain
-# text: text to be summarized
+SYSTEM_SUMMARY_WORDS = {"en": EN_SYSTEM_SUMMARY_WORDS, "fr": FR_SYSTEM_SUMMARY_WORDS}
 
 FR_SYSTEM_SUMMARY_SENTENCES = FR_SYSTEM_SUMMARY_WORDS.replace(
     "{num_words} mots", "{num_sentences} phrases"
@@ -41,3 +37,7 @@ EN_SYSTEM_SUMMARY_SENTENCES = EN_SYSTEM_SUMMARY_WORDS.replace(
     "{num_words} words", "{num_sentences} sentences"
 )
 # num_sentences: number of sentences the summary should contain
+SYSTEM_SUMMARY_SENTENCES = {
+    "en": EN_SYSTEM_SUMMARY_SENTENCES,
+    "fr": FR_SYSTEM_SUMMARY_SENTENCES,
+}

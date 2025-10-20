@@ -5,6 +5,19 @@
 import os
 from pathlib import Path
 
+from loguru import logger
+
+# Auto-load .env if python-dotenv is available
+try:
+    from dotenv import load_dotenv  # type: ignore
+
+    if load_dotenv(override=True):
+        logger.info("Loaded .env file")
+    else:
+        logger.warning("Failed to load .env file")
+except Exception:
+    pass
+
 from bertrend.utils.config_utils import load_toml_config
 
 # Default config files path

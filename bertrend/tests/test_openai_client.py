@@ -9,7 +9,7 @@ from unittest.mock import patch, MagicMock
 from openai import OpenAI, AzureOpenAI, Stream
 from pydantic import BaseModel
 
-from bertrend.llm_utils.openai_client import OpenAI_Client
+from bertrend.llm_utils.openai_client import OpenAI_Client, APIType
 
 
 @pytest.fixture
@@ -22,27 +22,27 @@ def mock_api_key():
 @pytest.fixture
 def mock_azure_endpoint():
     os.environ["OPENAI_API_KEY"] = "test_api_key"
-    os.environ["OPENAI_ENDPOINT"] = "https://azure.com"
+    os.environ["OPENAI_BASE_URL"] = "https://azure.com"
     yield
     del os.environ["OPENAI_API_KEY"]
-    del os.environ["OPENAI_ENDPOINT"]
+    del os.environ["OPENAI_BASE_URL"]
 
 
 def test_initialization_with_azure(mock_azure_endpoint):
     """Test client initialization when using Azure endpoint"""
-    client = OpenAI_Client(api_key="test_api_key", endpoint="https://azure.com")
+    client = OpenAI_Client(api_key="test_api_key", base_url="https://azure.com")
     assert isinstance(client.llm_client, AzureOpenAI)
 
 
 def test_initialization_without_azure(mock_api_key):
-    """Test client initialization when using OpenAI endpoint"""
+    """Test client initialization when using OpenAI base_url"""
     client = OpenAI_Client(api_key="test_api_key")
     assert isinstance(client.llm_client, OpenAI)
 
 
 def test_generate_user_prompt(mock_api_key):
     """Test generation with a simple user prompt"""
-    client = OpenAI_Client(api_key="test_api_key")
+    client = OpenAI_Client(api_key="test_api_key", api_type=APIType.RESPONSES)
 
     # Mocking the llm_client's responses create method
     with patch.object(
@@ -56,7 +56,7 @@ def test_generate_user_prompt(mock_api_key):
 
 def test_generate_from_history(mock_api_key):
     """Test generation using history of messages"""
-    client = OpenAI_Client(api_key="test_api_key")
+    client = OpenAI_Client(api_key="test_api_key", api_type=APIType.RESPONSES)
 
     # Mocking the llm_client's responses create method
     with patch.object(
@@ -71,7 +71,7 @@ def test_generate_from_history(mock_api_key):
 
 def test_api_error_handling(mock_api_key):
     """Test if an API error is properly handled"""
-    client = OpenAI_Client(api_key="test_api_key")
+    client = OpenAI_Client(api_key="test_api_key", api_type=APIType.RESPONSES)
 
     # Simulate an error during API call
     with patch.object(
@@ -83,7 +83,7 @@ def test_api_error_handling(mock_api_key):
 
 def test_generate_with_streaming(mock_api_key):
     """Test if streaming works when 'stream' is True"""
-    client = OpenAI_Client(api_key="test_api_key")
+    client = OpenAI_Client(api_key="test_api_key", api_type=APIType.RESPONSES)
 
     # Mock streaming response
     mock_stream = MagicMock(spec=Stream)
@@ -124,7 +124,7 @@ def test_parse_basic_functionality(mock_api_key):
 
     # Mock the beta.chat.completions.parse method
     with patch.object(
-        client.llm_client.beta.chat.completions,
+        client.llm_client.chat.completions,
         "parse",
         return_value=mock_response,
     ):
@@ -146,7 +146,7 @@ def test_parse_with_system_prompt(mock_api_key):
 
     # Mock the beta.chat.completions.parse method
     with patch.object(
-        client.llm_client.beta.chat.completions,
+        client.llm_client.chat.completions,
         "parse",
         return_value=mock_response,
     ) as mock_parse:
@@ -176,7 +176,7 @@ def test_parse_error_handling(mock_api_key):
 
     # Simulate an error during API call
     with patch.object(
-        client.llm_client.beta.chat.completions,
+        client.llm_client.chat.completions,
         "parse",
         side_effect=Exception("API Parse Error"),
     ):
@@ -196,7 +196,7 @@ def test_parse_with_none_response_format(mock_api_key):
 
     # Mock the beta.chat.completions.parse method
     with patch.object(
-        client.llm_client.beta.chat.completions,
+        client.llm_client.chat.completions,
         "parse",
         return_value=mock_response,
     ) as mock_parse:

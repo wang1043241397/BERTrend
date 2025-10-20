@@ -3,8 +3,8 @@
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
 import os
-
 import streamlit as st
+from dotenv import load_dotenv
 from loguru import logger
 
 from bertrend.demos.demos_utils.icons import WARNING_ICON
@@ -14,6 +14,9 @@ from bertrend.services.summary.extractive_summarizer import (
     EnhancedExtractiveSummarizer,
     ExtractiveSummarizer,
 )
+
+load_dotenv(override=True)
+
 
 SUMMARIZER_OPTIONS_MAPPER = {
     "GPTSummarizer": GPTSummarizer,
@@ -39,7 +42,7 @@ def get_summarizer(summary_model):
     kwargs = {}
     if summary_model == "GPTSummarizer":
         kwargs["api_key"] = st.session_state.openai_api_key
-        kwargs["endpoint"] = st.session_state.openai_endpoint
+        kwargs["base_url"] = st.session_state.openai_base_url
 
     summarizer_class = SUMMARIZER_OPTIONS_MAPPER[summary_model]
     return summarizer_class(**kwargs)
@@ -63,6 +66,7 @@ def app():
         )
         / 100
     )
+
     st.text_input(
         "Openai API key",
         key="openai_api_key",
@@ -70,12 +74,12 @@ def app():
         type="password",
     )
     st.text_input(
-        "Openai endpoint", key="openai_endpoint", value=os.getenv("OPENAI_ENDPOINT")
+        "Openai base URL", key="openai_base_url", value=os.getenv("OPENAI_BASE_URL")
     )
     st.text_input(
         "Openai model name",
         key="openai_model_name",
-        value=os.getenv("OPENAI_DEFAULT_MODEL_NAME"),
+        value=os.getenv("OPENAI_DEFAULT_MODEL"),
     )
 
     col1, col2 = st.columns(2)
