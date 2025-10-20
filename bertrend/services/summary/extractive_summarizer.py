@@ -26,7 +26,7 @@ from bertrend.services.summarizer import (
 )
 
 RTE_MODEL_NAME = "models/language_model_rte/lm-distilcamembertbase-rte-saola2_20220826"
-DEFAULT_SUMMARIZER_MODEL = "camembert-base"
+DEFAULT_SUMMARIZER_MODEL = "almanach/camembert-base"
 
 DEFAULT_CHUNKS_NUMBER_SUMMARY = 6
 
