@@ -15,7 +15,10 @@ from openai.types.chat import ChatCompletion, ChatCompletionChunk
 from pydantic import BaseModel
 
 # Load environment variables at module import
-load_dotenv(override=True)
+if load_dotenv(override=True):
+    logger.info("Loaded .env file")
+else:
+    logger.warning("Failed to load .env file")
 
 MAX_ATTEMPTS = 3
 TIMEOUT = 60.0

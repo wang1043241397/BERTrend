@@ -5,11 +5,16 @@
 import os
 from pathlib import Path
 
+from loguru import logger
+
 # Auto-load .env if python-dotenv is available
 try:
     from dotenv import load_dotenv  # type: ignore
 
-    load_dotenv(override=True)
+    if load_dotenv(override=True):
+        logger.info("Loaded .env file")
+    else:
+        logger.warning("Failed to load .env file")
 except Exception:
     pass
 
