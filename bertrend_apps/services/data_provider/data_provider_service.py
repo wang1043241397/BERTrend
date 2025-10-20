@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import tempfile
 from pathlib import Path
 from typing import List, Optional
+import asyncio
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
@@ -113,31 +114,37 @@ def _daterange(start_date: datetime, end_date: datetime, ndays: int):
 
 # Endpoints
 @app.post("/scrape", response_model=ScrapeResponse)
-def scrape(req: ScrapeRequest):
+async def scrape(req: ScrapeRequest):
     provider_class = PROVIDERS.get(req.provider)
     if provider_class is None:
         raise HTTPException(status_code=400, detail=f"Unknown provider: {req.provider}")
     provider = provider_class()
-    results = provider.get_articles(
+    results = await asyncio.to_thread(
+        provider.get_articles,
         req.keywords, req.after, req.before, req.max_results, req.language
     )
-    provider.store_articles(results, req.save_path)
+    await asyncio.to_thread(provider.store_articles, results, req.save_path)
     return ScrapeResponse(stored_path=req.save_path, article_count=len(results))
 
 
 @app.post("/auto-scrape", response_model=ScrapeResponse)
-def auto_scrape(req: AutoScrapeRequest):
+async def auto_scrape(req: AutoScrapeRequest):
     provider_class = PROVIDERS.get(req.provider)
     if provider_class is None:
         raise HTTPException(status_code=400, detail=f"Unknown provider: {req.provider}")
     provider = provider_class()
-    try:
+    
+    def read_requests_file():
         with open(req.requests_file) as file:
-            requests: List[List[str]] = [line.rstrip().split(";") for line in file]
+            return [line.rstrip().split(";") for line in file]
+    
+    try:
+        requests: List[List[str]] = await asyncio.to_thread(read_requests_file)
     except Exception:
         raise HTTPException(status_code=400, detail="Bad file format")
 
-    results = provider.get_articles_batch(
+    results = await asyncio.to_thread(
+        provider.get_articles_batch,
         queries_batch=requests,
         max_results=req.max_results,
         language=req.language,
@@ -145,30 +152,34 @@ def auto_scrape(req: AutoScrapeRequest):
         minimum_quality_level=QualityLevel.from_string(req.minimum_quality_level),
     )
     logger.info(f"Storing {len(results)} articles")
-    provider.store_articles(results, req.save_path)
+    await asyncio.to_thread(provider.store_articles, results, req.save_path)
     return ScrapeResponse(stored_path=req.save_path, article_count=len(results))
 
 
 @app.post("/generate-query-file", response_model=GenerateQueryFileResponse)
-def generate_query_file(req: GenerateQueryFileRequest):
+async def generate_query_file(req: GenerateQueryFileRequest):
     date_format = "%Y-%m-%d"
     start_date = datetime.strptime(req.after, date_format)
     end_date = datetime.strptime(req.before, date_format)
     dates_l = list(_daterange(start_date, end_date, req.interval))
 
-    line_count = 0
-    with open(req.save_path, "a") as query_file:
-        for elem in dates_l:
-            query_file.write(
-                f"{req.keywords};{elem[0].strftime(date_format)};{elem[1].strftime(date_format)}\n"
-            )
-            line_count += 1
+    def write_query_file():
+        line_count = 0
+        with open(req.save_path, "a") as query_file:
+            for elem in dates_l:
+                query_file.write(
+                    f"{req.keywords};{elem[0].strftime(date_format)};{elem[1].strftime(date_format)}\n"
+                )
+                line_count += 1
+        return line_count
+    
+    line_count = await asyncio.to_thread(write_query_file)
     return GenerateQueryFileResponse(save_path=req.save_path, line_count=line_count)
 
 
 @app.post("/scrape-feed", response_model=ScrapeResponse)
-def scrape_from_feed(req: ScrapeFeedRequest):
-    data_feed_cfg = load_toml_config(req.feed_cfg)
+async def scrape_from_feed(req: ScrapeFeedRequest):
+    data_feed_cfg = await asyncio.to_thread(load_toml_config, req.feed_cfg)
     current_date = datetime.today()
     current_date_str = current_date.strftime("%Y-%m-%d")
     days_to_subtract = data_feed_cfg["data-feed"].get("number_of_days")
@@ -189,12 +200,12 @@ def scrape_from_feed(req: ScrapeFeedRequest):
     minimum_quality_level = data_feed_cfg["data-feed"].get(
         "minimum_quality_level", QualityLevel.AVERAGE
     )
-    save_path.parent.mkdir(parents=True, exist_ok=True)
+    await asyncio.to_thread(save_path.parent.mkdir, parents=True, exist_ok=True)
 
     article_count = 0
     with tempfile.NamedTemporaryFile() as query_file:
         if provider_name in {"arxiv", "atom", "rss"}:  # already returns batches
-            resp = scrape(
+            resp = await scrape(
                 ScrapeRequest(
                     keywords=keywords,
                     provider=provider_name,
@@ -207,7 +218,7 @@ def scrape_from_feed(req: ScrapeFeedRequest):
             )
             article_count = resp.article_count
         else:
-            _ = generate_query_file(
+            _ = await generate_query_file(
                 GenerateQueryFileRequest(
                     keywords=keywords,
                     after=after,
@@ -216,7 +227,7 @@ def scrape_from_feed(req: ScrapeFeedRequest):
                     save_path=Path(query_file.name),
                 )
             )
-            resp = auto_scrape(
+            resp = await auto_scrape(
                 AutoScrapeRequest(
                     requests_file=Path(query_file.name),
                     max_results=max_results,
@@ -233,9 +244,9 @@ def scrape_from_feed(req: ScrapeFeedRequest):
 
 
 @app.post("/schedule-scrapping")
-def automate_scrapping(req: ScheduleScrappingRequest):
+async def automate_scrapping(req: ScheduleScrappingRequest):
     try:
-        scheduler_utils.schedule_scrapping(req.feed_cfg)
+        await asyncio.to_thread(scheduler_utils.schedule_scrapping, req.feed_cfg)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     return {"status": "scheduled"}
