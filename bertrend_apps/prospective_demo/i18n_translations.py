@@ -118,6 +118,94 @@ TRANSLATIONS = {
         "fr": "Sélectionnez deux périodes, puis cliquez sur le bouton ci-dessus pour lancer la comparaison.",
         "en": "Select two periods, then click the button above to render the comparison.",
     },
+    "loading_data": {
+        "fr": "Chargement des données...",
+        "en": "Loading data...",
+    },
+    "loading_historical_data": {
+        "fr": "Chargement des données historiques...",
+        "en": "Loading historical data...",
+    },
+    "error_accessing_user_feeds": {
+        "fr": "Erreur d'accès aux flux utilisateur : {error}",
+        "en": "Error accessing user feeds: {error}",
+    },
+    "error_loading_model_info": {
+        "fr": "Erreur lors du chargement des informations du modèle : {error}",
+        "en": "Error loading model information: {error}",
+    },
+    "error_loading_data_for_period": {
+        "fr": "Erreur lors du chargement des données pour la période {period} : {error}",
+        "en": "Error loading data for period {period}: {error}",
+    },
+    "topic_with_title": {
+        "fr": "Sujet {topic_id} : {title}",
+        "en": "Topic {topic_id}: {title}",
+    },
+    "topic_without_title": {
+        "fr": "Sujet {topic_id}",
+        "en": "Topic {topic_id}",
+    },
+    "date_label": {
+        "fr": "Date",
+        "en": "Date",
+    },
+    "showing_top_topics_summary": {
+        "fr": "Affichage des {count} sujets les plus populaires sur {periods} périodes",
+        "en": "Showing top {count} topics by average popularity across {periods} periods",
+    },
+    "error_plotting_popularity": {
+        "fr": "Erreur lors du tracé de la popularité des sujets au fil du temps : {error}",
+        "en": "Error plotting topic popularity over time: {error}",
+    },
+    "error_details_debugging": {
+        "fr": "Détails de l'erreur (pour le débogage)",
+        "en": "Error details (for debugging)",
+    },
+    "error_analyzing_evolution": {
+        "fr": "Erreur lors de l'analyse de l'évolution des sujets : {error}",
+        "en": "Error analyzing topic evolution: {error}",
+    },
+    "not_available": {
+        "fr": "N/A",
+        "en": "N/A",
+    },
+    "category": {
+        "fr": "Catégorie",
+        "en": "Category",
+    },
+    "error_displaying_topic_list": {
+        "fr": "Erreur lors de l'affichage de la liste des sujets : {error}",
+        "en": "Error displaying topic list: {error}",
+    },
+    "change_percent": {
+        "fr": "Variation %",
+        "en": "Change %",
+    },
+    "percentage_change_help": {
+        "fr": "Changement en pourcentage de la popularité",
+        "en": "Percentage change in popularity",
+    },
+    "top_n_topics": {
+        "fr": "(Top {n})",
+        "en": "(Top {n})",
+    },
+    "error_comparing_stable_topics": {
+        "fr": "Erreur lors de la comparaison des sujets stables : {error}",
+        "en": "Error comparing stable topics: {error}",
+    },
+    "username_not_found": {
+        "fr": "Nom d'utilisateur introuvable dans l'état de session",
+        "en": "Username not found in session state",
+    },
+    "no_data_for_period": {
+        "fr": "Aucune donnée disponible pour la période : {period}",
+        "en": "No data available for period: {period}",
+    },
+    "error_in_comparative_dashboard": {
+        "fr": "Erreur dans le tableau de bord comparatif : {error}",
+        "en": "Error in comparative dashboard: {error}",
+    },
     # dashboard_signals.py translations
     "title": {"fr": "Titre", "en": "Title"},
     "todo_message": {

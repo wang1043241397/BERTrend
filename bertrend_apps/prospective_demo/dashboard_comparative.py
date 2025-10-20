@@ -78,7 +78,7 @@ def choose_two_periods() -> tuple[str, datetime, datetime]:
             st.error(translate("no_available_model_warning"), icon=ERROR_ICON)
             st.stop()
     except (AttributeError, KeyError) as e:
-        st.error(f"Error accessing user feeds: {e}", icon=ERROR_ICON)
+        st.error(translate("error_accessing_user_feeds").format(error=e), icon=ERROR_ICON)
         st.stop()
 
     # Initialize model_id in session state if not present
@@ -98,7 +98,7 @@ def choose_two_periods() -> tuple[str, datetime, datetime]:
     try:
         list_models = get_models_info(model_id, st.session_state.username)
     except Exception as e:
-        st.error(f"Error loading model information: {e}", icon=ERROR_ICON)
+        st.error(translate("error_loading_model_info").format(error=e), icon=ERROR_ICON)
         st.stop()
 
     if not list_models:
@@ -186,7 +186,9 @@ def get_period_data(
         return get_df_topics(model_interpretation_path)
     except Exception as e:
         st.error(
-            f"Error loading data for period {period.strftime(DATE_FORMAT)}: {e}",
+            translate("error_loading_data_for_period").format(
+                period=period.strftime(DATE_FORMAT), error=e
+            ),
             icon=ERROR_ICON,
         )
         # Return empty dataframes to allow graceful degradation
@@ -230,7 +232,7 @@ def plot_topic_popularity_over_time(
         topic_popularity_data = {}  # {topic_id: {period: popularity}}
         topic_titles = {}  # {topic_id: title}
 
-        with st.spinner("Loading historical data..."):
+        with st.spinner(translate("loading_historical_data")):
             for period in filtered_periods:
                 period_data = get_period_data(model_id, period, username)
 
@@ -277,9 +279,11 @@ def plot_topic_popularity_over_time(
 
             # Format topic label
             topic_label = (
-                f"Topic {topic_id}: {topic_titles.get(topic_id, 'N/A')[:50]}"
+                translate("topic_with_title").format(
+                    topic_id=topic_id, title=topic_titles.get(topic_id, translate("not_available"))[:50]
+                )
                 if topic_id in topic_titles
-                else f"Topic {topic_id}"
+                else translate("topic_without_title").format(topic_id=topic_id)
             )
 
             fig.add_trace(
@@ -289,8 +293,8 @@ def plot_topic_popularity_over_time(
                     mode="lines+markers",
                     name=topic_label,
                     hovertemplate="<b>%{fullData.name}</b><br>"
-                    + "Date: %{x|%d/%m/%Y}<br>"
-                    + "Popularity: %{y:.2f}<br>"
+                    + translate("date_label") + ": %{x|%d/%m/%Y}<br>"
+                    + translate("popularity") + ": %{y:.2f}<br>"
                     + "<extra></extra>",
                 )
             )
@@ -312,14 +316,16 @@ def plot_topic_popularity_over_time(
 
         # Display summary statistics
         st.caption(
-            f"Showing top {len(top_topics)} topics by average popularity across {len(filtered_periods)} periods"
+            translate("showing_top_topics_summary").format(
+                count=len(top_topics), periods=len(filtered_periods)
+            )
         )
 
     except Exception as e:
-        st.error(f"Error plotting topic popularity over time: {e}", icon=ERROR_ICON)
+        st.error(translate("error_plotting_popularity").format(error=e), icon=ERROR_ICON)
         import traceback
 
-        with st.expander("Error details (for debugging)"):
+        with st.expander(translate("error_details_debugging")):
             st.code(traceback.format_exc())
 
 
@@ -415,7 +421,7 @@ def analyze_topic_evolution(
                 )
 
     except Exception as e:
-        st.error(f"Error analyzing topic evolution: {e}", icon=ERROR_ICON)
+        st.error(translate("error_analyzing_evolution").format(error=e), icon=ERROR_ICON)
 
 
 def display_topic_list(data: dict[str, pd.DataFrame], topic_ids: list[int]) -> None:
@@ -441,7 +447,7 @@ def display_topic_list(data: dict[str, pd.DataFrame], topic_ids: list[int]) -> N
                     title = (
                         topic_row[LLM_TOPIC_TITLE_COLUMN].values[0]
                         if LLM_TOPIC_TITLE_COLUMN in topic_row.columns
-                        else "N/A"
+                        else translate("not_available")
                     )
                     popularity = (
                         topic_row[COLUMN_POPULARITY].values[0]
@@ -452,8 +458,8 @@ def display_topic_list(data: dict[str, pd.DataFrame], topic_ids: list[int]) -> N
                         {
                             COLUMN_TOPIC: topic_id,
                             translate("title"): title,
-                            "Popularity": popularity,
-                            "Category": (
+                            translate("popularity"): popularity,
+                            translate("category"): (
                                 translate("weak_signals")
                                 if category == WEAK_SIGNALS
                                 else translate("strong_signals")
@@ -465,7 +471,7 @@ def display_topic_list(data: dict[str, pd.DataFrame], topic_ids: list[int]) -> N
         if topics_info:
             df = pd.DataFrame(topics_info)
             # Sort by popularity in descending order
-            df = df.sort_values(by="Popularity", ascending=False)
+            df = df.sort_values(by=translate("popularity"), ascending=False)
 
             # Store signal type info before removing the column
             signal_types = df["_signal_type"].copy()
@@ -488,7 +494,7 @@ def display_topic_list(data: dict[str, pd.DataFrame], topic_ids: list[int]) -> N
             st.info(translate("no_data"))
 
     except Exception as e:
-        st.error(f"Error displaying topic list: {e}", icon=ERROR_ICON)
+        st.error(translate("error_displaying_topic_list").format(error=e), icon=ERROR_ICON)
 
 
 def compare_stable_topics(
@@ -530,7 +536,7 @@ def compare_stable_topics(
                     title = (
                         topic2[LLM_TOPIC_TITLE_COLUMN].values[0]
                         if LLM_TOPIC_TITLE_COLUMN in topic2.columns
-                        else f"Topic {topic_id}"
+                        else translate("topic_without_title").format(topic_id=topic_id)
                     )
                     pop1 = (
                         topic1[COLUMN_POPULARITY].values[0]
@@ -552,7 +558,7 @@ def compare_stable_topics(
                             period1.strftime(DATE_FORMAT): pop1,
                             period2.strftime(DATE_FORMAT): pop2,
                             translate("popularity_change"): change,
-                            "Change %": change_percent,
+                            translate("change_percent"): change_percent,
                             "_signal_type": category,  # Internal field for styling
                         }
                     )
@@ -587,10 +593,10 @@ def compare_stable_topics(
                         format="%.2f",
                         help=translate("popularity_change"),
                     ),
-                    "Change %": st.column_config.NumberColumn(
-                        "Change %",
+                    translate("change_percent"): st.column_config.NumberColumn(
+                        translate("change_percent"),
                         format="%.1f%%",
-                        help="Percentage change in popularity",
+                        help=translate("percentage_change_help"),
                     ),
                 },
             )
@@ -613,7 +619,7 @@ def compare_stable_topics(
             )
 
             fig.update_layout(
-                title=translate("popularity_change") + f" (Top {top_n})",
+                title=translate("popularity_change") + " " + translate("top_n_topics").format(n=top_n),
                 xaxis_title=translate("topic"),
                 yaxis_title=translate("popularity_change"),
                 height=DEFAULT_CHART_HEIGHT,
@@ -626,7 +632,7 @@ def compare_stable_topics(
             st.info(translate("no_data"))
 
     except Exception as e:
-        st.error(f"Error comparing stable topics: {e}", icon=ERROR_ICON)
+        st.error(translate("error_comparing_stable_topics").format(error=e), icon=ERROR_ICON)
 
 
 @st.fragment()
@@ -658,13 +664,8 @@ def dashboard_comparative() -> None:
             st.session_state["comparative_render"] = False
 
         # Render button
-        render_label = (
-            translate("render_comparison")
-            if hasattr(translate, "render_comparison")
-            else "Render comparison"
-        )
         if st.button(
-            render_label + " " + ANALYSIS_ICON,
+            ANALYSIS_ICON + " " + translate("render_comparison"),
             key="comparative_render_button",
             type="primary",
         ):
@@ -682,14 +683,10 @@ def dashboard_comparative() -> None:
         # Load data for both periods with progress indication
         username = st.session_state.get("username", "")
         if not username:
-            st.error("Username not found in session state", icon=ERROR_ICON)
+            st.error(translate("username_not_found"), icon=ERROR_ICON)
             st.stop()
 
-        with st.spinner(
-            translate("loading_data")
-            if hasattr(translate, "loading_data")
-            else "Loading data..."
-        ):
+        with st.spinner(translate("loading_data")):
             data_period_1 = get_period_data(model_id, period_1, username)
             data_period_2 = get_period_data(model_id, period_2, username)
 
@@ -701,11 +698,15 @@ def dashboard_comparative() -> None:
             st.error(translate("no_data_for_comparison"), icon=WARNING_ICON)
             if not period_1_has_data:
                 st.info(
-                    f"No data available for period: {period_1.strftime(DATE_FORMAT)}"
+                    translate("no_data_for_period").format(
+                        period=period_1.strftime(DATE_FORMAT)
+                    )
                 )
             if not period_2_has_data:
                 st.info(
-                    f"No data available for period: {period_2.strftime(DATE_FORMAT)}"
+                    translate("no_data_for_period").format(
+                        period=period_2.strftime(DATE_FORMAT)
+                    )
                 )
             st.stop()
 
@@ -723,9 +724,9 @@ def dashboard_comparative() -> None:
             analyze_topic_evolution(data_period_1, data_period_2, period_1, period_2)
 
     except Exception as e:
-        st.error(f"Error in comparative dashboard: {e}", icon=ERROR_ICON)
+        st.error(translate("error_in_comparative_dashboard").format(error=e), icon=ERROR_ICON)
         # Log the error for debugging (in production, use proper logging)
         import traceback
 
-        with st.expander("Error details (for debugging)"):
+        with st.expander(translate("error_details_debugging")):
             st.code(traceback.format_exc())
