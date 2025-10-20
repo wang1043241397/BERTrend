@@ -142,5 +142,6 @@ def main():
     with tab6:
         dashboard_comparative()
 
+
 if __name__ == "__main__":
     main()
