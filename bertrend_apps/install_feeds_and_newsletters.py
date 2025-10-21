@@ -5,9 +5,7 @@
 from pathlib import Path
 from loguru import logger
 
-from bertrend_apps.common.crontab_utils import CrontabSchedulerUtils
-
-scheduler_utils = CrontabSchedulerUtils()
+from bertrend_apps import SCHEDULER_UTILS
 
 CONFIG_PATH = Path(__file__).parent / "config"
 CONFIG_FEEDS_PATH = CONFIG_PATH / "feeds"
@@ -18,7 +16,7 @@ if __name__ == "__main__":
     logger.info("*** Installing feeds crontabs ***")
     for f in CONFIG_FEEDS_PATH.iterdir():
         logger.info(f"Installing crontab for {f}")
-        scheduler_utils.schedule_scrapping(Path(f))
+        SCHEDULER_UTILS.schedule_scrapping(Path(f))
 
     # Install newsletters crontabs
     logger.info("*** Installing newsletters crontabs ***")
@@ -28,4 +26,4 @@ if __name__ == "__main__":
             f.stem.split("_newsletter")[0] + "_feed.toml"
         )
         logger.debug(f"Associated feed: {associated_feed}")
-        scheduler_utils.schedule_newsletter(Path(f), associated_feed)
+        SCHEDULER_UTILS.schedule_newsletter(Path(f), associated_feed)

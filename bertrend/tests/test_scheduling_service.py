@@ -13,7 +13,16 @@ from bertrend.services.scheduling import scheduling_service as svc
 
 
 class FakeJob:
-    def __init__(self, job_id, func=None, name=None, trigger=None, args=None, kwargs=None, max_instances=3):
+    def __init__(
+        self,
+        job_id,
+        func=None,
+        name=None,
+        trigger=None,
+        args=None,
+        kwargs=None,
+        max_instances=3,
+    ):
         self.id = job_id
         self.name = name or job_id
         self.func = func or (lambda *a, **k: None)
@@ -37,10 +46,29 @@ class FakeScheduler:
     def get_jobs(self):
         return list(self.jobs.values())
 
-    def add_job(self, func, trigger, id, name, args, kwargs, max_instances, coalesce, replace_existing):
+    def add_job(
+        self,
+        func,
+        trigger,
+        id,
+        name,
+        args,
+        kwargs,
+        max_instances,
+        coalesce,
+        replace_existing,
+    ):
         if id in self.jobs:
             raise Exception("Job already exists")
-        self.jobs[id] = FakeJob(id, func=func, name=name, trigger=trigger, args=args, kwargs=kwargs, max_instances=max_instances)
+        self.jobs[id] = FakeJob(
+            id,
+            func=func,
+            name=name,
+            trigger=trigger,
+            args=args,
+            kwargs=kwargs,
+            max_instances=max_instances,
+        )
 
     def reschedule_job(self, job_id, trigger):
         job = self.get_job(job_id)
@@ -155,7 +183,9 @@ def test_run_job_now_executes(client):
         return x + y
 
     # Insert job directly into fake scheduler
-    svc.scheduler.jobs["runme"] = FakeJob("runme", func=myjob, args=[2], kwargs={"y": 3})
+    svc.scheduler.jobs["runme"] = FakeJob(
+        "runme", func=myjob, args=[2], kwargs={"y": 3}
+    )
 
     r = client.post("/jobs/runme/run")
     assert r.status_code == 200
@@ -189,21 +219,34 @@ def test_cron_examples(client):
 
 # Unit tests for get_trigger helper
 
+
 def test_get_trigger_interval():
-    jc = svc.JobCreate(job_id="t1", job_type="interval", function_name="sample_job", seconds=5)
+    jc = svc.JobCreate(
+        job_id="t1", job_type="interval", function_name="sample_job", seconds=5
+    )
     trig = svc.get_trigger(jc)
     # Avoid importing trigger classes to keep this test lightweight, just check attribute presence
     assert hasattr(trig, "__class__") and "IntervalTrigger" in trig.__class__.__name__
 
 
 def test_get_trigger_cron_by_string():
-    jc = svc.JobCreate(job_id="t2", job_type="cron", function_name="sample_job", cron_expression="0 12 * * *")
+    jc = svc.JobCreate(
+        job_id="t2",
+        job_type="cron",
+        function_name="sample_job",
+        cron_expression="0 12 * * *",
+    )
     trig = svc.get_trigger(jc)
     assert "CronTrigger" in trig.__class__.__name__
 
 
 def test_get_trigger_cron_invalid_parts():
-    jc = svc.JobCreate(job_id="t3", job_type="cron", function_name="sample_job", cron_expression="0 12 * *")
+    jc = svc.JobCreate(
+        job_id="t3",
+        job_type="cron",
+        function_name="sample_job",
+        cron_expression="0 12 * *",
+    )
     with pytest.raises(ValueError):
         svc.get_trigger(jc)
 

@@ -2,6 +2,10 @@
 #  See AUTHORS.txt
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
+import time
+from pathlib import Path
+
+import requests
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -18,10 +22,15 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+DATA_DIR = "data"
+DATA_PATH = Path(DATA_DIR)
+DATA_PATH.mkdir(parents=True, exist_ok=True)
+
+
 app = FastAPI(title="Job Scheduler API", version="1.0.0")
 
 # Configure job stores and executors
-jobstores = {"default": SQLAlchemyJobStore(url="sqlite:///data/jobs.sqlite")}
+jobstores = {"default": SQLAlchemyJobStore(url=f"sqlite:///{DATA_DIR}/jobs.sqlite")}
 
 executors = {"default": ProcessPoolExecutor(max_workers=5)}
 
@@ -43,7 +52,9 @@ scheduler.start()
 # Pydantic models
 class JobCreate(BaseModel):
     job_id: str = Field(..., description="Unique identifier for the job")
-    job_name: Optional[str] = Field(None, description="Human-readable job name (defaults to job_id)")
+    job_name: Optional[str] = Field(
+        None, description="Human-readable job name (defaults to job_id)"
+    )
     job_type: str = Field(..., description="Type: 'interval', 'cron', or 'date'")
     function_name: str = Field(..., description="Name of the function to execute")
     args: Optional[List[Any]] = Field(
@@ -145,61 +156,39 @@ class CronExpressionResponse(BaseModel):
 
 def sample_job(message: str = "Default message"):
     """Example job function - must be at module level for multiprocessing"""
-    import time
-
     logger.info(f"Executing job: {message}")
-    print(f"[{datetime.now()}] Job executed: {message}")
     time.sleep(1)  # Simulate some work
     return f"Completed: {message}"
 
 
-def cleanup_task():
-    """Example cleanup task"""
-    import time
-
-    logger.info("Running cleanup task")
-    print(f"[{datetime.now()}] Cleanup task executed")
-    time.sleep(2)
-    return "Cleanup completed"
-
-
-def report_generator(report_type: str = "daily"):
-    """Example report generator"""
-    import time
-
-    logger.info(f"Generating {report_type} report")
-    print(f"[{datetime.now()}] Generated {report_type} report")
-    time.sleep(1.5)
-    return f"{report_type} report generated"
-
-
-def data_processor(data_id: int, operation: str = "process"):
-    """Example data processor"""
-    import time
-
-    logger.info(f"Processing data {data_id} with operation: {operation}")
-    print(f"[{datetime.now()}] Processing data ID {data_id}: {operation}")
-    time.sleep(1)
-    return f"Processed data {data_id}"
-
-
-def email_sender(recipient: str, subject: str = "Notification"):
-    """Example email sender (simulated)"""
-    import time
-
-    logger.info(f"Sending email to {recipient}: {subject}")
-    print(f"[{datetime.now()}] Email sent to {recipient}: {subject}")
-    time.sleep(0.5)
-    return f"Email sent to {recipient}"
+def http_request(
+    url: str,
+    method: str = "GET",
+    headers: dict = None,
+    json_data: dict = None,
+    timeout: int = 30,
+):
+    """Execute an HTTP request (curl-like functionality)"""
+    logger.info(f"Executing HTTP {method} request to {url}")
+    try:
+        response = requests.request(
+            method=method.upper(),
+            url=url,
+            headers=headers,
+            json=json_data,
+            timeout=timeout,
+        )
+        logger.info(f"HTTP request completed with status code: {response.status_code}")
+        return f"Request to {url} completed with status {response.status_code}"
+    except Exception as e:
+        logger.error(f"HTTP request failed: {str(e)}")
+        raise
 
 
 # Job function registry
 JOB_FUNCTIONS = {
     "sample_job": sample_job,
-    "cleanup_task": cleanup_task,
-    "report_generator": report_generator,
-    "data_processor": data_processor,
-    "email_sender": email_sender,
+    "http_request": http_request,
 }
 
 

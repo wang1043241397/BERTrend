@@ -15,7 +15,7 @@ from loguru import logger
 
 from bertrend import FEED_BASE_PATH, load_toml_config
 from bertrend.article_scoring.article_scoring import QualityLevel
-from bertrend_apps.common.crontab_utils import CrontabSchedulerUtils
+from bertrend_apps import SCHEDULER_UTILS
 from bertrend_apps.data_provider.arxiv_provider import ArxivProvider
 from bertrend_apps.data_provider.atom_feed_provider import ATOMFeedProvider
 from bertrend_apps.data_provider.rss_feed_provider import RSSFeedProvider
@@ -36,8 +36,6 @@ PROVIDERS = {
     "bing": BingNewsProvider,
     "newscatcher": NewsCatcherProvider,
 }
-
-scheduler_utils = CrontabSchedulerUtils()
 
 
 # Request/Response models
@@ -121,7 +119,11 @@ async def scrape(req: ScrapeRequest):
     provider = provider_class()
     results = await asyncio.to_thread(
         provider.get_articles,
-        req.keywords, req.after, req.before, req.max_results, req.language
+        req.keywords,
+        req.after,
+        req.before,
+        req.max_results,
+        req.language,
     )
     await asyncio.to_thread(provider.store_articles, results, req.save_path)
     return ScrapeResponse(stored_path=req.save_path, article_count=len(results))
@@ -133,11 +135,11 @@ async def auto_scrape(req: AutoScrapeRequest):
     if provider_class is None:
         raise HTTPException(status_code=400, detail=f"Unknown provider: {req.provider}")
     provider = provider_class()
-    
+
     def read_requests_file():
         with open(req.requests_file) as file:
             return [line.rstrip().split(";") for line in file]
-    
+
     try:
         requests: List[List[str]] = await asyncio.to_thread(read_requests_file)
     except Exception:
@@ -172,7 +174,7 @@ async def generate_query_file(req: GenerateQueryFileRequest):
                 )
                 line_count += 1
         return line_count
-    
+
     line_count = await asyncio.to_thread(write_query_file)
     return GenerateQueryFileResponse(save_path=req.save_path, line_count=line_count)
 
@@ -246,7 +248,7 @@ async def scrape_from_feed(req: ScrapeFeedRequest):
 @app.post("/schedule-scrapping")
 async def automate_scrapping(req: ScheduleScrappingRequest):
     try:
-        await asyncio.to_thread(scheduler_utils.schedule_scrapping, req.feed_cfg)
+        await asyncio.to_thread(SCHEDULER_UTILS.schedule_scrapping, req.feed_cfg)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     return {"status": "scheduled"}
