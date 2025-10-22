@@ -37,7 +37,8 @@ dependencies = [
     "lxml-html-clean (>=0.2.2)",
     "markdown (>=3.7)",
     "nltk (>=3.9.1)",
-    "numpy (<2)",
+    # "numpy (<2)",
+    "numpy (>=2)",
     "openai (>=1.77.0)",
     "openai-agents[litellm] (>=0.4.0)",
     "openpyxl (>=3.1.5)",
@@ -52,7 +53,8 @@ dependencies = [
     "pytest-asyncio",
     "python-dotenv (>=1.1.1)",
     "pyarrow>=21.0.0",
-    "scipy (==1.12)",
+    # "scipy (==1.12)",
+    "scipy (>=1.12)",
     "scikit-learn (>=1.5.2)",
     "sentence-transformers (==3.0.1)",
     "starlette (>=0.46.2)",
@@ -68,11 +70,17 @@ dependencies = [
     "tqdm (>=4.67.1)",
     "tiktoken (>=0.8.0)",
     "typer (>=0.16.0)",
-    "tokenizers (<0.20.0)",
+    # "tokenizers (<0.20.0)",
+    "tokenizers (>=0.20.0)",
     "umap-learn (>=0.5.7)"
 ]
 
 [project.optional-dependencies]
+# 对应pip install ".[apps]
+# 如果有报错
+# ERROR: Could not find a version that satisfies the requirement google-api-python-client>=2.148.0; extra == "apps" (from bertrend[apps]) (from versions: none)
+# ERROR: No matching distribution found for google-api-python-client>=2.148.0; extra == "apps"
+# python -m pip install --upgrade pip setuptools wheel
 apps = [
     "arxiv>=2.2.0",
     "feedparser>=6.0.11",
