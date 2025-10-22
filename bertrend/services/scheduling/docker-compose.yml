@@ -1,13 +1,11 @@
-version: '3.8'
-
 services:
   scheduler:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: job-scheduler
+    container_name: bertrend-scheduler
     ports:
-      - "8000:8000"
+      - "8081:8000"
     volumes:
       # Mount data directory for persistent SQLite database
       - ./data:/app/data
